@@ -1,10 +1,18 @@
 import simplevisor
+import sys
+
+_no_data_files = "--no-data-files"
+no_data_files = False
+if _no_data_files in sys.argv:
+    no_data_files = True
+    sys.argv.remove(_no_data_files)
 
 NAME = 'simplevisor'
 VERSION = simplevisor.VERSION
 DESCRIPTION = "Simple daemon supervisor"
 LONG_DESCRIPTION = """
-Module to supervise daemons in an easy way.
+Simplevisor is a simple daemons supervisor, it is inspired by
+Erlang OTP and it can supervise hierarchies of services.
 """
 AUTHOR = 'Massimo Paladin'
 AUTHOR_EMAIL = 'massimo.paladin@gmail.com'
@@ -40,6 +48,12 @@ class test(Command):
         from test import run_tests
         run_tests.main()
 
+if no_data_files:
+    data_files = []
+else:
+    data_files = [
+        ('/usr/share/man/man1', ['man/simplevisor.1', 'man/simplevisor-control.1', 'man/simplevisor-loop.1']),
+    ]
 setup(name=NAME,
       version=VERSION,
       description=DESCRIPTION,
@@ -52,8 +66,6 @@ setup(name=NAME,
       classifiers=CLASSIFIERS,
       packages=['simplevisor', ],
       scripts=['bin/simplevisor', 'bin/simplevisor-control', 'bin/simplevisor-loop'],
-      data_files=[
-                  ('/usr/share/man/man1', ['man/simplevisor.1']),
-                  ],
+      data_files=data_files,
       cmdclass={'test' : test,}
      )
