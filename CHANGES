@@ -1,5 +1,8 @@
 Change log for python-simplevisor
 
+0.5 Fri Sep 14 2012
+	* [mp] various cleaning and improvements
+
 0.4	Thu Jul 5 2012
 	* [mp] simplevisor-new-instance script added to the examples
 	* [mp] simplevisor-loop added, new script to daemonize foreground programs
