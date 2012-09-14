@@ -1,0 +1,6 @@
+include LICENSE README CHANGES
+include examples/*.example
+include examples/other_service.conf
+include examples/simplevisor-new-instance
+include man/*.1
+include test/*

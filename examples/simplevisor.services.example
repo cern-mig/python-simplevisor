@@ -1,0 +1,26 @@
+# The format of the configuration
+# file is a simplified Apache Style Config file.
+# Following features are supported:
+# 
+# - Apache Style Config syntax
+# - comments are allowed with lines starting with #
+# - blank lines are ignored
+# - file inclusion with <<include relative_file_path.conf>>
+
+<entry>
+    type = supervisor
+    name = svisor1
+    max_restarts = 10
+    max_time = 60
+    strategy = one_for_one
+    stop_all = false
+    <children>
+	    <entry>
+	        type = service
+	        name = httpd
+	        expected = stopped
+	        control = /sbin/service httpd
+	    </entry>
+        <<include other_service.conf>>
+    </children>
+</entry>

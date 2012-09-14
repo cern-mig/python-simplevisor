@@ -1,0 +1,34 @@
+# The format of the configuration
+# file is a simplified Apache Style Config file.
+# Following features are supported:
+# 
+# - Apache Style Config syntax
+# - comments are allowed with lines starting with #
+# - blank lines are ignored
+# - file inclusion with <<include relative_file_path.conf>>
+
+<simplevisor>
+    # File used to store the status
+    store = /var/cache/simplevisor/simplevisor.json
+    
+    # pid file
+    #pidfile = /path/to/pid
+    
+    # interval between supervision cycles in seconds
+    #interval = 120
+	
+    # Configure the logging system.
+    # 3 are available: print,syslog,simple
+    log = syslog
+
+    # If logging system is simple you need to specify a log file,
+    # check that the logfile is writable by the specified user.
+    #logfile = /var/log/simplevisor/simplevisor.log
+	
+    # If logging system is either print or simple you can
+    # specify a loglevel, it is warning by default:
+    # available log levels: debug,info,warning,error,critical
+    #loglevel = info
+</simplevisor>
+
+<<include simplevisor.services.example>>

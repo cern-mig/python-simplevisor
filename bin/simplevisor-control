@@ -1,0 +1,219 @@
+#!/bin/sh
+#
+# simplevisor Simple daemons supervisor
+#
+# chkconfig: - 90 15
+# description: Simple daemons supervisor
+#
+
+### BEGIN INIT INFO
+# Provides:          simplevisor
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     3 4 5
+# Default-Stop:      0 1 2 6
+# Description:       Simple daemons supervisor
+# Short-Description: Simple daemons supervisor
+### END INIT INFO
+
+RETVAL=0
+
+[ -r "/etc/sysconfig/simplevisor" ] && . "/etc/sysconfig/simplevisor"
+
+EXECUTABLE=`which simplevisor`
+test -x ${EXECUTABLE} || exit 5
+COMMAND_PREFIX="/usr/bin/python ${EXECUTABLE}"
+
+NAME=${SIMPLEVISOR_NAME-simplevisor}
+USER=${SIMPLEVISOR_USER}
+
+CONF=${SIMPLEVISOR_CONF-/etc/${NAME}/${NAME}.conf}
+if [ ! -r ${CONF} ] ; then
+    echo "configuration file not readable"
+    exit 5
+fi
+
+PIDFILE=${SIMPLEVISOR_PIDFILE-/var/run/${NAME}.pid}
+LOCKFILE=${SIMPLEVISOR_LOCKFILE-/var/lock/subsys/${NAME}}
+MAX_AGE=${SIMPLEVISOR_MAX_AGE-10}
+
+if [ -z "$SIMPLEVISOR_USER" -o `id -un` = "$SIMPLEVISOR_USER" ] ; then
+    COMMAND="${COMMAND_PREFIX} -p ${PIDFILE} --conf ${CONF}"
+else
+    COMMAND="sudo -n -u ${SIMPLEVISOR_USER} ${COMMAND_PREFIX} -p ${PIDFILE} --conf ${CONF}"
+fi
+
+SUBPATH="$2"
+
+start() {
+    echo -n "Starting ${NAME}: "
+    if [ "x${SUBPATH}" = "x" ] ; then
+        ${COMMAND} --daemon start
+    else
+        ${COMMAND} start ${SUBPATH}
+    fi
+    RETVAL=$?
+    [ "x${SUBPATH}" != "x" ] && return
+    if [ $RETVAL = 0 ] ; then
+        touch ${LOCKFILE}
+        echo "started"
+    else
+        echo "failed to start, check the logs for more information"
+    fi
+}
+
+status(){
+    echo -n "${NAME} status: "
+    ${COMMAND} status ${SUBPATH}
+    RETVAL=$?
+    [ "x${SUBPATH}" != "x" ] && return
+    if [ $RETVAL = 0 ] ; then
+        ok=`find ${PIDFILE} -mmin -${MAX_AGE}`
+        if [ "x$ok" = "x" ]; then
+            date=`date +"%Y/%m/%d-%H:%M:%S" -r ${PIDFILE}`
+            echo "stuck since $date"
+            RETVAL=4
+        fi
+    else
+        echo "not running with return code ${RETVAL}"
+    fi
+}
+
+stop() {
+    echo -n "Stopping ${NAME}: "
+    ${COMMAND} stop ${SUBPATH}
+    RETVAL=$?
+    [ "x${SUBPATH}" != "x" ] && return
+    if [ $RETVAL = 0 ] ; then
+        rm -f ${LOCKFILE} ${PIDFILE}
+        echo "stopped"
+    else
+        echo "failed to stop, check the logs for more information"
+    fi
+}
+
+stop_supervisor() {
+    echo -n "Stopping supervisor ${NAME}: "
+    ${COMMAND} stop_supervisor
+    RETVAL=$?
+    if [ $RETVAL = 0 ] ; then
+        rm -f ${LOCKFILE} ${PIDFILE}
+        echo "supervisor stopped"
+    else
+        echo "failed to stop supervisor, check the logs for more information"
+    fi
+}
+
+check() {
+    echo "Check ${NAME}: "
+    ${COMMAND} check ${SUBPATH}
+    RETVAL=$?
+}
+
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  stop-supervisor)
+    stop_supervisor
+    ;;
+  restart)
+    echo "Restarting ${NAME}"
+    stop
+    sleep 0.3
+    start
+    ;;
+  restart-supervisor)
+    echo "Restarting supervisor ${NAME}"
+    stop_supervisor
+    sleep 0.3
+    start
+    ;;
+  status)
+    status
+    ;;
+  check)
+    check
+    ;;
+  *)
+    echo "Usage: ${NAME} {start|stop|stop-supervisor|restart|restart-supervisor|status|check} [PATH]" >&2
+    RETVAL=1
+    ;;
+esac
+
+exit $RETVAL
+
+=head1 NAME
+
+simplevisor-control - run simplevisor as a service
+
+=head1 SYNOPSIS
+
+B<simplevisor-control>
+command [path]
+
+=head1 DESCRIPTION
+
+simplevisor-control command can be used to run simplevisor as a service.
+
+
+=head1 OPTIONS
+
+B<command>
+one of: start, stop, stop-supervisor,
+        restart, restart-supervisor, status, check
+
+B<path>
+look at simplevisor man page for path behavior.
+
+=head1 EXAMPLES
+
+On linux you can look at the script shipped in the examples folder
+which is called simplevisor-new-instance, it creates folders and
+the configuration to run a simplevisor instance.
+
+    mkdir -p /var/lib/myinstance/bin
+    mkdir -p /var/lib/myinstance/data
+    mkdir -p /var/lib/myinstance/etc
+
+Create a file /var/lib/myinstance/bin/service with content
+and make it executable:
+
+    #!/bin/sh
+    #
+    # init script that can be symlinked from /etc/init.d
+    #
+    
+    # chkconfig: - 90 15
+    # description: my simplevisor instance
+    
+    . "/var/lib/myinstance/etc/simplevisor.profile"
+    exec "/usr/bin/simplevisor-control" ${1+"$@"}
+
+/var/lib/myinstance/etc/simplevisor.profile could look like:
+
+    # main
+    export SIMPLEVISOR_NAME=myinstance
+    # if you want to run it as another user:
+    #export SIMPLEVISOR_USER=games
+    export SIMPLEVISOR_CONF=/var/lib/myinstance/etc/simplevisor.conf
+    export SIMPLEVISOR_PIDFILE=/var/lib/myinstance/data/simplevisor.pid
+    export SIMPLEVISOR_LOCKFILE=/var/lib/myinstance/data/simplevisor.lock
+
+Create /var/lib/myinstance/etc/simplevisor.conf according to simplevisor
+documentation.
+
+For Red Hat or Fedora you can symlink service script:
+
+    ln -s /var/lib/myinstance/bin/service /etc/init.d/myinstance
+
+And use it as a normal service:
+
+    /sbin/service myinstance start|stop|status|restart|check
+
+=head1 AUTHOR
+
+Massimo Paladin <massimo.paladin@gmail.com> - Copyright (C) 2012 CERN

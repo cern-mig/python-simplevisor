@@ -1,0 +1,252 @@
+#!/usr/bin/perl
+#+##############################################################################
+#                                                                              #
+# File: loop                                                                   #
+#                                                                              #
+# Description: execute the given command in a loop                             #
+#                                                                              #
+#-##############################################################################
+
+# $Revision: 1.5 $
+
+# FIXME: consider adding --discard-stdout and --discard-stderr options?
+# FIXME: consider adding a --discard-stdin option?
+# FIXME: consider adding a --kill-spec option to give to proc_create()
+# FIXME: consider adding a --timeout option to give to proc_create()
+
+#
+# modules
+#
+
+use strict;
+use warnings qw(FATAL all);
+use sigtrap qw(die normal-signals);
+use Getopt::Long qw(GetOptions);
+use List::Util qw(min);
+use No::Worries qw($ProgramName);
+use No::Worries::Die qw(handler dief);
+use No::Worries::Log qw(log_debug log_filter);
+use No::Worries::PidFile qw(pf_set pf_check pf_touch pf_unset pf_status pf_quit);
+use No::Worries::Proc qw(proc_detach proc_create proc_monitor);
+use No::Worries::Syslog qw(syslog_open syslog_close);
+use No::Worries::Warn qw(handler);
+use Pod::Usage qw(pod2usage);
+use Time::HiRes qw();
+
+#
+# global variables
+#
+
+our(%Option, %NeedsCleanup);
+
+#
+# initialization
+#
+
+sub init () {
+    my($status, $message);
+
+    $| = 1;
+    $Option{debug} = 0;
+    Getopt::Long::Configure(qw(posix_default no_ignore_case));
+    GetOptions(\%Option,
+        "count|c=i",
+        "daemon",
+        "debug|d+",
+        "help|h|?",
+        "manual|m",
+        "pidfile=s",
+        "quit",
+	"sleep|s=f",
+        "status",
+    ) or pod2usage(2);
+    pod2usage(1) if $Option{help};
+    pod2usage(exitstatus => 0, verbose => 2) if $Option{manual};
+    log_filter("debug") if $Option{debug};
+    if ($Option{quit}) {
+	dief("missing mandatory option for --quit: --pidfile")
+	    unless $Option{pidfile};
+	pf_quit($Option{pidfile},
+	    callback => sub { printf("%s %s\n", $ProgramName, $_[0]) },
+	);
+	exit(0);
+    }
+    if ($Option{status}) {
+	dief("missing mandatory option for --status: --pidfile")
+	    unless $Option{pidfile};
+	($status, $message) = pf_status($Option{pidfile}, freshness => 60);
+	printf("%s %s\n", $ProgramName, $message);
+	exit($status ? 0 : 1);
+    }
+    dief("missing command to execute") unless @ARGV;
+    if ($Option{daemon}) {
+	$No::Worries::Log::Handler = \&No::Worries::Syslog::log2syslog;
+	$No::Worries::Die::Syslog = 1;
+	$No::Worries::Warn::Syslog = 1;
+	syslog_open(ident => $ProgramName, facility => "user");
+	$NeedsCleanup{syslog}++;
+	proc_detach(callback => sub {
+	    printf("%s (pid %d) started\n", $ProgramName, $_[0])
+	});
+	log_debug("detached");
+    }
+    if ($Option{pidfile}) {
+	pf_set($Option{pidfile});
+	$NeedsCleanup{pidfile}++;
+    }
+}
+
+#
+# main loop
+#
+
+sub loop () {
+    my($killed, $count, $proc, $now, $maxtime);
+
+    $SIG{INT}  = sub { log_debug("caught SIGINT");  $killed = 1 };
+    $SIG{QUIT} = sub { log_debug("caught SIGQUIT"); $killed = 1 };
+    $SIG{TERM} = sub { log_debug("caught SIGTERM"); $killed = 1 };
+    $count = 0;
+    while (not $killed and (not $Option{count} or $count < $Option{count})) {
+	# optionally sleep
+	if ($Option{sleep} and $count) {
+	    if ($Option{sleep} <= 1 or not $Option{pidfile}) {
+		# short enough or no pid file, we block
+		Time::HiRes::sleep($Option{sleep});
+	    } else {
+		# too long and pid file, we loop
+		$now = Time::HiRes::time();
+		$maxtime = $now + $Option{sleep};
+		while ($now < $maxtime) {
+		    if (pf_check($Option{pidfile}) eq "quit") {
+			log_debug("told to quit (while sleeping)");
+			last;
+		    }
+		    pf_touch($Option{pidfile});
+		    Time::HiRes::sleep(min(1, $maxtime-$now));
+		    $now = Time::HiRes::time();
+		}
+	    }
+	}
+	# check if we have been told to quit
+	last if $killed;
+	if ($Option{pidfile} and pf_check($Option{pidfile}) eq "quit") {
+	    log_debug("told to quit");
+	    last;
+	}
+	# start a new command
+	$count++;
+	log_debug("starting command: %s", "@ARGV");
+	$proc = proc_create(command => \@ARGV);
+	while (1) {
+	    # monitor the running command
+	    proc_monitor([$proc], timeout => 1);
+	    last if $proc->{stop};
+	    goto kill_child if $killed;
+	    if ($Option{pidfile}) {
+		if (pf_check($Option{pidfile}) eq "quit") {
+		    log_debug("told to quit (while running)");
+		  kill_child:
+		    # hack: mark this process has having reached its timeout
+		    $proc->{maxtime} = Time::HiRes::time();
+		}
+		pf_touch($Option{pidfile});
+	    }
+	}
+	# check for problems
+	dief("command had to be killed: %s", "@ARGV")
+	    if $proc->{timeout};
+	dief("command failed (status %d): %s", $proc->{status}, "@ARGV")
+	    if $proc->{status};
+    }
+}
+
+#
+# cleanup
+#
+
+END {
+    return if $No::Worries::Proc::Transient;
+    log_debug("cleanup");
+    pf_unset($Option{pidfile}) if $NeedsCleanup{pidfile};
+    syslog_close() if $NeedsCleanup{syslog};
+}
+
+#
+# just do it
+#
+
+init();
+loop();
+
+__END__
+
+=head1 NAME
+
+loop - execute the given command in a loop
+
+=head1 SYNOPSIS
+
+B<loop> [I<OPTIONS>] COMMAND...
+
+=head1 DESCRIPTION
+
+By default, this program executes the given command in a loop,
+forever, until the command fails (i.e. return a non zero exit status).
+
+It can optionally sleep between consecutive executions of the command
+(see the B<--sleep> option) and stop after a given number of executions
+(see the B<--count> option).
+
+=head1 OPTIONS
+
+=over
+
+=item B<--count>, B<-c> I<INTEGER>
+
+stop after having executed the command the given number of times
+
+=item B<--daemon>
+
+detach B<loop> so that it becomes a daemon running in the background;
+debug, warning and error messages get sent to syslog
+
+=item B<--debug>, B<-d>
+
+show debugging information
+
+=item B<--help>, B<-h>, B<-?>
+
+show some help
+
+=item B<--manual>, B<-m>
+
+show this manual
+
+=item B<--pidfile> I<PATH>
+
+use this pid file
+
+=item B<--quit>
+
+tell another instance of B<loop> (identified by its pid file, as
+specified by the B<--pidfile> option) to quit
+
+=item B<--sleep>, B<-s> I<NUMBER>
+
+sleep during the given number of seconds between executions of the
+command; can be fractional
+
+=item B<--status>
+
+get the status of another instance of B<loop> (identified by its pid
+file, as specified by the B<--pidfile> option); the exit code will be
+zero if the instance is alive and non-zero otherwise
+
+=back
+
+=head1 AUTHOR
+
+Lionel Cons L<http://cern.ch/lionel.cons>
+
+Copyright CERN 2012

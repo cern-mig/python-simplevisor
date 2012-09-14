@@ -1,0 +1,103 @@
+#! /bin/sh
+
+NAME=${1:-"myinstance"}
+BASE="/var/lib/"
+SHOME=${BASE}${NAME}
+
+if [ -d ${SHOME} ]; then
+    echo "directory ${SHOME} already exists"
+    exit 1
+fi
+
+echo "creating ${SHOME} structure"
+mkdir -p ${SHOME}/bin ${SHOME}/data ${SHOME}/etc
+
+echo -n "changing directory to: "
+pushd ${SHOME}
+cat > bin/service <<EOT
+#!/bin/sh
+#
+# init script that can be symlinked from /etc/init.d
+#
+
+# chkconfig: - 90 15
+# description: ${NAME} - simplevisor instance
+
+. "${SHOME}/etc/simplevisor.profile"
+exec "/usr/bin/simplevisor-control" \${1+"\$@"}
+EOT
+chmod +x bin/service
+echo "$SHOME/bin/service created"
+
+cat > etc/simplevisor.profile <<EOT
+# main
+export SIMPLEVISOR_NAME=${NAME}
+# if you want to run it as another user:
+#export SIMPLEVISOR_USER=games
+export SIMPLEVISOR_CONF=${SHOME}/etc/simplevisor.conf
+export SIMPLEVISOR_PIDFILE=${SHOME}/data/simplevisor.pid
+export SIMPLEVISOR_LOCKFILE=${SHOME}/data/simplevisor.lock
+EOT
+echo "$SHOME/etc/simplevisor.profile created"
+
+cat > etc/simplevisor.conf <<EOT
+<simplevisor>
+    store = ${SHOME}/data/simplevisor.json
+    # log = (print|syslog|simple)
+    log = syslog
+    #logfile = ${SHOME}/log/simplevisor.log
+    # (debug|info|warning|error|critical)
+    loglevel = info
+</simplevisor>
+
+<<include simplevisor.services>>
+EOT
+echo "$SHOME/etc/simplevisor.conf created"
+
+cat > etc/simplevisor.services <<EOT
+<entry>
+  type = supervisor
+  name = ${NAME}
+  <children>
+     <entry>
+        type = service
+        name = httpd
+        expected = running
+        control = /sbin/service httpd
+    </entry>
+    <entry>
+        type = service
+        name = ntpd
+        expected = running
+        control = /sbin/service ntpd
+    </entry>
+ </children>
+</entry>
+EOT
+echo "$SHOME/etc/simplevisor.services created"
+
+echo -n "changing directory to: "
+popd
+
+
+ln -s ${SHOME}/bin/service /etc/init.d/${NAME}
+chkconfig --add ${NAME}
+echo "/etc/init.d/${NAME} created"
+
+echo "
+*******************************
+
+All the supervisor's file live in ${SHOME}
+
+customize the supervisor:
+${SHOME}/etc/simplevisor.conf
+
+declare your services:
+${SHOME}/etc/simplevisor.services
+
+and start the supervisor:
+$ /sbin/service ${NAME} start
+
+for more commands:
+$ /sbin/service ${NAME}
+"

@@ -1,0 +1,372 @@
+#!/usr/bin/python
+"""
+simplevisor prog
+"""
+import argparse
+import os
+import re
+import sys
+
+import simplevisor
+from simplevisor.Simplevisor import Simplevisor, \
+                                    NORMAL_COMMAND, SERVICE_COMMAND
+from simplevisor.utils import read_apache_config
+
+COMMANDS = list(NORMAL_COMMAND)
+COMMANDS.extend(SERVICE_COMMAND)
+COMMANDS.extend(["pod", "rst", "help"])
+COMMANDS = sorted(set(COMMANDS))
+CHECK_ARG_COMMAND_RE = re.compile("(%s)" % "|".join(COMMANDS))
+LOG_SYSTEMS = "null print syslog simple".split()
+CHECK_ARG_LOG_RE = re.compile("(%s)" % "|".join(LOG_SYSTEMS))
+
+PROG = "simplevisor"
+SHORT_DESCRIPTION = "simple daemons supervisor"
+DESCRIPTION = """Simplevisor is a simple daemons supervisor, it is inspired
+by Erlang OTP and it can supervise hierarchies of services.
+
+COMMANDS
+
+If a path is given or only one service entry is given:
+
+for given command X
+    run the service X command where service is the only entry provided
+    or the entry identified by its path
+
+If path is not given and root entry is a supervisor:
+
+start
+    start the simplevisor process which start the supervision.
+    It can be used with --daemon if you want it as daemon
+
+stop
+    stop the simplevisor process and all its children, if running
+    
+status
+    return the status of the simplevisor process
+    
+check
+    return the comparison between the expected state and the actual state.
+    0 -> everything is fine
+    1 -> warning, not expected
+    
+restart
+    stop + start the simplevisor process
+    
+single
+    execute one cycle of supervision and exit.
+    Useful to be run in a cron script
+    
+stop_supervisor
+    stop only the simplevisor process and the supervision
+    
+stop_children
+    stop only the children
+    
+configuration_check
+    just check the configuration
+    
+pod
+    generate pod format help to be used by pod2man to generate man page
+    
+pod
+    generate rst format help to be used in the web doc
+    
+help
+    same as -h/--help, print help page
+
+
+"""
+EXAMPLES = """Create and edit the main configuration file::
+    
+    ## look for simplevisor.conf.example in the examples.
+
+Run it::
+
+    simplevisor --conf /path/to/simplevisor.conf start
+
+to run it in daemon mode::
+
+    simplevisor --conf /path/to/simplevisor.conf --daemon start
+
+For other commands::
+
+    simplevisor --help
+
+Given the example configuration, to start the httpd service::
+
+    simplevisor --conf /path/to/simplevisor.conf start svisor1/httpd
+"""
+
+def check_arg_command(command):
+    """ Check command argument validity. """
+    match = CHECK_ARG_COMMAND_RE.match(command)
+    if match is None:
+        msg = "command must be one of %s" % ",".join(COMMANDS)
+        raise argparse.ArgumentTypeError(msg)
+    return command
+
+class CommandAction(argparse._StoreAction):
+    def __call__(self, parser, namespace, values, option_string=None):
+        if values == "pod":
+            print_pod()
+            sys.exit(0)
+        elif values == "rst":
+            print_rst()
+            sys.exit(0)
+        elif values == "help":
+            parser.print_help()
+            sys.exit(0)
+        super(CommandAction, self).__call__(parser,
+                                            namespace,
+                                            values, option_string=None)
+#        setattr(namespace, self.dest, values)
+
+def check_arg_log(log_type):
+    """ Check log argument validity. """
+    match = CHECK_ARG_LOG_RE.match(log_type)
+    if match is None:
+        msg = "log must be one of %s" % ",".join(LOG_SYSTEMS)
+        raise argparse.ArgumentTypeError(msg)
+    return log_type
+
+ARGUMENTS = {
+    "conf" : {"long" : "--conf",
+              "help" : "configuration file",
+              "required" : True, },
+    "store" : {"long" : "--store",
+               "help" : "file where to store the state"},
+    "interval" : {"long" : "--interval",
+                  "type" : int,
+                  "help" : "interval to wait between supervision cycles"},
+    "log" : {"long" : "--log",
+             "help" : "available: %s" % ", ".join(LOG_SYSTEMS),
+             "type" : check_arg_log},
+    "logfile" : {"long" : "--logfile",
+                 "help" : "log file, ONLY for simple"},
+    "loglevel" : {"long" : "--loglevel",
+                  "help" : "log level, ONLY for simple and print"},
+    "daemon" : {"long" : "--daemon",
+                "help" : "daemonize, ONLY with start",
+                "action" : "store_true"},
+    "pidfile" : {"short" : "-p",
+             "long" : "--pidfile",
+             "help" : "the pidfile"},
+    "help" : {"short" : "-h",
+              "long" : "--help",
+              "action" : "help",
+              "help" : "print the help page"},
+    "version" : {"long" : "--version",
+                 "action" : "version",
+                 "version" : "%s %s" % (PROG, simplevisor.VERSION),
+                 "help" : "print the program version"},
+    "command" : {"positional" : True,
+                 "long" : "command",
+                 "type" : check_arg_command,
+                 "action" : CommandAction,
+                 "help" : "%s" % ", ".join(COMMANDS)
+                },
+    "path" : {"positional" : True,
+              "long" : "path",
+              "nargs" : "?",
+              "help" : "path to a service, subset of commands available: %s" %
+                       ", ".join(SERVICE_COMMAND)
+              },
+            }
+
+DEFAULT_OPTIONS = {
+                  "daemon"      : False,
+                  "log"         : "syslog",
+                  "loglevel"    : "warning",
+                  "interval"    : 60,
+                  "path"        : None,
+                  "pidfile"     : None,
+                  "store"       : None, }
+        
+def get_parser():
+    """ Create the parser. """
+    parser = argparse.ArgumentParser(
+                prog=PROG,
+                description="%s\n\nEXAMPLES\n\n%s\n\nOPTIONS\n" % \
+                			(DESCRIPTION, EXAMPLES),
+                epilog="AUTHOR\n\n%s - %s" % \
+                		(simplevisor.AUTHOR, simplevisor.COPYRIGHT),
+                argument_default=argparse.SUPPRESS,
+                formatter_class=lambda prog:
+                                    argparse.RawDescriptionHelpFormatter(
+                                                prog,max_help_position=33))
+    for name, elopts in ARGUMENTS.items():
+        if name == "help":
+            continue
+        t_args = list()
+        t_kwargs = elopts.copy()
+        for arg in ["short", "long"]:
+            if arg in t_kwargs:
+                t_args.append(t_kwargs.pop(arg))
+        t_kwargs.pop("positional", None)
+        parser.add_argument(*t_args, **t_kwargs)
+    return parser
+    
+def read_args():
+    """ Read the arguments. """
+    return vars(get_parser().parse_args())
+
+def print_rst():
+    """ Print the rst for the web page. """
+    out =  "simplevisor command\n"
+    out += "===================\n\n"
+    out += "%s %s - %s\n\n" % (PROG,
+                               simplevisor.VERSION, SHORT_DESCRIPTION,)
+    out += "SYNOPSIS\n"
+    out += "--------\n\n"
+    out += "**%s**\n" % PROG
+    positional = ""
+    optional = ""
+    for _, elopts in sorted(ARGUMENTS.iteritems()):
+        if elopts.get("positional", False):
+            if elopts.get("nargs", None) == "?":
+                positional += "[%s] " % (elopts.get("long"),)
+            else:
+                positional = "%s " % (elopts.get("long"),) + positional
+        else:
+            if elopts.get("action", None) is None:
+                sname = " %s" % elopts.get("long").replace("-", "").upper()
+            else:
+                sname = ""
+            if elopts.get("required ", False):
+                optional += ("%s%s" %
+                        (elopts.get("short", elopts.get("long")), sname))
+            else:
+                optional += "[%s%s] " % \
+                        (elopts.get("short", elopts.get("long")), sname)
+    out += "%s\n" % optional
+    out += "%s\n\n" % positional
+    out += "DESCRIPTION\n"
+    out += "-----------\n\n"
+    out += "%s\n\n" % DESCRIPTION
+    out += "OPTIONS\n"
+    out += "-------\n\n"
+    positional = ""
+    optional = ""
+    for _, elopts in sorted(ARGUMENTS.iteritems()):
+        if elopts.get("positional", False):
+            part = "**%s**\n\t%s\n\n" % (elopts.get("long"),
+                                        elopts.get("help"))
+            if elopts.get("nargs", None) == "?":
+                positional += part
+            else:
+                positional = part + positional
+        else:
+            optional += "**"
+            if "short" in elopts:
+                optional += "%s, " % elopts["short"]
+            optional += elopts["long"]
+            if elopts.get("action", None) is None:
+                optional += " %s" % elopts.get("long").replace("-", "").upper()
+            else:
+                optional += ""
+            optional += "**\n\t%s\n\n" % elopts.get("help", "")
+    out += "**positional arguments:**\n\n"
+    out += positional
+    out += "**optional arguments:**\n\n"
+    out += optional
+    for title, text in [("EXAMPLES", EXAMPLES),
+                        ("AUTHOR", "%s - %s" % (simplevisor.AUTHOR,
+                                                simplevisor.COPYRIGHT))]:
+        out += "%s\n%s\n\n%s\n\n" % (title, len(title) * "-", text)
+    out = out.replace("<{LIST_BEGIN}>", "")\
+             .replace("<{LIST_END}>", "")
+    print(out)
+
+def print_pod():
+    """ Print the pod for the man page. """
+    out = "=head1 NAME\n\n"
+    out += "%s %s - %s\n\n" % (PROG,
+                               simplevisor.VERSION, SHORT_DESCRIPTION,)
+    out += "=head1 SYNOPSIS\n\n"
+    out += "B<%s>\n" % PROG
+    positional = ""
+    optional = ""
+    for _, elopts in sorted(ARGUMENTS.iteritems()):
+        if elopts.get("positional", False):
+            if elopts.get("nargs", None) == "?":
+                positional += "[%s]" % (elopts.get("long"),)
+            else:
+                positional = "%s " % (elopts.get("long"),) + positional
+        else:
+            if elopts.get("action", None) is None:
+                sname = " %s" % elopts.get("long").replace("-", "").upper()
+            else:
+                sname = ""
+            if elopts.get("required", False):
+                optional += ("%s%s" %
+                        (elopts.get("short", elopts.get("long")), sname))
+            else:
+                optional += "[%s%s]" % \
+                        (elopts.get("short", elopts.get("long")), sname)
+    out += "%s\n" % optional
+    out += "%s\n\n" % positional
+    out += "=head1 DESCRIPTION\n\n"
+    out += "%s\n\n" % DESCRIPTION
+    out += "=head1 OPTIONS\n\n"
+    positional = ""
+    optional = ""
+    for _, elopts in sorted(ARGUMENTS.iteritems()):
+        if elopts.get("positional", False):
+            part = "B<%s> %s\n\n" % (elopts.get("long"),
+                                        elopts.get("help"))
+            if elopts.get("nargs", None) == "?":
+                positional += part
+            else:
+                positional = part + positional
+        else:
+            optional += "B<"
+            if "short" in elopts:
+                optional += "%s, " % elopts["short"]
+            optional += elopts["long"]
+            if elopts.get("action", None) is None:
+                optional += " %s" % elopts.get("long").replace("-", "").upper()
+            else:
+                optional += ""
+            optional += "> %s\n\n" % elopts.get("help", "")
+    out += "B<positional arguments:>\n<{LIST_BEGIN}>\n"
+    out += positional
+    out += "<{LIST_END}>\n"
+    out += "B<optional arguments:>\n<{LIST_BEGIN}>\n\n"
+    out += optional
+    out += "<{LIST_END}>\n"
+    for title, text in [("EXAMPLES", EXAMPLES),
+                        ("AUTHOR", "%s - %s" % (simplevisor.AUTHOR,
+                                                simplevisor.COPYRIGHT))]:
+        out += "=head1 %s\n\n%s\n\n" % (title, text)
+    out = out.replace("::", ":")\
+             .replace("**%s**" % PROG, "B<%s>" % PROG)\
+             .replace("<{LIST_BEGIN}>", "\n=over\n")\
+             .replace("<{LIST_END}>", "\n=back\n")\
+             .replace("\n- ", "\n=item *\n\n")
+    print(out)
+
+def check_restrictions(arguments):
+    """ Check arguments restriction. """
+    if (arguments["daemon"] and
+        arguments["path"] is not None and
+        arguments["command"] != "start") :
+        raise argparse.ArgumentTypeError(
+                "daemon option make sense only with start command")
+
+def merge_(first, second):
+    """ Merge two dictionaries. """
+    merge = first.copy()
+    merge.update(second)
+    return merge
+
+if __name__ == "__main__":
+    args = read_args()
+    conf = read_apache_config(os.path.abspath(args.get("conf", None)))
+    entry = conf.get("entry", None)
+    merged = conf.get("simplevisor", dict())
+    merged = merge_(DEFAULT_OPTIONS, merged)
+    merged = merge_(merged, args)
+    check_restrictions(merged)
+    svisor = Simplevisor(merged, entry)
+    svisor.work()
