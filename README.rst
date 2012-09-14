@@ -1,8 +1,16 @@
-simplevisor
+==================
+python-simplevisor
+==================
+
+.. image:: https://secure.travis-ci.org/mpaladin/python-simplevisor.png?branch=master
+
+Overview
+========
 
 This module offers a simple supervisor to run daemons.
 
-INSTALLATION
+Install
+=======
 
 To install this module, run the following command:
 
@@ -12,12 +20,17 @@ To test this module, run the following command:
 
     python setup.py test
 
-SUPPORT AND DOCUMENTATION
+Support and documentation
+=========================
+
 
 After installing, you can find documentation for this module with the
-standard python help function command.
+standard python help function command or at:
 
-LICENSE AND COPYRIGHT
+    http://mpaladin.web.cern.ch/mpaladin/python/simplevisor/
+
+License and Copyright
+=====================
 
 Copyright (C) 2012 CERN
 

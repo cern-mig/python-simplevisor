@@ -1,4 +1,4 @@
-include LICENSE README CHANGES
+include LICENSE README.rst CHANGES
 include examples/*.example
 include examples/other_service.conf
 include examples/simplevisor-new-instance
