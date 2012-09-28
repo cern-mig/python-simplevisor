@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 #+##############################################################################
 #                                                                              #
-# File: loop                                                                   #
+# File: simplevisor-loop                                                       #
 #                                                                              #
 # Description: execute the given command in a loop                             #
 #                                                                              #
@@ -183,11 +183,11 @@ __END__
 
 =head1 NAME
 
-loop - execute the given command in a loop
+simplevisor-loop - execute the given command in a loop
 
 =head1 SYNOPSIS
 
-B<loop> [I<OPTIONS>] COMMAND...
+B<simplevisor-loop> [I<OPTIONS>] COMMAND...
 
 =head1 DESCRIPTION
 
@@ -208,7 +208,7 @@ stop after having executed the command the given number of times
 
 =item B<--daemon>
 
-detach B<loop> so that it becomes a daemon running in the background;
+detach B<simplevisor-loop> so that it becomes a daemon running in the background;
 debug, warning and error messages get sent to syslog
 
 =item B<--debug>, B<-d>
@@ -229,7 +229,7 @@ use this pid file
 
 =item B<--quit>
 
-tell another instance of B<loop> (identified by its pid file, as
+tell another instance of B<simplevisor-loop> (identified by its pid file, as
 specified by the B<--pidfile> option) to quit
 
 =item B<--sleep>, B<-s> I<NUMBER>
@@ -239,7 +239,7 @@ command; can be fractional
 
 =item B<--status>
 
-get the status of another instance of B<loop> (identified by its pid
+get the status of another instance of B<simplevisor-loop> (identified by its pid
 file, as specified by the B<--pidfile> option); the exit code will be
 zero if the instance is alive and non-zero otherwise
 

@@ -1,15 +1,15 @@
 """
-Licensed under the Apache License, Version 2.0 (the "License"); 
-you may not use this file except in compliance with the License. 
-You may obtain a copy of the License at 
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0 
+    http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software 
-distributed under the License is distributed on an "AS IS" BASIS, 
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, 
-either express or implied. 
-See the License for the specific language governing permissions and 
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+either express or implied.
+See the License for the specific language governing permissions and
 limitations under the License.
 
 
@@ -34,6 +34,7 @@ TimedProcessSets = ((None, "sleep 1", 10, (0, ''.encode(), ''.encode())),
                     (sutils.ProcessTimedout, "sleep 5", 1, None),
                     (sutils.ProcessError, "skjghdjskhfgkdf", 5, None),)
 
+
 class UtilsTest(unittest.TestCase):
 
     def setUp(self):
@@ -43,7 +44,7 @@ class UtilsTest(unittest.TestCase):
             os.mkdir(TestDir)
         except:
             pass
-    
+
     def tearDown(self):
         """ Restore the test environment. """
         shutil.rmtree(TestDir, True)
@@ -64,14 +65,14 @@ class UtilsTest(unittest.TestCase):
         if got == error:
             if result_got != result:
                 raise AssertionError(
-                    "command %s was expected to return %s, it returned %s" % 
+                    "command %s was expected to return %s, it returned %s" %
                     (command, result, result_got, ))
         else:
             raise AssertionError(
-                    "command %s was expected to fail with error: %s" % 
-                    (command, error, ))
+                "command %s was expected to fail with error: %s" %
+                (command, error, ))
         print("...test timed_process ok")
-        
+
 
 if __name__ == "__main__":
-    unittest.main()  
+    unittest.main()

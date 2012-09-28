@@ -34,14 +34,14 @@ Parameters
 *expected*
     expected state of the service.
     Valid values are *running* and *stopped*.
-  
+
 *name*
     unique name of the *worker/service*.
 
 *path*
     the path for executing the commands.
     Multiple values should be separated by colons.
-  
+
 *pattern*
     used to look for the service in the process table for stop and status
     commands if they are not specified and control is also not specified.
@@ -49,56 +49,56 @@ Parameters
 *restart*
     specify a custom restart command.
     If <control> is specified:
-    
+
         - if <restart> is not specified "<control> restart" is executed
         - if <restart> = "stop+start" a "<control> stop" followed by a
           "<control> start" is executed
         - else "<restart>" is executed
-        
+
     If <control> is not specified:
-    
+
         - if <restart> is not specified a "<control> stop" followed by a
           "<control> start" is executed
         - else "<restart>" is executed
-  
+
 *start*
     specify a custom start command.
     If <control> is specified:
-    
+
         - if <start> is not specified "<control> start" is executed
         - else "<start>" is executed
-        
+
     If <control> is not specified:
-    
+
         - "<start>" is executed
-  
+
 *status*
     specify a custom status command.
     If <control> is specified:
-    
+
         - "<control> status" is executed
-        
+
     If <control> is not specified:
-    
+
         - if <status> is specified "<status>" is executed
         - else it will look for it in the process table either looking
           for the start command or the provided pattern.
-    
-    Status commands are expected to exit with return code according to    
+
+    Status commands are expected to exit with return code according to
     the following following:
-    
+
     - *0:* the service is running fine
     - *3:* the service is stopped
     - *other:* return code is interpreted as dirty/zombie/hang state
-  
+
 *stop*
     specify a custom stop command.
     If <control> is specified:
-    
+
         - "<control> stop" is executed
-        
+
     If <control> is not specified:
-    
+
         - if <stop> is specified "<stop>" is executed
         - else it will look for it in the process table either looking
           for the start command or the provided pattern and then kill it.
@@ -132,11 +132,12 @@ from simplevisor import utils
 
 MAXIMUM_LOG = 100
 
+
 class Service(object):
     """
     Service class.
     """
-    
+
     def __init__(self, name, expected="running",
                  timeout=10,
                  control=None, path=None, pattern=None,
@@ -147,18 +148,18 @@ class Service(object):
                                      "control or a start parameter: %s" %
                                      name)
         self.name = name
-        self._opts = {"name"    : name,
-                      "expected"  : expected,
-                      "control"  : control,
-                      "path"    : path,
-                      "pattern" : pattern,
-                      "restart" : restart,
-                      "start"   : start,
-                      "status"  : status,
-                      "stop"    : stop,
-                      "timeout" : timeout, }
-        self._status = {"name"  : name,
-                        "log"   : list(),
+        self._opts = {"name": name,
+                      "expected": expected,
+                      "control": control,
+                      "path": path,
+                      "pattern": pattern,
+                      "restart": restart,
+                      "start": start,
+                      "status": status,
+                      "stop": stop,
+                      "timeout": timeout, }
+        self._status = {"name": name,
+                        "log": list(),
                         }
         self.is_new = True
         if control is None and status is None:
@@ -178,7 +179,7 @@ class Service(object):
                 error = sys.exc_info()[1]
                 msg = "%s service pattern not valid: %s" % error
                 raise ConfigurationError(msg)
-            
+
     def get_child(self, path):
         """
         Return a child by its path.
@@ -187,42 +188,42 @@ class Service(object):
         if first == self.name:
             return self
         raise ValueError("not found")
-    
+
     def get_cmd(self, subcmd):
         """
         Return a command given the sub command.
         """
         base = []
-        if self._opts["control"] is not None: # standard use case
+        if self._opts["control"] is not None:  # standard use case
             if self._opts[subcmd] is None:
                 base = self._opts["control"].split()
                 base.append(subcmd)
             else:
                 base = self._opts[subcmd].split()
-        else: # other use case
+        else:  # other use case
             base = self._opts[subcmd].split()
         return base
-        
+
     def __execute(self, cmd):
         """ Execute the given command. """
         env = None
         if self._opts["path"] is not None:
-            env = {"PATH" : self._opts["path"]}
+            env = {"PATH": self._opts["path"]}
         try:
             log.LOG.debug("executing %s" % " ".join(cmd))
             result = utils.timed_process(cmd, self._opts["timeout"], env)
             log.LOG.debug("%s returned: %s" % (" ".join(cmd), result))
             return result
         except utils.ProcessTimedout:
-            log.LOG.error("%s timedout %d seconds" % (" ".join(cmd),
-                                                 self._opts["timeout"]))
+            log.LOG.error("%s timedout %d seconds" %
+                          (" ".join(cmd), self._opts["timeout"]))
             return (1, "", "timeout")
         except utils.ProcessError:
             error = sys.exc_info()[1]
-            log.LOG.error("error running %s: %s" % (" ".join(cmd),
-                                                error))
+            log.LOG.error("error running %s: %s" %
+                          (" ".join(cmd), error))
             return (1, "", "%s" % error)
-    
+
     def adjust(self, timeout=5):
         """
         Start/stop according to expected status.
@@ -245,11 +246,11 @@ class Service(object):
                              (self._opts["name"], result))
                 self._status_log("start", result)
                 to_verify = True
-        else: # unknown/dead/hang...
+        else:  # unknown/dead/hang...
             stop_res = self.stop()
             self._status_log("stop", stop_res)
             log.LOG.info("%s stopped for cleaning %s" %
-                     (self._opts["name"], stop_res))
+                         (self._opts["name"], stop_res))
             if self._opts["expected"] == "running":
                 result = self.start()
                 log.LOG.info("%s started with %s" %
@@ -267,7 +268,7 @@ class Service(object):
                              self._opts["name"])
             raise ConfigurationError("service %s could not be adjusted." %
                                      self._opts["name"])
-        
+
     def start(self):
         """
         This method takes care of starting the service using the
@@ -276,12 +277,12 @@ class Service(object):
         result = self.__execute(self.get_cmd("start"))
         self._status_log("start", result)
         return result
-    
+
     def stop(self):
         """
         This method takes care of stopping the service which means
         it will run the stop command if provided.
-        
+
         If not provided the process id will be looked in the process
         table and the process will be killed with a *SIGTERM* signal
         first and with a *SIGKILL* signal if it fails to stop.
@@ -291,29 +292,29 @@ class Service(object):
             if pid_info is None:
                 result = (0, "", "")
                 log.LOG.info("%s already stopped" %
-                         (self._opts["name"], ))
+                             (self._opts["name"], ))
             else:
                 pids = [x[0] for x in pid_info]
                 utils.kill_pids(pids, self._opts["timeout"])
                 log.LOG.info("%s killed by killing processes: %s" %
-                         (self._opts["name"],
-                          " ".join(map(str, pids))))
+                             (self._opts["name"],
+                             " ".join(map(str, pids))))
                 result = (0, "", "")
         else:
             result = self.__execute(self.get_cmd("stop"))
         self._status_log("stop", result)
         return result
-    
+
     def status(self):
         """
         This method return the status of the service.
-        
+
         The status of a service is determined using the status command.
-        
+
         If no status command is provided, the status of the process will
         be looked in the process table if any search pattern has been
         provided.
-        
+
         In case a pattern is not provided the start command will be
         used as pattern.
         """
@@ -329,7 +330,7 @@ class Service(object):
             result = self.__execute(self.get_cmd("status"))
         self._status_log("status", result)
         return result
-    
+
     def check(self):
         """
         This method check the service status against the expected one.
@@ -343,32 +344,32 @@ class Service(object):
             elif status == 3:
                 check_status = False
                 output = "%s: WARNING, not running, not expected" % \
-                            (self.name, )
+                         (self.name, )
             else:
                 check_status = False
                 output = "%s: WARNING, in \"dirty\" state: %d" % \
-                            (self.name, status)
+                         (self.name, status)
         else:
             if status == 0:
                 check_status = False
                 output = "%s: WARNING, found running, not expected" % \
-                            (self.name, )
+                         (self.name, )
             elif status == 3:
                 output = "%s: OK, not running, as expected" % \
-                            (self.name, )
+                         (self.name, )
             else:
                 check_status = False
                 output = "%s: WARNING, in \"dirty\" state: %d" % \
-                            (self.name, status)
+                         (self.name, status)
         return (check_status, [output, ])
-    
+
     def restart(self):
         """
         This method takes care of restarting the service.
-        
+
         If the service does not have a restart command the service will be
         restarted doing a *stop+start*.
-        
+
         If the service does have a restart command this will be used in
         order to restart the service.
         """
@@ -379,7 +380,7 @@ class Service(object):
         else:
             if self._opts["restart"] is None:
                 restart_cmd = False
-        
+
         if restart_cmd:
             result = self.__execute(self.get_cmd("restart"))
             log.LOG.info("%s restarted with %s" % (self.name, result))
@@ -392,37 +393,37 @@ class Service(object):
             log.LOG.info("%s stop+start with %s" % (self.name, rjoint))
             self._status_log("stop+start", rjoint)
             return rjoint
-        
+
     def pidof(self):
         """ Return the pid of the service. """
         pat_re = self._opts.get("pattern_re", None)
         if pat_re is not None:
             return utils.pidof(pat_re)
         return None
-        
+
     def _status_log(self, operation, output):
         """
         Log the operation output.
         """
         self._status.setdefault("log", list())
-        self._status["log"].append({"time" : time.time(),
-                                    "operation" : operation,
-                                    "output" : output})
+        self._status["log"].append({"time": time.time(),
+                                    "operation": operation,
+                                    "output": output})
         self._status["log"] = self._status["log"][-MAXIMUM_LOG:]
-        
+
     def is_enabled(self):
         """
         Return *True* if the service is expected to run,
         *False* in other case.
         """
         return self._opts["expected"] == "running"
-    
+
     def __str__(self):
         """
         Return the string representation.
         """
         return "service %s" % self._opts["name"]
-            
+
     def get_id(self):
         """
         Return the id of the service.
@@ -431,7 +432,7 @@ class Service(object):
                                 self._opts["expected"],
                                 " ".join(self.get_cmd("start")),)
         return utils.md5_hash(text_id).hexdigest()
-    
+
     def load_status(self, status):
         """
         Load the status from the previous run.
@@ -440,7 +441,7 @@ class Service(object):
             return
         self.is_new = False
         self._status = status
-            
+
     def dump_status(self):
         """
         Return the status to be saved for future runs.
@@ -449,4 +450,3 @@ class Service(object):
         if "log" in self._status:
             del(self._status["log"])
         return self._status
-    

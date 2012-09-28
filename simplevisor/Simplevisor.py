@@ -21,7 +21,7 @@ from simplevisor.service import Service
 from simplevisor import service, supervisor
 import simplevisor.utils as utils
 from simplevisor.utils import pid_check, pid_quit, pid_read, pid_remove, \
-                                pid_status, pid_touch, pid_write
+    pid_status, pid_touch, pid_write
 
 import pprint
 PP = pprint.PrettyPrinter(indent=2)
@@ -32,10 +32,11 @@ NORMAL_COMMAND.remove("restart")
 NORMAL_COMMAND.extend(["single", "stop_supervisor", "stop_children",
                        "configuration_check"])
 
+
 class Simplevisor(object):
     """ Simplevisor class. """
     prog = "simplevisor"
-        
+
     def __init__(self, config=dict(), entry_config=None):
         """ Initialize Simplevisor. """
         if type(config) != dict:
@@ -49,7 +50,7 @@ class Simplevisor(object):
         self.entry_config = entry_config
         self.running = False
         self.child = supervisor.new_child(self.entry_config)
-        
+
     def get_child(self, path=""):
         """ Return child by its path. """
         path_list = path.split("/")
@@ -64,7 +65,7 @@ class Simplevisor(object):
             except StandardError:
                 pass
         raise ValueError("given path is invalid: %s" % path)
-    
+
     @utils.log_exceptions(re_raise=False)
     def work(self):
         """ Controller. """
@@ -73,7 +74,7 @@ class Simplevisor(object):
         if path is None and isinstance(self.child, Supervisor):
             self.initialize_log()
             self.load_status()
-            action = getattr(self, command) 
+            action = getattr(self, command)
             action()
             return
         if command not in SERVICE_COMMAND:
@@ -93,13 +94,13 @@ class Simplevisor(object):
         else:
             log.LOG.debug("calling %s.%s" % (target.name, command))
             getattr(target, command)()
-    
+
     def configuration_check(self):
         """ Check only the configuration. """
         # so far so good
         print("Configuration is valid.")
         sys.exit(0)
-        
+
     def on_signal(self, signum, _):
         """ Handle signals. """
         if signum == signal.SIGINT:
@@ -110,7 +111,7 @@ class Simplevisor(object):
             self.running = False
         elif signum == signal.SIGHUP:
             log.LOG.info("caught SIGHUP, ignoring it")
-        
+
     def start(self):
         """ Do start action. """
         signal.signal(signal.SIGINT, self.on_signal)
@@ -124,7 +125,7 @@ class Simplevisor(object):
         self.run()
         if self.config.get("pidfile"):
             pid_remove(self.config.get("pidfile"))
-        
+
     def single(self):
         """ Do single action. """
         if self.config.get("pidfile"):
@@ -133,7 +134,7 @@ class Simplevisor(object):
         self.run()
         if self.config.get("pidfile"):
             pid_remove(self.config.get("pidfile"))
-        
+
     def stop(self, action="quit"):
         """ Quit the process. """
         if not self.config.get("pidfile"):
@@ -155,21 +156,21 @@ class Simplevisor(object):
                 os.kill(pid, 0)
             except OSError:
                 print("%s (pid %d) does not seem to be running anymore" %
-                        (self.prog, pid))
+                      (self.prog, pid))
                 sys.exit(0)
         pid_quit(self.config["pidfile"], self.prog)
         sys.exit(0)
-        
+
     def stop_supervisor(self):
         """ Tell the supervisor to stop without touching the children. """
         self.stop("stop_supervisor")
-        
+
     def stop_children(self):
         """ Tell the supervisor to stop without touching the children. """
         if not self.config.get("pidfile"):
             raise ConfigurationError("status requires a pidfile")
         self.send_action("stop_children")
-        
+
     def send_action(self, action="stop_children"):
         """ Tell the supervsisor to execute an action. """
         if not self.config.get("pidfile"):
@@ -181,21 +182,21 @@ class Simplevisor(object):
             pid_write(self.config["pidfile"], pid, action)
         elif pid is not None:
             print("%s does not seem to be running anymore" %
-                        (self.prog, ))
-        
+                  (self.prog, ))
+
     def restart(self):
         """ Restart not accepted. """
         raise ConfigurationError(
-                    "restart command is accepted only with a path")
-        
+            "restart command is accepted only with a path")
+
     def check(self, child=None):
         """
         Confront the expected status with the real status of
         the children aggregating them and return code associated
         with the state.
-        
+
         0 if everything is fine.
-        
+
         1 if status is unexpected.
         """
         child = child or self.child
@@ -205,7 +206,7 @@ class Simplevisor(object):
             sys.exit(0)
         else:
             sys.exit(1)
-    
+
     def status(self):
         """ Do status action. """
         if not self.config.get("pidfile"):
@@ -213,23 +214,23 @@ class Simplevisor(object):
         (status, message) = pid_status(self.config["pidfile"], 60)
         print("%s %s" % (status, message))
         sys.exit(status)
-        
+
     def initialize_log(self, stdout=False):
         """ Initialize the log.LOG. """
         if stdout:
             log.LOG = get_log("print")("simplevisor", **self.config)
         else:
             log.LOG = get_log(self.config.get("log", "print"))("simplevisor",
-                                                                **self.config)
-        
+                                                               **self.config)
+
     def load_status(self):
         """ Load saved status. """
         if self.status_file is not None:
             old_status = self.read_status()
             if old_status is not None:
                 self.child.load_status(
-                        old_status.get(self.child.get_id(), None))
-            
+                    old_status.get(self.child.get_id(), None))
+
     def read_status(self):
         """ Read the status from the specified file. """
         try:
@@ -245,7 +246,7 @@ class Simplevisor(object):
         except IOError:
             # log.LOG.info("status file not found, continuing.")
             pass
-        
+
     def save_status(self):
         """ Save the status in the specified file. """
         if self.status_file is None:
@@ -255,13 +256,13 @@ class Simplevisor(object):
             log.LOG.debug("status file: %s" % self.status_file)
             staus_f = open(self.status_file, "w")
             try:
-                status = { self.child.get_id() : self.child.dump_status() }
+                status = {self.child.get_id(): self.child.dump_status()}
                 json.dump(status, staus_f)
                 log.LOG.debug("status saved: %s" % status)
             except StandardError:
-                type, error, _ = sys.exc_info()
+                error_type, error, _ = sys.exc_info()
                 msg = "error writing status file %s: %s - %s" % \
-                      (self.status_file, type, error)
+                      (self.status_file, error_type, error)
                 log.LOG.error(msg)
                 raise ConfigurationError(msg)
             staus_f.close()
@@ -271,19 +272,19 @@ class Simplevisor(object):
                   (self.status_file, error)
             log.LOG.error(msg)
             raise IOError(msg)
-        
+
     def sleep_interval(self, default=60):
         """ Return the interval between every supervision run. """
         if type(self.config.get("interval", default)) != int:
             try:
                 self.config["interval"] = int(self.config.get("interval",
-                                                             default))
+                                                              default))
             except ValueError:
                 msg = "interval must be an integer"
                 log.LOG.error(msg)
                 raise ValueError(msg)
         return self.config.get("interval", default)
-    
+
     def pre_run(self):
         """ Before detaching. """
         if isinstance(self.child, service.Service):
@@ -291,7 +292,7 @@ class Simplevisor(object):
             sys.exit(rcode)
         self.child.adjust()
         log.LOG.debug("all elements adjusted")
-    
+
     def run(self):
         """ Coordinate the job. """
         log.LOG.info("supervisor started")

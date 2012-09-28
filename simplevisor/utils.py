@@ -19,27 +19,29 @@ try:
 except ImportError:
     import md5
     md5_hash = md5.md5
-    
+
 try:
     import simplejson as json
 except ImportError:
     import json
 
-CHECK_TIME = 0.05 # milliseconds
+CHECK_TIME = 0.05  # milliseconds
+
 
 def read_apache_config(path):
     """
     Read Apache style config files.
     """
     cmd = "perl -e 'use Config::General qw(ParseConfig);" + \
-            "use JSON qw(to_json);print(to_json({ParseConfig(" + \
-            "-ConfigFile => $ARGV[0])}))' %s" % (path, )
+          "use JSON qw(to_json);print(to_json({ParseConfig(" + \
+          "-ConfigFile => $ARGV[0])}))' %s" % (path, )
     proc = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
     out, err = proc.communicate()
     if err:
         raise ValueError(err)
     data = json.loads(out)
     return data
+
 
 def merge_status(main, other):
     """
@@ -49,6 +51,7 @@ def merge_status(main, other):
     new_out = "%s%s" % (main[1], other[1])
     new_err = "%s%s" % (main[2], other[2])
     return (new_code, new_out, new_err)
+
 
 def print_nested_list(items, level=0, indent=2):
     """
@@ -60,11 +63,12 @@ def print_nested_list(items, level=0, indent=2):
         else:
             print("%s%s" % (level * indent * " ", item))
 
+
 def pidof(pattern_re):
     """
     Given a compiled :py:mod:`re` return a tuple containing the *pid* and
     the *command line* of the process matching it.
-    
+
     If multiple processes match the pattern a list of tuple containing
     the *pid* and the *command line* is returned.
     """
@@ -83,11 +87,12 @@ def pidof(pattern_re):
         return pids_info
     else:
         return None
-    
+
+
 def kill_pids(pids, timeout=5):
     """
     Kill the pids in the list.
-    
+
     It will first send a SIGTERM to all the given *pids*, if the timeout
     expires and processes are still running they are killed with a
     brutal SIGKILL.
@@ -113,39 +118,42 @@ def kill_pids(pids, timeout=5):
             # process already gone
             pass
 
+
 class ProcessTimedout(Exception):
     """
     Raised if a process timeout.
     """
-    
+
+
 class ProcessError(Exception):
     """
     Raised if a process fail.
     """
+
 
 def timed_process(args, timeout=None, env=None):
     """
     Execute a command using :py:mod:`subprocess` module,
     if timeout is specified the process is killed if it does
     not terminate in the maxim required time.
-    
+
     Parameters:
-    
+
     args
         the command to run, in a list format
-        
+
     timeout
         the maximumt time to wait for the process to terminate
         before killing it
-    
+
     env
         a dictionary representing the environment
     """
     if env is None:
-        env = { "PATH" : "/usr/bin:/usr/sbin:/bin:/sbin" }
+        env = {"PATH": "/usr/bin:/usr/sbin:/bin:/sbin"}
     try:
         proc = Popen(args, stdout=PIPE, stderr=PIPE, shell=False,
-                  env=env)
+                     env=env)
     except OSError:
         error = sys.exc_info()[1]
         raise ProcessError("OSError %s" % error)
@@ -165,14 +173,15 @@ def timed_process(args, timeout=None, env=None):
         except AttributeError:
             try:
                 os.kill(proc.pid, signal.SIGKILL)
-            except OSError: # process already gone
+            except OSError:  # process already gone
                 pass
         raise ProcessTimedout("Process %s timed out after %s seconds." %
                               (" ".join(args), timeout))
     else:
         out, err = proc.communicate()
         return (proc.poll(), out, err)
-    
+
+
 def send_signal(daemon, sig):
     """ Send a signal to the pid of the given daemon. """
     pid = daemon.readpid()
@@ -189,34 +198,35 @@ def send_signal(daemon, sig):
             print(str(error))
             sys.exit(1)
 
+
 #### Daemon helper
 def daemonize():
     """ Daemonize. UNIX double fork mechanism. """
-    try: 
-        pid = os.fork() 
+    try:
+        pid = os.fork()
         if pid > 0:
             # exit first parent
-            sys.exit(0) 
+            sys.exit(0)
     except OSError:
         error = sys.exc_info()[1]
         sys.stderr.write("fork #1 failed: %d (%s)\n"
                          % (error.errno, error.strerror))
         sys.exit(1)
     # decouple from parent environment
-    os.chdir('/') 
-    os.setsid() 
-    os.umask(0) 
+    os.chdir('/')
+    os.setsid()
+    os.umask(0)
     # do second fork
-    try: 
-        pid = os.fork() 
+    try:
+        pid = os.fork()
         if pid > 0:
             # exit from second parent
-            sys.exit(0) 
+            sys.exit(0)
     except OSError:
         error = sys.exc_info()[1]
         sys.stderr.write("fork #2 failed: %d (%s)\n"
                          % (error.errno, error.strerror))
-        sys.exit(1) 
+        sys.exit(1)
     sys.stdout.flush()
     sys.stderr.flush()
     stdin = open(os.devnull, 'r')
@@ -226,10 +236,12 @@ def daemonize():
     os.dup2(stdout.fileno(), sys.stdout.fileno())
     os.dup2(stderr.fileno(), sys.stderr.fileno())
 
+
 #### PID helpers
 class PIDError(Exception):
     """ PID related errors. """
-    
+
+
 def pid_read(path, action=False):
     """ Return the pid content. """
     content = (None, None)
@@ -253,6 +265,7 @@ def pid_read(path, action=False):
         return content
     return content[0]
 
+
 def pid_touch(path):
     """ Touch the pid. """
     try:
@@ -261,6 +274,7 @@ def pid_touch(path):
         raise OSError("cannot utime pidfile %s" % path)
     else:
         return True
+
 
 def pid_write(path, pid, action=None, excl=False):
     """ Write content to the pid. """
@@ -286,6 +300,7 @@ def pid_write(path, pid, action=None, excl=False):
         return pid
     return None
 
+
 def pid_check(path):
     """ Check the pid content and return the action if present. """
     (pid, action) = pid_read(path, True)
@@ -298,7 +313,8 @@ def pid_check(path):
     if action is None:
         return ""
     return action
-    
+
+
 def pid_quit(path, program=""):
     """ Write quit to the pid. """
     pid = pid_read(path)
@@ -306,7 +322,7 @@ def pid_quit(path, program=""):
         return
     if pid:
         if program:
-            print("%s (pid %d) is being told to quit..." % 
+            print("%s (pid %d) is being told to quit..." %
                   (program, pid))
         if pid_write(path, pid, "quit") is None:
             return
@@ -338,7 +354,7 @@ def pid_quit(path, program=""):
                 raise PIDError("could not kill %d" % pid)
             except OSError:
                 if program:
-                    print("%s (pid %d) has been successfully killed\n" % 
+                    print("%s (pid %d) has been successfully killed\n" %
                           (program, pid))
         except OSError:
             if program:
@@ -353,6 +369,7 @@ def pid_quit(path, program=""):
         except OSError:
             raise PIDError("failed to remove pid file: %s" % path)
     return pid
+
 
 def pid_status(path, maxage=None):
     """ Return the pid status. """
@@ -376,7 +393,8 @@ def pid_status(path, maxage=None):
     if fileage > maxage:
         return (1, "(pid %d) is not running since %s" % (pid, mdate))
     return (0, "(pid %d) was active on %s" % (pid, mdate))
-    
+
+
 def pid_remove(path):
     """ Remove the pidfile. """
     pid = pid_read(path)
@@ -391,7 +409,8 @@ def pid_remove(path):
         raise OSError("cannot remove pidfile %s: %s" % (path, error))
     else:
         return pid
-    
+
+
 def log_exceptions(re_raise=True):
     """
     Log exceptions to configured log and re raise the exception or exit.

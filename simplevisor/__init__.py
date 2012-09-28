@@ -12,12 +12,12 @@ Install it::
 
     easy_install simplevisor
     # look at the installation page for details
-    
+
 create and edit the main configuration file::
 
     simplevisor.conf.example available in the examples
     # check the configuration page for details
-    
+
 run it with::
 
     simplevisor --conf /path/to/simplevisor.conf start
@@ -25,11 +25,11 @@ run it with::
     simplevisor --conf /path/to/simplevisor.conf --daemon start
 
 check the help page::
-    
+
     simplevisor help
-    
+
 if you want to run it as a service user simplevisor-control as init script.
-    
+
 
 Author: Massimo.Paladin@gmail.com
 

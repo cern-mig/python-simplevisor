@@ -1,15 +1,15 @@
 """
-Licensed under the Apache License, Version 2.0 (the "License"); 
-you may not use this file except in compliance with the License. 
-You may obtain a copy of the License at 
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0 
+    http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software 
-distributed under the License is distributed on an "AS IS" BASIS, 
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, 
-either express or implied. 
-See the License for the specific language governing permissions and 
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+either express or implied.
+See the License for the specific language governing permissions and
 limitations under the License.
 
 Copyright (C) 2012 CERN
@@ -34,6 +34,7 @@ LOG_OPERATIONS = "debug info warning error critical".split()
 
 TestDir = os.path.abspath("test_tmp")
 
+
 def capture(callable, *args, **kwargs):
     # setup the environment
     b_out = sys.stdout
@@ -46,7 +47,8 @@ def capture(callable, *args, **kwargs):
     sys.stdout = b_out
     sys.stderr = b_err
     return out
-    
+
+
 class LogTest(unittest.TestCase):
 
     def setUp(self):
@@ -56,7 +58,7 @@ class LogTest(unittest.TestCase):
             os.mkdir(TestDir)
         except:
             pass
-    
+
     def tearDown(self):
         """ Restore the test environment. """
         shutil.rmtree(TestDir, True)
@@ -69,7 +71,7 @@ class LogTest(unittest.TestCase):
         l = log_s("foo")
         l2 = slog.get_log(log_n)
         print("...test log system creation ok")
-        
+
     @parametrized("log_n log_s".split(), slog.LOG_SYSTEM.items())
     def test_log_operations(self, log_n, log_s):
         """ Test log system operations. """
@@ -79,6 +81,6 @@ class LogTest(unittest.TestCase):
         for operation in LOG_OPERATIONS:
             capture(getattr(l, operation), "foo")
         print("...test log operations checking ok")
-        
+
 if __name__ == "__main__":
-    unittest.main()  
+    unittest.main()

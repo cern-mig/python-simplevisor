@@ -14,7 +14,7 @@ An example of supervisor declaration::
             .... other supervisors or services
         </children>
     </entry>
-    
+
 Parameters
 ----------
 
@@ -26,7 +26,7 @@ max_restarts
 
 max_time
     window time to count the number of restarts, None to restart infinitely.
-    
+
 timeout
     the maximum timeout for start, stop, status and restart commands,
     set to one minute by default.
@@ -34,20 +34,20 @@ timeout
 strategy
     - one_for_one: if a child process terminates, only that process
       is restarted.
-    
+
     - one_for_all: if a child process terminates, all other
       child processes are terminated and then all child processes,
       including the terminated one, are restarted.
-    
+
     - rest_for_one: If a child process terminates, the *rest* of the
       child processes i.e. the child processes after the terminated
       process in start order are terminated. Then the terminated
       child process and the rest of the child processes are restarted.
-      
+
 stop_all
     set to *true* if you want to stop the supervisor and its children.
     Default value is *false*.
-    
+
 children
     children structure.
 
@@ -80,6 +80,7 @@ import sys
 import time
 
 MAXIMUM_RESTARTS = 10
+
 
 def new_child(options, inherit=dict()):
     """
@@ -120,15 +121,16 @@ def new_child(options, inherit=dict()):
         raise ConfigurationError(msg)
     return child
 
+
 class Supervisor(object):
     """
     Supervisor class.
     """
-    
+
     def __init__(self, name="supervisor", stop_all="false",
                  max_restarts=10, max_time=60, timeout=60,
                  strategy="one_for_one",
-                 children = dict()):
+                 children=dict()):
         """ Constructor. """
         self.name = name
         self.stop_all = stop_all == "true"
@@ -136,7 +138,7 @@ class Supervisor(object):
         if self.max_restarts == "" or self.max_restarts == "None":
             self.max_restarts = None
         self.max_time = max_time
-        if self.max_time == ""  or self.max_time == "None":
+        if self.max_time == "" or self.max_time == "None":
             self.max_time = None
         self.timeout = timeout
         self.strategy = strategy
@@ -146,10 +148,10 @@ class Supervisor(object):
         self.add_child_set(children.get("entry", []))
         if len(self._children) == 0:
             raise ConfigurationError(
-                    "A supervisor must have at least one child.")
+                "A supervisor must have at least one child.")
         self.restarts = list()
         self.is_new = True
-    
+
     def add_child_set(self, children):
         """
         Add a child set.
@@ -159,13 +161,13 @@ class Supervisor(object):
         elif type(children) == list:
             for child in children:
                 self.add_child(child)
-    
+
     def add_child(self, options):
         """
         Add a child.
         """
-        inherit = {"timeout" : self.timeout,
-                   "stop_all" : self.stop_all}
+        inherit = {"timeout": self.timeout,
+                   "stop_all": self.stop_all}
         n_child = new_child(options, inherit)
         if n_child is not None:
             if n_child.name in self._children_name:
@@ -174,7 +176,7 @@ class Supervisor(object):
             self._children.append(n_child)
             self._children_dict[n_child.get_id()] = n_child
             self._children_name[n_child.name] = n_child
-            
+
     def get_child(self, path):
         """
         Return a child by its path.
@@ -187,7 +189,7 @@ class Supervisor(object):
             else:
                 return self._children_name[first].get_child(path)
         raise ValueError("not found")
-            
+
     def adjust(self):
         """
         Start/stop all elements according to their expected state.
@@ -196,7 +198,7 @@ class Supervisor(object):
         log.LOG.debug("adjust supervisor: %s" % self.name)
         for child in self._children:
             child.adjust()
-            
+
     def start(self):
         """
         This method takes care of starting the supervisor and its children.
@@ -207,7 +209,7 @@ class Supervisor(object):
             result = utils.merge_status(result, presult)
             log.LOG.debug("%s started with %s" % (self.name, result))
         return result
-    
+
     def stop(self):
         """
         This method takes care of stopping the supervisor and its children.
@@ -218,13 +220,13 @@ class Supervisor(object):
             result = utils.merge_status(result, presult)
             log.LOG.debug("%s stopped with %s" % (self.name, result))
         return result
-    
+
     def status(self):
         """
         This method is not implemented.
         """
         raise NotImplementedError
-    
+
     def restart(self):
         """
         This method takes care of restarting the supervisor.
@@ -235,7 +237,7 @@ class Supervisor(object):
             result = utils.merge_status(result, presult)
             log.LOG.debug("%s restarted with %s" % (self.name, result))
         return result
-    
+
     def check(self):
         """
         This method check the children status against the expected one.
@@ -254,8 +256,7 @@ class Supervisor(object):
             msg = "%s: WARNING, not expected" % self.name
         health_output = [msg, health_output]
         return (health, health_output)
-                        
-            
+
     def supervise(self):
         """
         This method check that children are running/stopped according
@@ -264,11 +265,11 @@ class Supervisor(object):
         for child in self._children:
             fail = None
             if isinstance(child, Supervisor):
-                (rcode, _, _ ) = child.supervise()
+                (rcode, _, _) = child.supervise()
                 if rcode != 0:
                     fail = (child, child.start)
-            else: # it is a Service
-                (rcode, _, _ ) = child.status()
+            else:  # it is a Service
+                (rcode, _, _) = child.status()
                 if rcode == 0:
                     if not child.is_enabled():
                         # FAIL, need to stop it
@@ -277,7 +278,7 @@ class Supervisor(object):
                     if child.is_enabled():
                         # FAIL, need to start it
                         fail = (child, child.start)
-                else: # unknown/dead/hang ...
+                else:  # unknown/dead/hang ...
                     if child.is_enabled():
                         # FAIL, need to restart
                         fail = (child, child.restart)
@@ -286,10 +287,10 @@ class Supervisor(object):
                         fail = (child, child.stop)
             if fail is not None:
                 log.LOG.error("%s found in an unexpected state: %d" %
-                            (fail[0], rcode))
+                              (fail[0], rcode))
                 self.restarts.append(time.time())
                 log.LOG.error("applying %s strategy to supervisor %s" %
-                          (self.strategy, self.name))
+                              (self.strategy, self.name))
                 getattr(self, self.strategy)(*fail)
             if self.failed():
                 # the supervisor terminates all the child processes
@@ -297,19 +298,19 @@ class Supervisor(object):
                 self.stop()
                 return (3, "", "")
         return (0, "", "")
-    
+
     def one_for_one(self, child, child_action):
         """
         Implement *one_for_one* strategy.
-        
+
         If a child process terminates, only that process is restarted.
         """
         child_action()
-    
+
     def one_for_all(self, child, child_action):
         """
         Implement *one_for_all* strategy.
-        
+
         If a child process terminates, all other child processes are
         terminated and then all child processes, including the terminated
         one, are restarted.
@@ -325,11 +326,11 @@ class Supervisor(object):
                 continue
             if temp_child.is_enabled():
                 temp_child.start()
-    
+
     def rest_for_one(self, child, child_action):
         """
         Implement *rest_for_one* strategy.
-        
+
         If a child process terminates, the *rest* of the child processes
         (i.e. the child processes after the terminated process in start order)
         are terminated. Then the terminated child process and the rest
@@ -347,7 +348,7 @@ class Supervisor(object):
                 continue
             if temp_child.is_enabled():
                 temp_child.start()
-                    
+
     def failed(self):
         """
         Return True if there has been more than *max_restarts* restarts
@@ -366,29 +367,29 @@ class Supervisor(object):
         self.restarts = new
         if num > self.max_restarts:
             log.LOG.error("%s handled %d restarts in less than %d seconds" %
-                        (self.name, num, self.max_time))
+                          (self.name, num, self.max_time))
             return True
         return False
-    
+
     def is_enabled(self):
         """
-        Return *True* if supervisor is expected to run, 
+        Return *True* if supervisor is expected to run,
         *False* in other case.
         """
         return not self.stop_all
-    
+
     def __str__(self):
         """
         Return the string representation.
         """
         return "supervisor %s" % self.name
-            
+
     def get_id(self):
         """
         Return the id of the supervisor.
         """
         return utils.md5_hash(self.name).hexdigest()
-    
+
     def load_status(self, status):
         """
         Load the status from the previous run.
@@ -400,10 +401,10 @@ class Supervisor(object):
         for identifier, child in self._children_dict.items():
             if identifier in cstatus:
                 child.load_status(cstatus[identifier])
-        keys = {"restarts" : list(), }
+        keys = {"restarts": list(), }
         for key, val in keys.items():
             setattr(self, key, status.pop(key, val))
-            
+
     def dump_status(self):
         """
         Return the status to be saved for future runs.

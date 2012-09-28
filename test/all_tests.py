@@ -10,7 +10,7 @@
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
- 
+
  Copyright (C) 2012 CERN
 """
 __version__ = "$Revision: 1 $"
@@ -19,13 +19,13 @@ __version__ = "$Revision: 1 $"
 import glob
 import unittest
 
+
 def create_test_suite():
     """ create the suite with all the tests """
     test_file_strings = glob.glob('test/*test.py')
-    module_strings = ['test.' + string[5:-3] 
+    module_strings = ['test.' + string[5:-3]
                       for string in test_file_strings]
-    suites = [unittest.defaultTestLoader.loadTestsFromName(name) \
+    suites = [unittest.defaultTestLoader.loadTestsFromName(name)
               for name in module_strings]
     test_suite = unittest.TestSuite(suites)
     return test_suite
-

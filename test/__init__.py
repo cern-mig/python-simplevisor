@@ -1,6 +1,6 @@
 """
  Testing package for simplevisor
- 
+
  Copyright (C) 2012 CERN
 """
 
@@ -9,4 +9,4 @@ import sys
 
 sys.path.insert(0, os.path.split(__file__)[0])
 
-__all__ = [  ]
+__all__ = list()

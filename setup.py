@@ -38,12 +38,16 @@ CLASSIFIERS = [
 
 from distutils.core import setup, Command
 
+
 class test(Command):
     user_options = []
+
     def initialize_options(self):
         pass
+
     def finalize_options(self):
         pass
+
     def run(self):
         from test import run_tests
         run_tests.main()
@@ -52,7 +56,10 @@ if no_data_files:
     data_files = []
 else:
     data_files = [
-        ('/usr/share/man/man1', ['man/simplevisor.1', 'man/simplevisor-control.1', 'man/simplevisor-loop.1']),
+        ('/usr/share/man/man1',
+         ['man/simplevisor.1',
+          'man/simplevisor-control.1',
+          'man/simplevisor-loop.1']),
     ]
 setup(name=NAME,
       version=VERSION,
@@ -65,7 +72,8 @@ setup(name=NAME,
       url=URL,
       classifiers=CLASSIFIERS,
       packages=['simplevisor', ],
-      scripts=['bin/simplevisor', 'bin/simplevisor-control', 'bin/simplevisor-loop'],
+      scripts=['bin/simplevisor',
+               'bin/simplevisor-control',
+               'bin/simplevisor-loop'],
       data_files=data_files,
-      cmdclass={'test' : test,}
-     )
+      cmdclass={'test': test, }, )
