@@ -361,7 +361,7 @@ def pid_quit(path, program=""):
                 print("%s (pid %d) does not seem to be running anymore" %
                       (program, pid))
     elif program:
-        print ("%s does not seem to be running" % (program, ))
+        print("%s does not seem to be running" % (program, ))
     if os.path.isfile(path):
         try:
             log_warning("removing pid file %s\n" % path)
