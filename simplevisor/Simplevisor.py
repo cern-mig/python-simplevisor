@@ -72,7 +72,7 @@ class Simplevisor(object):
         command = self.config.get("command", "status")
         path = self.config.get("path", None)
         if path is None and isinstance(self.child, Supervisor):
-            self.initialize_log()
+            self.initialize_log(stdout=True)
             self.load_status()
             action = getattr(self, command)
             action()
@@ -122,6 +122,7 @@ class Simplevisor(object):
             utils.daemonize()
         if self.config.get("pidfile"):
             pid_write(self.config["pidfile"], os.getpid(), excl=True)
+        self.initialize_log()
         self.run()
         if self.config.get("pidfile"):
             pid_remove(self.config.get("pidfile"))

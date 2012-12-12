@@ -69,7 +69,7 @@ configuration_check
 pod
     generate pod format help to be used by pod2man to generate man page
 
-pod
+rst
     generate rst format help to be used in the web doc
 
 help
