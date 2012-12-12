@@ -227,14 +227,17 @@ def daemonize():
         sys.stderr.write("fork #2 failed: %d (%s)\n"
                          % (error.errno, error.strerror))
         sys.exit(1)
-    sys.stdout.flush()
-    sys.stderr.flush()
-    stdin = open(os.devnull, 'r')
-    stdout = open(os.devnull, 'a+')
-    stderr = open(os.devnull, 'a+')
-    os.dup2(stdin.fileno(), sys.stdin.fileno())
-    os.dup2(stdout.fileno(), sys.stdout.fileno())
-    os.dup2(stderr.fileno(), sys.stderr.fileno())
+    if (type(sys.stdin) is not file):
+        stdin = open(os.devnull, 'r')
+        os.dup2(stdin.fileno(), sys.stdin.fileno())
+    if (type(sys.stdout) is not file):
+        sys.stdout.flush()
+        stdout = open(os.devnull, 'a+')
+        os.dup2(stdout.fileno(), sys.stdout.fileno())
+    if (type(sys.stderr) is not file):
+        sys.stderr.flush()
+        stderr = open(os.devnull, 'a+')
+        os.dup2(stderr.fileno(), sys.stderr.fileno())
 
 
 #### PID helpers
