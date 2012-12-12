@@ -225,7 +225,9 @@ class Supervisor(object):
         """
         This method is not implemented.
         """
-        raise NotImplementedError
+        raise NotImplementedError(
+            "status command not supported for a type supervisor, "
+            "look at the \"check\" command")
 
     def restart(self):
         """
