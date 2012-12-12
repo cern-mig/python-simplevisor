@@ -93,7 +93,12 @@ class Simplevisor(object):
             self.check(target)
         else:
             log.LOG.debug("calling %s.%s" % (target.name, command))
-            getattr(target, command)()
+            (return_code, out, err) = getattr(target, command)()
+            if out:
+                print("stdout: %s" % out)
+            if err:
+                print("stdout: %s" % err)
+            sys.exit(return_code)
 
     def configuration_check(self):
         """ Check only the configuration. """
