@@ -118,11 +118,11 @@ class Simplevisor(object):
         signal.signal(signal.SIGTERM, self.on_signal)
         signal.signal(signal.SIGHUP, self.on_signal)
         self.pre_run()
+        self.initialize_log()
         if self.config.get("daemon"):
             utils.daemonize()
         if self.config.get("pidfile"):
             pid_write(self.config["pidfile"], os.getpid(), excl=True)
-        self.initialize_log()
         self.run()
         if self.config.get("pidfile"):
             pid_remove(self.config.get("pidfile"))
