@@ -94,9 +94,9 @@ class Simplevisor(object):
         else:
             log.LOG.debug("calling %s.%s" % (target.name, command))
             (return_code, out, err) = getattr(target, command)()
-            if out:
+            if len(out.strip()) > 0:
                 print("stdout: %s" % out)
-            if err:
+            if len(err.strip()) > 0:
                 print("stdout: %s" % err)
             sys.exit(return_code)
 
