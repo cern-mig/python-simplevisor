@@ -133,58 +133,58 @@ def check_arg_log(log_type):
         raise argparse.ArgumentTypeError(msg)
     return log_type
 
-ARGUMENTS = {
-    "conf": {
+ARGUMENTS = [
+    ("conf", {
         "long": "--conf",
         "help": "configuration file",
-        "required": True, },
-    "store": {
-        "long": "--store",
-        "help": "file where to store the state"},
-    "interval": {
-        "long": "--interval",
-        "type": int,
-        "help": "interval to wait between supervision cycles"},
-    "log": {
-        "long": "--log",
-        "help": "available: %s" % ", ".join(LOG_SYSTEMS),
-        "type": check_arg_log},
-    "logfile": {
-        "long": "--logfile",
-        "help": "log file, ONLY for simple"},
-    "loglevel": {
-        "long": "--loglevel",
-        "help": "log level, ONLY for simple and print"},
-    "daemon": {
+        "required": True, }),
+    ("daemon", {
         "long": "--daemon",
         "help": "daemonize, ONLY with start",
-        "action": "store_true"},
-    "pidfile": {
-        "short": "-p",
-        "long": "--pidfile",
-        "help": "the pidfile"},
-    "help": {
+        "action": "store_true"}),
+    ("interval", {
+        "long": "--interval",
+        "type": int,
+        "help": "interval to wait between supervision cycles"}),
+    ("help", {
         "short": "-h",
         "long": "--help",
         "action": "help",
-        "help": "print the help page"},
-    "version": {
+        "help": "print the help page"}),
+    ("log", {
+        "long": "--log",
+        "help": "available: %s" % ", ".join(LOG_SYSTEMS),
+        "type": check_arg_log}),
+    ("logfile", {
+        "long": "--logfile",
+        "help": "log file, ONLY for simple"}),
+    ("loglevel", {
+        "long": "--loglevel",
+        "help": "log level, ONLY for simple and print"}),
+    ("pidfile", {
+        "short": "-p",
+        "long": "--pidfile",
+        "help": "the pidfile"}),
+    ("store", {
+        "long": "--store",
+        "help": "file where to store the state"}),
+    ("version", {
         "long": "--version",
         "action": "version",
         "version": "%s %s" % (PROG, simplevisor.VERSION),
-        "help": "print the program version"},
-    "command": {
+        "help": "print the program version"}),
+    ("command", {
         "positional": True,
         "long": "command",
         "type": check_arg_command,
         "action": CommandAction,
-        "help": "%s" % ", ".join(COMMANDS)},
-    "path": {
+        "help": "%s" % ", ".join(COMMANDS)}),
+    ("path", {
         "positional": True,
         "long": "path",
         "nargs": "?",
         "help": "path to a service, subset of commands available: %s" %
-                 ", ".join(SERVICE_COMMAND)}, }
+                 ", ".join(SERVICE_COMMAND)}), ]
 
 DEFAULT_OPTIONS = {
     "daemon": False,
@@ -208,7 +208,7 @@ def get_parser():
         formatter_class=lambda prog:
         argparse.RawDescriptionHelpFormatter(
             prog, max_help_position=33))
-    for name, elopts in ARGUMENTS.items():
+    for name, elopts in ARGUMENTS:
         if name == "help":
             continue
         t_args = list()
@@ -237,7 +237,7 @@ def print_rst():
     out += "**%s**\n" % PROG
     positional = ""
     optional = ""
-    for _, elopts in sorted(ARGUMENTS.iteritems()):
+    for _, elopts in ARGUMENTS:
         if elopts.get("positional", False):
             if elopts.get("nargs", None) == "?":
                 positional += "[%s] " % (elopts.get("long"),)
@@ -263,7 +263,7 @@ def print_rst():
     out += "-------\n\n"
     positional = ""
     optional = ""
-    for _, elopts in sorted(ARGUMENTS.iteritems()):
+    for _, elopts in ARGUMENTS:
         if elopts.get("positional", False):
             part = "**%s**\n\t%s\n\n" % (elopts.get("long"),
                                          elopts.get("help"))
@@ -303,7 +303,7 @@ def print_pod():
     out += "B<%s>\n" % PROG
     positional = ""
     optional = ""
-    for _, elopts in sorted(ARGUMENTS.iteritems()):
+    for _, elopts in ARGUMENTS:
         if elopts.get("positional", False):
             if elopts.get("nargs", None) == "?":
                 positional += "[%s]" % (elopts.get("long"),)
@@ -327,7 +327,7 @@ def print_pod():
     out += "=head1 OPTIONS\n\n"
     positional = ""
     optional = ""
-    for _, elopts in sorted(ARGUMENTS.iteritems()):
+    for _, elopts in ARGUMENTS:
         if elopts.get("positional", False):
             part = "B<%s> %s\n\n" % (elopts.get("long"),
                                      elopts.get("help"))
