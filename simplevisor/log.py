@@ -3,16 +3,17 @@ Three unified log classes to manage in a coherent way logs
 between different logging systems:
 
 null
-    log black hole
+    log black hole, it simply discard log messages
 
 syslog
-    use standard :py:mod:`syslog`: http://en.wikipedia.org/wiki/Syslog
+    log standard messages to
+    :py:mod:`syslog`: http://en.wikipedia.org/wiki/Syslog
 
 simple
-    use standard Python :py:mod:`logging`
+    use standard Python :py:mod:`logging` customizable to log to a file
 
 print
-    log on the standard output
+    print log messages on the standard output, works only if not daemonized
 
 
 Copyright (C) 2012 CERN
@@ -42,29 +43,36 @@ class SysLog(object):
 
     def __init__(self, name, **kwargs):
         """ Initialize syslog logging. """
+        self.level_threshold = self.level.get(
+            kwargs.get('loglevel', 'warning'), syslog.LOG_WARNING)
         syslog.openlog("%s" % (name, ),
                        syslog.LOG_PID,
                        syslog.LOG_DAEMON)
 
+    def _log(self, criticality, message):
+        """ Filter. """
+        if self.level_threshold >= self.level[criticality]:
+            syslog.syslog(criticality, message)
+
     def debug(self, message):
         """ Log a debug message. """
-        syslog.syslog(syslog.LOG_DEBUG, message)
+        self._log(syslog.LOG_DEBUG, message)
 
     def info(self, message):
         """ Log an info message. """
-        syslog.syslog(syslog.LOG_INFO, message)
+        self._log(syslog.LOG_INFO, message)
 
     def warning(self, message):
         """ Log a warning message. """
-        syslog.syslog(syslog.LOG_WARNING, message)
+        self._log(syslog.LOG_WARNING, message)
 
     def error(self, message):
         """ Log an error message. """
-        syslog.syslog(syslog.LOG_ERR, message)
+        self._log(syslog.LOG_ERR, message)
 
     def critical(self, message):
         """ Log a critical message. """
-        syslog.syslog(syslog.LOG_CRIT, message)
+        self._log(syslog.LOG_CRIT, message)
 
 
 class SimpleLog(object):
