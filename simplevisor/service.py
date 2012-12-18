@@ -24,6 +24,29 @@ another example for a standalone script::
         pattern = /path/to/script --conf /path/to/conf --daemon
     </entry>
 
+If one of the parameters contains one or more spaces you should quote them
+in url-like style, invoked commands are :py:func:`urllib.unquote`
+before being launched like in this example::
+
+    ...
+    start = /path/to/script --conf /path/to/conf --space hello%20world start
+    ...
+
+The commands provided should provide return codes according to the default
+LSB Unix return codes,
+for more info visit `LSB Core Specification <http://goo.gl/vQqaC>`_::
+
+    0        program is running or service is OK
+    1        program is dead and /var/run pid file exists
+    2        program is dead and /var/lock lock file exists
+    3        program is not running
+    4        program or service status is unknown
+    5-99     reserved for future LSB use
+    100-149  reserved for distribution use
+    150-199  reserved for application use
+    200-254  reserved
+
+
 Parameters
 ----------
 
