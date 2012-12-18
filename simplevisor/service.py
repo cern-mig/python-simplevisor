@@ -153,7 +153,10 @@ import simplevisor.log as log
 import sys
 import time
 from simplevisor import utils
-from urllib import unquote
+try:
+    from urllib import unquote
+except ImportError:
+    from urllib.parse import unquote
 
 MAXIMUM_LOG = 100
 
