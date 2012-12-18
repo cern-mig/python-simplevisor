@@ -52,7 +52,7 @@ class SysLog(object):
     def _log(self, criticality, message):
         """ Filter. """
         if self.level_threshold >= self.level[criticality]:
-            syslog.syslog(criticality, message)
+            syslog.syslog(self.level[criticality], message)
 
     def debug(self, message):
         """ Log a debug message. """
