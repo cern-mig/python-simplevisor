@@ -56,23 +56,23 @@ class SysLog(object):
 
     def debug(self, message):
         """ Log a debug message. """
-        self._log(syslog.LOG_DEBUG, message)
+        self._log('debug', message)
 
     def info(self, message):
         """ Log an info message. """
-        self._log(syslog.LOG_INFO, message)
+        self._log('info', message)
 
     def warning(self, message):
         """ Log a warning message. """
-        self._log(syslog.LOG_WARNING, message)
+        self._log('warning', message)
 
     def error(self, message):
         """ Log an error message. """
-        self._log(syslog.LOG_ERR, message)
+        self._log('error', message)
 
     def critical(self, message):
         """ Log a critical message. """
-        self._log(syslog.LOG_CRIT, message)
+        self._log('critical', message)
 
 
 class SimpleLog(object):
