@@ -45,6 +45,7 @@ Parameters
 *pattern*
     used to look for the service in the process table for stop and status
     commands if they are not specified and control is also not specified.
+    Accepted values are valid python regular expressions: :py:mod:`re`.
 
 *restart*
     specify a custom restart command.
@@ -108,8 +109,8 @@ Required Parameters
 
 ::
 
-- *name*
-- either *start* or *control*
+- name
+- one of: start, control
 
 Default Parameters
 ------------------
@@ -129,6 +130,7 @@ import simplevisor.log as log
 import sys
 import time
 from simplevisor import utils
+from urllib import unquote
 
 MAXIMUM_LOG = 100
 
@@ -202,6 +204,7 @@ class Service(object):
                 base = self._opts[subcmd].split()
         else:  # other use case
             base = self._opts[subcmd].split()
+        base = [unquote(token) for token in base]
         return base
 
     def __execute(self, cmd):
