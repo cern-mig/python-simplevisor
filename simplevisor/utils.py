@@ -21,9 +21,9 @@ except ImportError:
     md5_hash = md5.md5
 
 try:
-    import simplejson as json
-except ImportError:
     import json
+except ImportError:
+    import simplejson as json
 
 CHECK_TIME = 0.05  # milliseconds
 
