@@ -2,7 +2,7 @@
 Common utilities used by :py:mod:`simplevisor` module.
 
 
-Copyright (C) 2012 CERN
+Copyright (C) 2013 CERN
 """
 import datetime
 import os

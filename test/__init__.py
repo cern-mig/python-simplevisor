@@ -1,7 +1,7 @@
 """
  Testing package for simplevisor
 
- Copyright (C) 2012 CERN
+ Copyright (C) 2013 CERN
 """
 
 import os

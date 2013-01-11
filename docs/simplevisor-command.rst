@@ -139,6 +139,6 @@ Given the example configuration, to start the httpd service::
 AUTHOR
 ------
 
-Massimo Paladin <massimo.paladin@gmail.com> - Copyright (C) 2012 CERN
+Massimo Paladin <massimo.paladin@gmail.com> - Copyright (C) 2013 CERN
 
 

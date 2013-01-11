@@ -33,11 +33,11 @@ if you want to run it as a service user simplevisor-control as init script.
 
 Author: Massimo.Paladin@gmail.com
 
-Copyright (C) 2012 CERN
+Copyright (C) 2013 CERN
 """
 
 AUTHOR = "Massimo Paladin <massimo.paladin@gmail.com>"
-COPYRIGHT = "Copyright (C) 2012 CERN"
+COPYRIGHT = "Copyright (C) 2013 CERN"
 VERSION = "0.5"
 DATE = "14 Sep 2012"
 __author__ = AUTHOR

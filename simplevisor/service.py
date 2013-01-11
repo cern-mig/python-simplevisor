@@ -145,7 +145,7 @@ Default Parameters
 - all the others are default to None
 
 
-Copyright (C) 2012 CERN
+Copyright (C) 2013 CERN
 """
 import re
 from simplevisor.errors import ConfigurationError

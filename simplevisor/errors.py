@@ -2,7 +2,7 @@
 Errors used in the simplevisor module.
 
 
-Copyright (C) 2012 CERN
+Copyright (C) 2013 CERN
 """
 
 

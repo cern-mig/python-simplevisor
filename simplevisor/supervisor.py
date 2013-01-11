@@ -70,7 +70,7 @@ Default Parameters
 - timeout = 60
 - strategy = one_for_one
 
-Copyright (C) 2012 CERN
+Copyright (C) 2013 CERN
 """
 from simplevisor.errors import ConfigurationError
 import simplevisor.log as log
