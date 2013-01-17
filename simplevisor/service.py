@@ -222,7 +222,7 @@ class Service(object):
         self.is_new = True
         if control is None and daemon is not None:
             self._opts["start"] = (
-                "/usr/bin/simplevisor-loop -c 1"
+                "/usr/bin/simplevisor-loop -c 1 "
                 "--pidfile %s --daemon %s" % (daemon, start))
             self._opts["stop"] = (
                 "/usr/bin/simplevisor-loop --pidfile %s --quit" % (daemon, ))
