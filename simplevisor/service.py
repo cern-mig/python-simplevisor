@@ -221,7 +221,12 @@ class Service(object):
                         "log": list(),
                         }
         self.is_new = True
-        self._validate_opts(self._opts)
+        try:
+            self._validate_opts(self._opts)
+        except ValueError:
+            error = sys.exc_info()[1]
+            raise SimplevisorError(
+                "Service %s configuration error: %s" % (self.name, error))
         if control is None and daemon is not None:
             self._opts["start"] = (
                 "/usr/bin/simplevisor-loop -c 1 "

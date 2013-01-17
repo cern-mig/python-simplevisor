@@ -57,7 +57,7 @@ class ServiceTest(unittest.TestCase):
                 self.fail(
                     "exception should have been raised for:\nService(%s)" %
                     string)
-            except ValueError:
+            except SimplevisorError:
                 pass
         print("...service creation ok")
 
