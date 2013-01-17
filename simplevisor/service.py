@@ -263,10 +263,6 @@ class Service(object):
         mutex(options, "daemon", "control")
         # if daemon then start is required
         reqall(options, "daemon", "start")
-        # if start, stop or pattern required
-        reqany(options, "start", "stop", "pattern")
-        # if start, status or pattern required
-        reqany(options, "start", "status", "pattern")
         # if pattern no status, stop, control
         mutex(options, "pattern", "status")
         mutex(options, "pattern", "stop")

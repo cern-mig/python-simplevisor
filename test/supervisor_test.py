@@ -24,6 +24,7 @@ CREATION_COMBINATIONS = [
     (FAIL, dict()),
 ]
 
+
 class SupervisorTest(unittest.TestCase):
 
     def setUp(self):
