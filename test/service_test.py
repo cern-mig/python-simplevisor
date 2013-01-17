@@ -14,12 +14,24 @@ limitations under the License.
 
 Copyright (C) 2013 CERN
 """
-from simplevisor.errors import ConfigurationError
+from simplevisor.errors import SimplevisorError
 from simplevisor.service import Service
 import unittest
 
 OK = True
 FAIL = False
+CREATION_COMBINATIONS = [
+    (FAIL, {"name": "foo", }),
+    (OK, {"name": "foo", "control": "foo", }),
+    (FAIL, {"name": "foo", "control": "foo", "start": "foo", }),
+    (FAIL, {"name": "foo", "control": "foo", "daemon": "pid", }),
+    (FAIL, {"name": "foo", "daemon": "pid", }),
+    (FAIL, {"name": "foo", "control": "foo", "pattern": "pattern", }),
+    (FAIL, {"name": "foo", "start": "start", "pattern": "pattern",
+            "stop": "stop", "status": "status", }),
+    (OK, {"name": "foo", "start": "start",
+          "stop": "stop", "status": "status", }),
+]
 
 
 class ServiceTest(unittest.TestCase):
@@ -32,23 +44,36 @@ class ServiceTest(unittest.TestCase):
         """ Restore the test environment. """
         pass
 
-    def test_init(self):
-        """ Test service init. """
-        print("running service init test")
-        try:
-            Service("foo")
-            self.assert_(False, "Service(\"foo\") should fail because "
-                         "it does not provide a control or start parameter")
-        except ConfigurationError:
-            pass
-        
+    def test_creation(self):
+        """ Test service creation. """
+        print("running service creation tests")
+        for (shouldpass, options) in CREATION_COMBINATIONS:
+            if shouldpass:
+                service = Service(**options)
+                continue
+            # else
+            try:
+                service = Service(**options)
+                self.fail(
+                    "exception should have been raised for:\nService(%s)" %
+                    string)
+            except ValueError:
+                pass
+        print("...service creation ok")
+
+    def test_daemon_option(self):
+        """ Test daemon option. """
+        print("running service daemon option test")
         pidfile = "/path/to/pid.pid"
         start = "start command"
-        service = Service("foo",
-                          daemon=pidfile,
-                          start=start)
+        service = Service(
+            "foo",
+            daemon=pidfile,
+            start=start,
+            stop="stop command",
+            status="status command")
         self.assertEqual(
-            "/usr/bin/simplevisor-loop -c 1"
+            "/usr/bin/simplevisor-loop -c 1 "
             "--pidfile %s --daemon %s" % (pidfile, start),
             service._opts["start"])
         self.assertEqual(
@@ -57,7 +82,7 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual(
             "/usr/bin/simplevisor-loop --pidfile %s --status" % (pidfile, ),
             service._opts["status"])
-        print("...service init ok")
+        print("...service daemon option ok")
 
 if __name__ == "__main__":
     unittest.main()

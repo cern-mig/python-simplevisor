@@ -72,7 +72,7 @@ Default Parameters
 
 Copyright (C) 2013 CERN
 """
-from simplevisor.errors import ConfigurationError
+from simplevisor.errors import SimplevisorError
 import simplevisor.log as log
 import simplevisor.utils as utils
 from simplevisor.service import Service
@@ -91,9 +91,9 @@ def new_child(options, inherit=dict()):
     try:
         tmp_type = options.pop("type")
     except KeyError:
-        msg = "type not specified for entry: %s" % options
+        msg = "type not specified for entry: %s" % (options, )
         log.LOG.error(msg)
-        raise ConfigurationError(msg)
+        raise SimplevisorError(msg)
     child = None
     if tmp_type == "service":
         try:
@@ -104,7 +104,7 @@ def new_child(options, inherit=dict()):
             error = sys.exc_info()[1]
             msg = "Service entry not valid:\n%s\n%s" % (options, error)
             log.LOG.error(msg)
-            raise ConfigurationError(msg)
+            raise SimplevisorError(msg)
     elif tmp_type == "supervisor":
         try:
             if inherit.get("stop_all", False):
@@ -114,11 +114,11 @@ def new_child(options, inherit=dict()):
             error = sys.exc_info()[1]
             msg = "Supervisor entry not valid:\n%s\n%s" % (options, error)
             log.LOG.error(msg)
-            raise ConfigurationError(msg)
+            raise SimplevisorError(msg)
     else:
         msg = "entry type non supported: %s" % (tmp_type,)
         log.LOG.error(msg)
-        raise ConfigurationError(msg)
+        raise SimplevisorError(msg)
     return child
 
 
@@ -147,7 +147,7 @@ class Supervisor(object):
         self._children_name = dict()
         self.add_child_set(children.get("entry", []))
         if len(self._children) == 0:
-            raise ConfigurationError(
+            raise SimplevisorError(
                 "A supervisor must have at least one child.")
         self.restarts = list()
         self.is_new = True
@@ -161,6 +161,10 @@ class Supervisor(object):
         elif type(children) == list:
             for child in children:
                 self.add_child(child)
+        else:
+            raise ValueError(
+                "should be a list of children or a single child, "
+                "unknown given")
 
     def add_child(self, options):
         """
@@ -171,7 +175,7 @@ class Supervisor(object):
         n_child = new_child(options, inherit)
         if n_child is not None:
             if n_child.name in self._children_name:
-                raise ConfigurationError(
+                raise SimplevisorError(
                     "Two entries with the same name: %s" % n_child.name)
             self._children.append(n_child)
             self._children_dict[n_child.get_id()] = n_child

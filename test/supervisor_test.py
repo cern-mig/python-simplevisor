@@ -14,13 +14,15 @@ limitations under the License.
 
 Copyright (C) 2013 CERN
 """
-from simplevisor.errors import ConfigurationError
+from simplevisor.errors import SimplevisorError
 from simplevisor.supervisor import Supervisor
 import unittest
 
 OK = True
 FAIL = False
-
+CREATION_COMBINATIONS = [
+    (FAIL, dict()),
+]
 
 class SupervisorTest(unittest.TestCase):
 
@@ -32,14 +34,21 @@ class SupervisorTest(unittest.TestCase):
         """ Restore the test environment. """
         pass
 
-    def test_init(self):
-        """ Test supervisor init. """
-        print("running supervisor init test")
-        try:
-            Supervisor()
-            self.assert_(False, "Supervisor() should raise ConfigurationError")
-        except ConfigurationError:
-            pass
+    def test_creation(self):
+        """ Test supervisor creation. """
+        print("running supervisor creation test")
+        for (shouldpass, options) in CREATION_COMBINATIONS:
+            if shouldpass:
+                service = Supervisor(**options)
+                continue
+            # else
+            try:
+                service = Supervisor(**options)
+                self.fail(
+                    "exception should have been raised for:\nSupervisor(%s)" %
+                    string)
+            except SimplevisorError:
+                pass
         print("...supervisor init ok")
 
 if __name__ == "__main__":

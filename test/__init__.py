@@ -1,5 +1,5 @@
 """
- Testing package for simplevisor
+ Testing package for simplevisor.
 
  Copyright (C) 2013 CERN
 """

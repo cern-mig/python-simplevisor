@@ -101,6 +101,7 @@ Parameters
 
 *restart*
     specify a custom restart command.
+
     If <control> is specified:
 
         - if <restart> is not specified "<control> restart" is executed
@@ -116,6 +117,7 @@ Parameters
 
 *start*
     specify a custom start command.
+
     If <control> is specified:
 
         - if <start> is not specified "<control> start" is executed
@@ -127,6 +129,7 @@ Parameters
 
 *status*
     specify a custom status command.
+
     If <control> is specified:
 
         - "<control> status" is executed
@@ -146,6 +149,7 @@ Parameters
 
 *stop*
     specify a custom stop command.
+
     If <control> is specified:
 
         - "<control> stop" is executed
@@ -177,11 +181,12 @@ Default Parameters
 Copyright (C) 2013 CERN
 """
 import re
-from simplevisor.errors import ConfigurationError
+from simplevisor.errors import SimplevisorError
 import simplevisor.log as log
 import sys
 import time
 from simplevisor import utils
+from simplevisor.config_utils import mutex, reqall, reqany
 try:
     from urllib import unquote
 except ImportError:
@@ -200,10 +205,6 @@ class Service(object):
                  control=None, daemon=None, path=None, pattern=None,
                  restart=None, start=None, status=None, stop=None):
         """ Service constructor. """
-        if control is None and start is None:
-            raise ConfigurationError("Service entries requires either a "
-                                     "control or a start parameter: %s" %
-                                     name)
         self.name = name
         self._opts = {"name": name,
                       "expected": expected,
@@ -220,6 +221,7 @@ class Service(object):
                         "log": list(),
                         }
         self.is_new = True
+        self._validate_opts(self._opts)
         if control is None and daemon is not None:
             self._opts["start"] = (
                 "/usr/bin/simplevisor-loop -c 1 "
@@ -244,7 +246,26 @@ class Service(object):
             except re.error:
                 error = sys.exc_info()[1]
                 msg = "%s service pattern not valid: %s" % error
-                raise ConfigurationError(msg)
+                raise ValueError(msg)
+
+    def _validate_opts(self, options):
+        """ Validate options. """
+        # at least start or control
+        reqany(options, None, "start", "control")
+        # either start or control
+        mutex(options, "start", "control")
+        # either control or daemon
+        mutex(options, "daemon", "control")
+        # if daemon then start is required
+        reqall(options, "daemon", "start")
+        # if start, stop or pattern required
+        reqany(options, "start", "stop", "pattern")
+        # if start, status or pattern required
+        reqany(options, "start", "status", "pattern")
+        # if pattern no status, stop, control
+        mutex(options, "pattern", "status")
+        mutex(options, "pattern", "stop")
+        mutex(options, "pattern", "control")
 
     def get_child(self, path):
         """
@@ -331,10 +352,10 @@ class Service(object):
                 if checked_status:
                     return
                 time.sleep(0.2)
-            log.LOG.critical("service %s could not be adjusted." %
-                             self._opts["name"])
-            raise ConfigurationError("service %s could not be adjusted." %
-                                     self._opts["name"])
+            log.LOG.critical(
+                "service %s could not be adjusted." % self._opts["name"])
+            raise SimplevisorError("service %s could not be adjusted." %
+                                   self._opts["name"])
 
     def start(self):
         """

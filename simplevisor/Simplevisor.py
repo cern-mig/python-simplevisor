@@ -13,7 +13,7 @@ try:
 except ImportError:
     import simplejson as json
 
-from simplevisor.errors import ConfigurationError
+from simplevisor.errors import SimplevisorError
 from simplevisor.log import get_log
 import simplevisor.log as log
 from simplevisor.supervisor import Supervisor
@@ -22,6 +22,7 @@ from simplevisor import service, supervisor
 import simplevisor.utils as utils
 from simplevisor.utils import pid_check, pid_quit, pid_read, pid_remove, \
     pid_status, pid_touch, pid_write
+from simplevisor.config_utils import mutex, reqany, reqall
 
 import pprint
 PP = pprint.PrettyPrinter(indent=2)
@@ -37,15 +38,16 @@ class Simplevisor(object):
     """ Simplevisor class. """
     prog = "simplevisor"
 
-    def __init__(self, config=dict(), entry_config=None):
+    def __init__(self, options=None, entry_config=None):
         """ Initialize Simplevisor. """
-        if type(config) != dict:
-            raise ConfigurationError("Simplevisor expect a dictionary.")
-        if entry_config is None:
-            raise ConfigurationError("Simplevisor expect at least one entry.")
-        elif type(entry_config) == list:
-            raise ConfigurationError("Simplevisor expect a single entry.")
-        self.config = config
+        if options is None:
+            options = dict()
+        elif type(options) != dict:
+            raise SimplevisorError(
+                "Simplevisor expect a configuration dictionary.")
+        if entry_config is None or type(entry_config) == list:
+            raise SimplevisorError("Simplevisor expect a single entry.")
+        self.config = options
         self.status_file = self.config.get("store")
         self.entry_config = entry_config
         self.running = False
@@ -144,7 +146,7 @@ class Simplevisor(object):
     def stop(self, action="quit"):
         """ Quit the process. """
         if not self.config.get("pidfile"):
-            raise ConfigurationError("%s requires a pidfile" % action)
+            raise SimplevisorError("%s requires a pidfile" % action)
         pid = pid_read(self.config["pidfile"])
         timeout = 10
         if pid and timeout is not None:
@@ -174,13 +176,13 @@ class Simplevisor(object):
     def stop_children(self):
         """ Tell the supervisor to stop without touching the children. """
         if not self.config.get("pidfile"):
-            raise ConfigurationError("status requires a pidfile")
+            raise SimplevisorError("stop requires a pidfile")
         self.send_action("stop_children")
 
     def send_action(self, action="stop_children"):
         """ Tell the supervsisor to execute an action. """
         if not self.config.get("pidfile"):
-            raise ConfigurationError("%s requires a pidfile" % action)
+            raise SimplevisorError("%s requires a pidfile" % action)
         pid = pid_read(self.config["pidfile"])
         if pid:
             print("%s (pid %d) is being told to %s..." %
@@ -192,7 +194,7 @@ class Simplevisor(object):
 
     def restart(self):
         """ Restart not accepted. """
-        raise ConfigurationError(
+        raise SimplevisorError(
             "restart command is accepted only with a path")
 
     def check(self, child=None):
@@ -216,7 +218,7 @@ class Simplevisor(object):
     def status(self):
         """ Do status action. """
         if not self.config.get("pidfile"):
-            raise ConfigurationError("status requires a pidfile")
+            raise SimplevisorError("status requires a pidfile")
         (status, message) = pid_status(self.config["pidfile"], 60)
         print("%s %s" % (status, message))
         sys.exit(status)
@@ -244,8 +246,8 @@ class Simplevisor(object):
             try:
                 status = json.load(tmp_file)
             except ValueError:
-                msg = "Status file not valid: %s" % self.status_file
-                raise ConfigurationError(msg)
+                raise SimplevisorError(
+                    "Status file not valid: %s" % (self.status_file, ))
             else:
                 tmp_file.close()
                 return status
@@ -270,7 +272,7 @@ class Simplevisor(object):
                 msg = "error writing status file %s: %s - %s" % \
                       (self.status_file, error_type, error)
                 log.LOG.error(msg)
-                raise ConfigurationError(msg)
+                raise SimplevisorError(msg)
             staus_f.close()
         except IOError:
             error = sys.exc_info()[1]

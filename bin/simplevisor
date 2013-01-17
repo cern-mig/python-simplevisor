@@ -18,7 +18,7 @@ COMMANDS.extend(["pod", "rst", "help"])
 COMMANDS = sorted(set(COMMANDS))
 CHECK_ARG_COMMAND_RE = re.compile("(%s)" % "|".join(COMMANDS))
 LOG_SYSTEMS = "null print syslog simple".split()
-CHECK_ARG_LOG_RE = re.compile("(%s)" % "|".join(LOG_SYSTEMS))
+CHECK_ARG_LOG_RE = re.compile("(%s)" % ("|".join(LOG_SYSTEMS), ))
 
 PROG = "simplevisor"
 SHORT_DESCRIPTION = "simple daemons supervisor"

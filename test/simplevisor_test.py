@@ -14,12 +14,15 @@ limitations under the License.
 
 Copyright (C) 2013 CERN
 """
-from simplevisor.errors import ConfigurationError
+from simplevisor.errors import SimplevisorError
 from simplevisor.Simplevisor import Simplevisor
 import unittest
 
 OK = True
 FAIL = False
+CREATION_COMBINATIONS = [
+    (FAIL, dict()),
+]
 
 
 class SimplevisorTest(unittest.TestCase):
@@ -35,12 +38,18 @@ class SimplevisorTest(unittest.TestCase):
     def test_init(self):
         """ Test Simplevisor init. """
         print("running Simplevisor init test")
-        try:
-            Simplevisor()
-            self.assert_(False,
-                         "Simplevisor() should raise ConfigurationError")
-        except ConfigurationError:
-            pass
+        for (shouldpass, options) in CREATION_COMBINATIONS:
+            if shouldpass:
+                service = Simplevisor(**options)
+                continue
+            # else
+            try:
+                service = Simplevisor(**options)
+                self.fail(
+                    "exception should have been raised for:\nSimplevisor(%s)" %
+                    string)
+            except SimplevisorError:
+                pass
         print("...Simplevisor init ok")
 
 if __name__ == "__main__":
