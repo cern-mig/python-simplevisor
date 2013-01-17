@@ -123,14 +123,22 @@ case "$1" in
   restart)
     echo "Restarting ${NAME}"
     stop
-    sleep 0.3
-    start
+    if [ ${RETVAL} = 1 ] ; then
+        echo "skipping start action"
+    else
+        sleep 0.3
+        start
+    fi
     ;;
   restart-supervisor)
     echo "Restarting supervisor ${NAME}"
     stop_supervisor
-    sleep 0.3
-    start
+    if [ ${RETVAL} = 1 ] ; then
+        echo "skipping start action"
+    else
+        sleep 0.3
+        start
+    fi
     ;;
   status)
     status
