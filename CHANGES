@@ -1,5 +1,9 @@
 Change log for python-simplevisor
 
+X X X X 2013
+    * [mp] bug fixes and improvements
+    * [mp] service daemonization functionality embedded
+
 0.5 Fri Sep 14 2012
 	* [mp] various cleaning and improvements
 
