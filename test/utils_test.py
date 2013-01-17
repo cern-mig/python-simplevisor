@@ -17,39 +17,39 @@ Copyright (C) 2013 CERN
 """
 
 import simplevisor.utils as sutils
-from utils import parametrized
+from test.utils import parametrized
 import os
 import shutil
-import time
-from threading import Thread
 import unittest
 
-TestDir = os.path.abspath("test_tmp")
-TimedProcessSetsNames = "error command timeout result".split()
-TimedProcessSets = ((None, "sleep 1", 10, (0, ''.encode(), ''.encode())),
-                    (None, "echo ciao", 10,
-                     (0, 'ciao\n'.encode(), ''.encode())),
-                    (None, "test -x /dev/null", 10,
-                     (1, ''.encode(), ''.encode())),
-                    (sutils.ProcessTimedout, "sleep 5", 1, None),
-                    (sutils.ProcessError, "skjghdjskhfgkdf", 5, None),)
+TEST_DIR = os.path.abspath("test_tmp")
+TIMED_PROCESS_SETS_NAMES = "error command timeout result".split()
+TIMED_PROCESS_SETS = (
+    (None, "sleep 1", 10, (0, ''.encode(), ''.encode())),
+    (None, "echo ciao", 10,
+     (0, 'ciao\n'.encode(), ''.encode())),
+    (None, "test -x /dev/null", 10,
+     (1, ''.encode(), ''.encode())),
+    (sutils.ProcessTimedout, "sleep 5", 1, None),
+    (sutils.ProcessError, "skjghdjskhfgkdf", 5, None),)
 
 
 class UtilsTest(unittest.TestCase):
+    """ Test utilities module. """
 
     def setUp(self):
         """ Setup the test environment. """
-        shutil.rmtree(TestDir, True)
+        shutil.rmtree(TEST_DIR, True)
         try:
-            os.mkdir(TestDir)
-        except:
+            os.mkdir(TEST_DIR)
+        except OSError:
             pass
 
     def tearDown(self):
         """ Restore the test environment. """
-        shutil.rmtree(TestDir, True)
+        shutil.rmtree(TEST_DIR, True)
 
-    @parametrized(TimedProcessSetsNames, TimedProcessSets)
+    @parametrized(TIMED_PROCESS_SETS_NAMES, TIMED_PROCESS_SETS)
     def test_timed_process(self, error, command, timeout, result):
         """ Test timed_process. """
         print("running timed_process for %s"

@@ -35,28 +35,21 @@ CREATION_COMBINATIONS = [
 
 
 class ServiceTest(unittest.TestCase):
-
-    def setUp(self):
-        """ Setup the test environment. """
-        pass
-
-    def tearDown(self):
-        """ Restore the test environment. """
-        pass
+    """ Test Service module. """
 
     def test_creation(self):
         """ Test service creation. """
         print("running service creation tests")
         for (shouldpass, options) in CREATION_COMBINATIONS:
             if shouldpass:
-                service = Service(**options)
+                Service(**options)
                 continue
             # else
             try:
-                service = Service(**options)
+                Service(**options)
                 self.fail(
                     "exception should have been raised for:\nService(%s)" %
-                    string)
+                    options)
             except SimplevisorError:
                 pass
         print("...service creation ok")

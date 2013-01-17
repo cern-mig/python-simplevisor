@@ -20,34 +20,27 @@ import unittest
 
 OK = True
 FAIL = False
-CREATION_COMBINATIONS = [
+CREATION_COMBS = [
     (FAIL, dict()),
 ]
 
 
 class SimplevisorTest(unittest.TestCase):
-
-    def setUp(self):
-        """ Setup the test environment. """
-        pass
-
-    def tearDown(self):
-        """ Restore the test environment. """
-        pass
+    """ Test Simplevisor module. """
 
     def test_init(self):
         """ Test Simplevisor init. """
         print("running Simplevisor init test")
-        for (shouldpass, options) in CREATION_COMBINATIONS:
+        for (shouldpass, options) in CREATION_COMBS:
             if shouldpass:
-                service = Simplevisor(**options)
+                Simplevisor(**options)
                 continue
             # else
             try:
-                service = Simplevisor(**options)
+                Simplevisor(**options)
                 self.fail(
                     "exception should have been raised for:\nSimplevisor(%s)" %
-                    string)
+                    options)
             except SimplevisorError:
                 pass
         print("...Simplevisor init ok")

@@ -22,7 +22,6 @@ from simplevisor import service, supervisor
 import simplevisor.utils as utils
 from simplevisor.utils import pid_check, pid_quit, pid_read, pid_remove, \
     pid_status, pid_touch, pid_write
-from simplevisor.config_utils import mutex, reqany, reqall
 
 import pprint
 PP = pprint.PrettyPrinter(indent=2)

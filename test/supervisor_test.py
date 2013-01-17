@@ -26,28 +26,21 @@ CREATION_COMBINATIONS = [
 
 
 class SupervisorTest(unittest.TestCase):
-
-    def setUp(self):
-        """ Setup the test environment. """
-        pass
-
-    def tearDown(self):
-        """ Restore the test environment. """
-        pass
+    """ Test Supervisor module. """
 
     def test_creation(self):
         """ Test supervisor creation. """
         print("running supervisor creation test")
         for (shouldpass, options) in CREATION_COMBINATIONS:
             if shouldpass:
-                service = Supervisor(**options)
+                Supervisor(**options)
                 continue
             # else
             try:
-                service = Supervisor(**options)
+                Supervisor(**options)
                 self.fail(
                     "exception should have been raised for:\nSupervisor(%s)" %
-                    string)
+                    options)
             except SimplevisorError:
                 pass
         print("...supervisor init ok")

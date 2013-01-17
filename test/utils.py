@@ -1,11 +1,15 @@
+""" Test utilities. """
 
 
 def parametrized(arg_list, values):
-    def parametrized(fn):
+    """ Outer function. """
+    def parametrized(function):
+        """ Middle function. """
         def parametrized(*args, **kwargs):
-            __name__ = fn.__name__
+            """ Inner function. """
+            __name__ = function.__name__
             for value_set in values:
                 arg = dict(zip(arg_list, value_set))
-                fn(*args, **arg)
+                function(*args, **arg)
         return parametrized
     return parametrized

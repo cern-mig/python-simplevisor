@@ -20,11 +20,10 @@ try:
 except ImportError:
     from io import StringIO
 import simplevisor.log as slog
-from utils import parametrized
+from test.utils import parametrized
 import os
 import shutil
 import sys
-import time
 import unittest
 
 OK = True
@@ -32,16 +31,17 @@ FAIL = False
 
 LOG_OPERATIONS = "debug info warning error critical".split()
 
-TestDir = os.path.abspath("test_tmp")
+TEST_DIR = os.path.abspath("test_tmp")
 
 
-def capture(callable, *args, **kwargs):
+def capture(func, *args, **kwargs):
+    """ Capture stdout. """
     # setup the environment
     b_out = sys.stdout
     b_err = sys.stderr
     sys.stdout = StringIO()
     sys.stderr = sys.stdout
-    callable(*args, **kwargs)
+    func(*args, **kwargs)
     out = sys.stdout.getvalue()
     sys.stdout.close()
     sys.stdout = b_out
@@ -50,26 +50,29 @@ def capture(callable, *args, **kwargs):
 
 
 class LogTest(unittest.TestCase):
+    """ Test log. """
 
     def setUp(self):
-        """ Setup the test environment. """
-        shutil.rmtree(TestDir, True)
+        """ Setup the test environment for the log test. """
+        # remove the test folder
+        shutil.rmtree(TEST_DIR, True)
+        # and create it again
         try:
-            os.mkdir(TestDir)
-        except:
+            os.mkdir(TEST_DIR)
+        except OSError:
             pass
 
     def tearDown(self):
-        """ Restore the test environment. """
-        shutil.rmtree(TestDir, True)
+        """ Restore the test environment and delete the test folder. """
+        shutil.rmtree(TEST_DIR, True)
 
     @parametrized("log_n log_s".split(), slog.LOG_SYSTEM.items())
     def test_init(self, log_n, log_s):
         """ Test log system creation. """
         print("running log system creation for %s"
               % (log_n,))
-        l = log_s("foo")
-        l2 = slog.get_log(log_n)
+        log_s("foo")
+        slog.get_log(log_n)
         print("...test log system creation ok")
 
     @parametrized("log_n log_s".split(), slog.LOG_SYSTEM.items())
@@ -77,9 +80,9 @@ class LogTest(unittest.TestCase):
         """ Test log system operations. """
         print("running log operations checking for %s"
               % (log_n,))
-        l = log_s("foo")
+        log_system = log_s("foo")
         for operation in LOG_OPERATIONS:
-            capture(getattr(l, operation), "foo")
+            capture(getattr(log_system, operation), "foo")
         print("...test log operations checking ok")
 
 if __name__ == "__main__":

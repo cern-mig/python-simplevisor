@@ -109,6 +109,7 @@ def check_arg_command(command):
 
 
 class CommandAction(argparse._StoreAction):
+    """ Intercept pod, rst and help actions. """
     def __call__(self, parser, namespace, values, option_string=None):
         if values == "pod":
             print_pod()
@@ -378,7 +379,9 @@ def merge_(first, second):
     merge.update(second)
     return merge
 
-if __name__ == "__main__":
+
+def main():
+    """ Do the work. """
     args = read_args()
     conf = read_apache_config(os.path.abspath(args.get("conf", None)))
     entry = conf.get("entry", None)
@@ -388,3 +391,6 @@ if __name__ == "__main__":
     check_restrictions(merged)
     svisor = Simplevisor(merged, entry)
     svisor.work()
+
+if __name__ == "__main__":
+    main()
