@@ -7,7 +7,7 @@ SYNOPSIS
 --------
 
 **simplevisor**
-[--conf CONF] [--daemon] [-h] [--interval INTERVAL] [--log LOG] [--logfile LOGFILE] [--loglevel LOGLEVEL] [-p PIDFILE] [--store STORE] [--version] 
+[--conf CONF] [--daemon] [--interval INTERVAL] [-h] [--log LOG] [--logfile LOGFILE] [--loglevel LOGLEVEL] [-p PIDFILE] [--store STORE] [--version] 
 command [path] 
 
 DESCRIPTION
@@ -32,37 +32,37 @@ start
 
 stop
     stop the simplevisor process and all its children, if running
-    
+
 status
     return the status of the simplevisor process
-    
+
 check
     return the comparison between the expected state and the actual state.
     0 -> everything is fine
     1 -> warning, not expected
-    
+
 restart
     stop + start the simplevisor process
-    
+
 single
     execute one cycle of supervision and exit.
     Useful to be run in a cron script
-    
+
 stop_supervisor
     stop only the simplevisor process and the supervision
-    
+
 stop_children
     stop only the children
-    
+
 configuration_check
     just check the configuration
-    
+
 pod
     generate pod format help to be used by pod2man to generate man page
-    
-pod
+
+rst
     generate rst format help to be used in the web doc
-    
+
 help
     same as -h/--help, print help page
 
@@ -88,11 +88,11 @@ OPTIONS
 **--daemon**
 	daemonize, ONLY with start
 
-**-h, --help**
-	print the help page
-
 **--interval INTERVAL**
 	interval to wait between supervision cycles
+
+**-h, --help**
+	print the help page
 
 **--log LOG**
 	available: null, print, syslog, simple
@@ -116,7 +116,7 @@ EXAMPLES
 --------
 
 Create and edit the main configuration file::
-    
+
     ## look for simplevisor.conf.example in the examples.
 
 Run it::
@@ -139,6 +139,6 @@ Given the example configuration, to start the httpd service::
 AUTHOR
 ------
 
-Massimo Paladin <massimo.paladin@gmail.com> - Copyright (C) 2013 CERN
+Massimo Paladin <massimo.paladin@gmail.com> - Copyright (C) 2012 CERN
 
 
