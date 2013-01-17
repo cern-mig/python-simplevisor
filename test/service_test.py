@@ -23,6 +23,7 @@ FAIL = False
 CREATION_COMBINATIONS = [
     (FAIL, {"name": "foo", }),
     (OK, {"name": "foo", "control": "foo", }),
+    (OK, {"name": "foo", "control": "foo", "expected": "stopped", }),
     (FAIL, {"name": "foo", "control": "foo", "start": "foo", }),
     (FAIL, {"name": "foo", "control": "foo", "daemon": "pid", }),
     (FAIL, {"name": "foo", "daemon": "pid", }),
