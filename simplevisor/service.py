@@ -54,6 +54,35 @@ Parameters
     the control of the command to run. If specified it will be the prefix
     of *start/stop/status* commands.
 
+*daemon*
+    if the service command runs in foreground and you wish to daemonize
+    it you can declare this option with value the pidfile path that should
+    be used for the daemonization.
+
+    If control is specified this option is ignored.
+
+    Given the start command::
+
+        start = /path/to/script --conf /path/to/conf
+
+    and declaring::
+
+        daemon = /path/to/script_pidfile.pid
+
+    it is like specifying the following pair of commands/values::
+
+     start = /usr/bin/simplevisor-loop -c 1 --pidfile \
+/path/to/script_pidfile.pid --daemon /path/to/script --conf /path/to/conf
+
+     stop = /usr/bin/simplevisor-loop --pidfile /path/to/script_pidfile.pid \
+--quit
+
+     status = /usr/bin/simplevisor-loop --pidfile /path/to/script_pidfile.pid \
+--status
+
+    Hence, if *daemon* is specified *stop* and *status* command
+    are overwritten.
+
 *expected*
     expected state of the service.
     Valid values are *running* and *stopped*.
@@ -168,7 +197,7 @@ class Service(object):
 
     def __init__(self, name, expected="running",
                  timeout=10,
-                 control=None, path=None, pattern=None,
+                 control=None, daemon=None, path=None, pattern=None,
                  restart=None, start=None, status=None, stop=None):
         """ Service constructor. """
         if control is None and start is None:
@@ -179,6 +208,7 @@ class Service(object):
         self._opts = {"name": name,
                       "expected": expected,
                       "control": control,
+                      "daemon": daemon,
                       "path": path,
                       "pattern": pattern,
                       "restart": restart,
@@ -190,7 +220,15 @@ class Service(object):
                         "log": list(),
                         }
         self.is_new = True
-        if control is None and status is None:
+        if control is None and daemon is not None:
+            self._opts["start"] = (
+                "/usr/bin/simplevisor-loop -c 1"
+                "--pidfile %s --daemon %s" % (daemon, start))
+            self._opts["stop"] = (
+                "/usr/bin/simplevisor-loop --pidfile %s --quit" % (daemon, ))
+            self._opts["status"] = (
+                "/usr/bin/simplevisor-loop --pidfile %s --status" % (daemon, ))
+        elif control is None and status is None:
             if sys.platform != "linux2":
                 msg = "don't know how to read process table, you " + \
                       "must specify a status command for service %s" % name

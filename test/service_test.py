@@ -41,6 +41,22 @@ class ServiceTest(unittest.TestCase):
                          "it does not provide a control or start parameter")
         except ConfigurationError:
             pass
+        
+        pidfile = "/path/to/pid.pid"
+        start = "start command"
+        service = Service("foo",
+                          daemon=pidfile,
+                          start=start)
+        self.assertEqual(
+            "/usr/bin/simplevisor-loop -c 1"
+            "--pidfile %s --daemon %s" % (pidfile, start),
+            service._opts["start"])
+        self.assertEqual(
+            "/usr/bin/simplevisor-loop --pidfile %s --quit" % (pidfile, ),
+            service._opts["stop"])
+        self.assertEqual(
+            "/usr/bin/simplevisor-loop --pidfile %s --status" % (pidfile, ),
+            service._opts["status"])
         print("...service init ok")
 
 if __name__ == "__main__":
