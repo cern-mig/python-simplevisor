@@ -23,6 +23,11 @@ import shutil
 import sys
 import unittest
 
+def u_(value):
+    if sutils.PY2:
+        return unicode(value)
+    return value
+
 TEST_DIR = os.path.abspath("test_tmp")
 TIMED_PROCESS_SETS_NAMES = "error command timeout result".split()
 TIMED_PROCESS_SETS = (
@@ -38,8 +43,8 @@ UNIFY_KEYS_SETS = (
     (None, None, None),
     (None, "", ""),
     (None, {'hello': 'world'}, {'hello': 'world'}),
-    (None, {u'hello': 'world'}, {'hello': 'world'}),
-    (None, {u'hello': 'world', 'foo': {u'hello': 'world'}},
+    (None, {u_('hello'): 'world'}, {'hello': 'world'}),
+    (None, {u_('hello'): 'world', 'foo': {u_('hello'): 'world'}},
      {'hello': 'world', 'foo': {'hello': 'world'}}),
 )
 

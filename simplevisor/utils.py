@@ -456,7 +456,7 @@ def unify_keys(dictionary):
     for element in dictionary:
         if PY2 and type(element) is not str:
             value = dictionary.pop(element)
-            dictionary[element] = value
+            dictionary[str(element)] = value
         elif PY3 and type(element) is bytes:
             value = dictionary.pop(element)
             dictionary[element.decode()] = value
