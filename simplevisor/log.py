@@ -9,10 +9,10 @@ syslog
     log standard messages to
     :py:mod:`syslog`: http://en.wikipedia.org/wiki/Syslog
 
-simple
+file
     use standard Python :py:mod:`logging` customizable to log to a file
 
-print
+stdout
     print log messages on the standard output, works only if not daemonized
 
 
@@ -75,7 +75,7 @@ class SysLog(object):
         self._log('critical', message)
 
 
-class SimpleLog(object):
+class FileLog(object):
     """
     Class which logs with Python standard :py:mod:`logging`.
 
@@ -132,7 +132,7 @@ class SimpleLog(object):
         self.logger.critical(message)
 
 
-class PrintLog(object):
+class StdOutLog(object):
     """
     Class which logs on standard output.
 
@@ -220,8 +220,8 @@ class NullLog(object):
         """ Custom print. """
 
 LOG_SYSTEM = {"null": NullLog,
-              "print": PrintLog,
-              "simple": SimpleLog,
+              "stdout": StdOutLog,
+              "file": FileLog,
               "syslog": SysLog, }
 
 
@@ -232,11 +232,13 @@ def get_log(type_t):
     try:
         log = LOG_SYSTEM[type_t]
     except KeyError:
-        raise errors.LogSystemNotSupported("%s not supported" % type_t)
+        raise errors.LogSystemNotSupported(
+            "%s is not valid as log system, must be one of: %s" %
+            (type_t, ", ".join(LOG_SYSTEM.keys()), ))
     else:
         return log
 
-LOG = PrintLog("printlog")
+LOG = StdOutLog("stdout")
 
 
 def log_debug(message):
