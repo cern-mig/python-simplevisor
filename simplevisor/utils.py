@@ -21,9 +21,13 @@ except ImportError:
     md5_hash = md5.md5
 
 try:
-    import json
-except ImportError:
     import simplejson as json
+except (SyntaxError, ImportError):
+    import json
+    try:
+        getattr(json, "dumps")
+    except AttributeError:
+        raise ImportError("No available json module.")
 
 CHECK_TIME = 0.05  # milliseconds
 

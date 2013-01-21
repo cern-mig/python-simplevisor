@@ -9,9 +9,13 @@ import signal
 import sys
 import time
 try:
-    import json
-except ImportError:
     import simplejson as json
+except (SyntaxError, ImportError):
+    import json
+    try:
+        getattr(json, "dumps")
+    except AttributeError:
+        raise ImportError("No available json module.")
 
 from simplevisor.errors import SimplevisorError
 from simplevisor.log import get_log
