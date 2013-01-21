@@ -293,10 +293,10 @@ class Supervisor(object):
                         # FAIL, need to stop
                         fail = (child, child.stop)
             if fail is not None:
-                log.LOG.error("%s found in an unexpected state: %d" %
+                log.LOG.info("%s found in an unexpected state: %d" %
                               (fail[0], rcode))
                 self.restarts.append(time.time())
-                log.LOG.error("applying %s strategy to supervisor %s" %
+                log.LOG.info("applying %s strategy to supervisor %s" %
                               (self.strategy, self.name))
                 getattr(self, self.strategy)(*fail)
             if self.failed():

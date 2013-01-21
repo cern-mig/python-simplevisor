@@ -77,15 +77,15 @@ class Simplevisor(object):
         command = self.config.get("command", "status")
         path = self.config.get("path", None)
         if path is None and isinstance(self.child, Supervisor):
-            self.initialize_log(stdout=True)
+            self.initialize_log()
             self.load_status()
             action = getattr(self, command)
             action()
             return
+        self.initialize_log(stdout=True)
         if command not in SERVICE_COMMAND:
             raise ValueError("command must be one of: %s" %
                              ", ".join(SERVICE_COMMAND))
-        self.initialize_log(stdout=True)
         if isinstance(self.child, Service):
             target = self.child
         else:
@@ -94,15 +94,16 @@ class Simplevisor(object):
             if target is None:
                 raise ValueError("element at path not found: %s" %
                                  (path, ))
+        self.initialize_log()
         if command == "check":
             self.check(target)
         else:
             log.LOG.debug("calling %s.%s" % (target.name, command))
             (return_code, out, err) = getattr(target, command)()
             if len(out.strip()) > 0:
-                print("stdout: %s" % out.strip())
+                log.LOG.debug("stdout: %s" % (out.strip(), ))
             if len(err.strip()) > 0:
-                print("stderr: %s" % err.strip())
+                log.LOG.debug("stderr: %s" % (err.strip(), ))
             sys.exit(return_code)
 
     def configuration_check(self):
@@ -127,8 +128,8 @@ class Simplevisor(object):
         signal.signal(signal.SIGINT, self.on_signal)
         signal.signal(signal.SIGTERM, self.on_signal)
         signal.signal(signal.SIGHUP, self.on_signal)
-        self.pre_run()
         self.initialize_log()
+        self.pre_run()
         if self.config.get("daemon"):
             utils.daemonize()
         if self.config.get("pidfile"):
@@ -227,12 +228,17 @@ class Simplevisor(object):
         sys.exit(status)
 
     def initialize_log(self, stdout=False):
-        """ Initialize the log.LOG. """
+        """
+        Initialize the log system.
+        
+        If stdout is set to True then the log is initialized to print
+        to stdout independently from the configuration.
+        """
         if stdout:
-            log.LOG = get_log("print")("simplevisor", **self.config)
+            log.LOG = get_log("stdout")("simplevisor", **self.config)
         else:
-            log.LOG = get_log(self.config.get("log", "print"))("simplevisor",
-                                                               **self.config)
+            log.LOG = get_log(self.config.get("log", "stdout"))("simplevisor",
+                                                                **self.config)
 
     def load_status(self):
         """ Load saved status. """

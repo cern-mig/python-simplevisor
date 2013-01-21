@@ -32,7 +32,10 @@ before being launched like in this example::
     start = /path/to/script --conf /path/to/conf --space hello%20world start
     ...
 
-The commands provided should provide return codes according to the default
+The stdout and the stderr of the commands executed is logged as debug level
+within the configured log system.
+
+The commands declared should provide return codes according to the default
 LSB Unix return codes,
 for more info visit `LSB Core Specification <http://goo.gl/vQqaC>`_::
 
@@ -111,8 +114,8 @@ Parameters
 
     If <control> is not specified:
 
-        - if <restart> is not specified a "<control> stop" followed by a
-          "<control> start" is executed
+        - if <restart> is not specified "<stop>" followed by
+          "<start>" is executed
         - else "<restart>" is executed
 
 *start*
@@ -304,13 +307,13 @@ class Service(object):
             log.LOG.debug("%s returned: %s" % (" ".join(cmd), result))
             return result
         except utils.ProcessTimedout:
-            log.LOG.error("%s timedout %d seconds" %
-                          (" ".join(cmd), self._opts["timeout"]))
+            log.LOG.warning("%s timedout %d seconds" %
+                            (" ".join(cmd), self._opts["timeout"]))
             return (1, "", "timeout")
         except utils.ProcessError:
             error = sys.exc_info()[1]
-            log.LOG.error("error running %s: %s" %
-                          (" ".join(cmd), error))
+            log.LOG.warning("error running %s: %s" %
+                            (" ".join(cmd), error))
             return (1, "", "%s" % error)
 
     def adjust(self, timeout=5):
@@ -353,7 +356,7 @@ class Service(object):
                 if checked_status:
                     return
                 time.sleep(0.2)
-            log.LOG.critical(
+            log.LOG.error(
                 "service %s could not be adjusted." % self._opts["name"])
             raise SimplevisorError("service %s could not be adjusted." %
                                    self._opts["name"])
