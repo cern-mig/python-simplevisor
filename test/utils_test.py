@@ -23,6 +23,7 @@ import shutil
 import sys
 import unittest
 
+
 def u_(value):
     if sutils.PY2:
         return unicode(value)
