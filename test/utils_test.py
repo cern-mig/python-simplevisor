@@ -20,6 +20,7 @@ import simplevisor.utils as sutils
 from test.utils import parametrized
 import os
 import shutil
+import sys
 import unittest
 
 TEST_DIR = os.path.abspath("test_tmp")
@@ -32,6 +33,16 @@ TIMED_PROCESS_SETS = (
      (1, ''.encode(), ''.encode())),
     (sutils.ProcessTimedout, "sleep 5", 1, None),
     (sutils.ProcessError, "skjghdjskhfgkdf", 5, None),)
+UNIFY_KEYS_SETS_NAMES = "error given result".split()
+UNIFY_KEYS_SETS = (
+    (None, None, None),
+    (None, "", ""),
+    (None, {'hello': 'world'}, {'hello': 'world'}),
+    (None, {b'hello': 'world'}, {'hello': 'world'}),
+    (None, {u'hello': 'world'}, {'hello': 'world'}),
+    (None, {u'hello': 'world', 'foo': {u'hello': 'world'}},
+     {'hello': 'world', 'foo': {'hello': 'world'}}),
+)
 
 
 class UtilsTest(unittest.TestCase):
@@ -72,6 +83,43 @@ class UtilsTest(unittest.TestCase):
                 "command %s was expected to fail with error: %s" %
                 (command, error, ))
         print("...test timed_process ok")
+
+    @parametrized(UNIFY_KEYS_SETS_NAMES, UNIFY_KEYS_SETS)
+    def test_unify_keys(self, error, given, result):
+        """ Test unify kes. """
+        print("running unify keys for %s" % (given, ))
+        got = None
+        result_got = None
+        try:
+            result_got = sutils.unify_keys(given)
+        except:
+            got = type(sys.exc_info()[1])
+        if got == error:
+            if result_got != result:
+                raise AssertionError(
+                    "%s was expected to return %s, it returned %s" %
+                    (given, result, result_got, ))
+        else:
+            raise AssertionError(
+                "%s was expected to fail with error: %s" %
+                (given, error, ))
+        print("...test unify keys ok")
+
+    def some_function(**kwargs):
+        """ Example. """
+        pass
+
+    def test_unicode_keywords_function(self):
+        """ Test unicode keywords function. """
+        error = None
+        unicode_dict = {u'hello': 'world'}
+        try:
+            some_function(**unicode_dict)
+        except:
+            error = sys.exc_info()[1]
+        if type(error) is TypeError:
+            sutils.unify_keys(unicode_dict)
+            some_function(**unicode_dict)
 
 
 if __name__ == "__main__":

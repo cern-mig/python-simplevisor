@@ -31,6 +31,9 @@ except (SyntaxError, ImportError):
 
 CHECK_TIME = 0.05  # milliseconds
 
+PY2 = sys.hexversion < 0x03000000
+PY3 = not PY2
+
 
 def read_apache_config(path):
     """
@@ -441,3 +444,23 @@ def log_exceptions(re_raise=True):
                     sys.exit(1)
         return out_function
     return out_function
+
+
+def unify_keys(dictionary):
+    """
+    Unify dictionary's keys, if they are unicode transform them to strings.
+    This is for interoperability with old versions of Python.
+    """
+    if type(dictionary) is not dict:
+        return dictionary
+    for element in dictionary:
+        if PY2 and type(element) is not str:
+            value = dictionary.pop(element)
+            dictionary[element] = value
+        elif PY3 and type(element) is bytes:
+            value = dictionary.pop(element)
+            dictionary[element.decode()] = value
+        tmp = dictionary.get(element)
+        if type(tmp) is dict:
+            unify_keys(tmp)
+    return dictionary

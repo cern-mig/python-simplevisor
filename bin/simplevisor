@@ -10,7 +10,7 @@ import sys
 import simplevisor
 from simplevisor.Simplevisor import Simplevisor, \
     NORMAL_COMMAND, SERVICE_COMMAND
-from simplevisor.utils import read_apache_config
+from simplevisor.utils import read_apache_config, unify_keys
 
 COMMANDS = list(NORMAL_COMMAND)
 COMMANDS.extend(SERVICE_COMMAND)
@@ -389,7 +389,7 @@ def main():
     merged = merge_(DEFAULT_OPTIONS, merged)
     merged = merge_(merged, args)
     check_restrictions(merged)
-    svisor = Simplevisor(merged, entry)
+    svisor = Simplevisor(unify_keys(merged), unify_keys(entry))
     svisor.work()
 
 if __name__ == "__main__":
