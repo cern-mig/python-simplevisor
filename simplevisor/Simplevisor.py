@@ -230,7 +230,7 @@ class Simplevisor(object):
     def initialize_log(self, stdout=False):
         """
         Initialize the log system.
-        
+
         If stdout is set to True then the log is initialized to print
         to stdout independently from the configuration.
         """

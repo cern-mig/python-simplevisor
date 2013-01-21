@@ -294,10 +294,10 @@ class Supervisor(object):
                         fail = (child, child.stop)
             if fail is not None:
                 log.LOG.info("%s found in an unexpected state: %d" %
-                              (fail[0], rcode))
+                             (fail[0], rcode))
                 self.restarts.append(time.time())
                 log.LOG.info("applying %s strategy to supervisor %s" %
-                              (self.strategy, self.name))
+                             (self.strategy, self.name))
                 getattr(self, self.strategy)(*fail)
             if self.failed():
                 # the supervisor terminates all the child processes
