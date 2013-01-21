@@ -117,7 +117,7 @@ class UtilsTest(unittest.TestCase):
     def test_unicode_keywords_function(self):
         """ Test unicode keywords function. """
         error = None
-        unicode_dict = {u'hello': 'world'}
+        unicode_dict = {u_('hello'): 'world'}
         try:
             some_function(**unicode_dict)
         except:
