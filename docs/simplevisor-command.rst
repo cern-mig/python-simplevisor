@@ -1,7 +1,7 @@
 simplevisor command
 ===================
 
-simplevisor 0.4 - simple daemons supervisor
+simplevisor 0.6 - simple daemons supervisor
 
 SYNOPSIS
 --------
@@ -89,25 +89,25 @@ OPTIONS
 	daemonize, ONLY with start
 
 **--interval INTERVAL**
-	interval to wait between supervision cycles
+	interval to wait between supervision cycles (default: 60)
 
 **-h, --help**
 	print the help page
 
 **--log LOG**
-	available: null, print, syslog, simple
+	available: null, file, syslog, stdout (default: stdout)
 
 **--logfile LOGFILE**
-	log file, ONLY for simple
+	log file, ONLY for file
 
 **--loglevel LOGLEVEL**
-	log level, ONLY for simple and print
+	log level (default: warning)
 
 **-p, --pidfile PIDFILE**
 	the pidfile
 
 **--store STORE**
-	file where to store the state
+	file where to store the state, it is not mandatory,however recommended to store the simplevisor nodesstatus between restarts
 
 **--version**
 	print the program version
@@ -139,6 +139,6 @@ Given the example configuration, to start the httpd service::
 AUTHOR
 ------
 
-Massimo Paladin <massimo.paladin@gmail.com> - Copyright (C) 2012 CERN
+Massimo Paladin <massimo.paladin@gmail.com> - Copyright (C) 2013 CERN
 
 

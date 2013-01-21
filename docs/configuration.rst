@@ -10,6 +10,9 @@ Following features are supported:
 - blank lines are ignored
 - file inclusion with <<include relative_file_path.conf>>
 
+If a certain value is set for a specific feature in both the configuration
+file and the command line then the command line has the priority.
+
 You can find a configuration example in the examples directory called::
 
     simplevisor.conf.example
@@ -30,6 +33,7 @@ copy and edit the file::
 	    store = /var/cache/simplevisor/simplevisor.json
 	    
 	    # pid file
+	    # ignored if simplevisor-control is used
 	    #pidfile = /path/to/pid
 	    
 	    # interval between supervision cycles in seconds

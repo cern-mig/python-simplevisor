@@ -1,6 +1,6 @@
 =head1 NAME
 
-simplevisor 0.4 - simple daemons supervisor
+simplevisor 0.6 - simple daemons supervisor
 
 =head1 SYNOPSIS
 
@@ -88,19 +88,19 @@ B<--conf CONF> configuration file
 
 B<--daemon> daemonize, ONLY with start
 
-B<--interval INTERVAL> interval to wait between supervision cycles
+B<--interval INTERVAL> interval to wait between supervision cycles (default: 60)
 
 B<-h, --help> print the help page
 
-B<--log LOG> available: null, print, syslog, simple
+B<--log LOG> available: null, file, syslog, stdout (default: stdout)
 
-B<--logfile LOGFILE> log file, ONLY for simple
+B<--logfile LOGFILE> log file, ONLY for file
 
-B<--loglevel LOGLEVEL> log level, ONLY for simple and print
+B<--loglevel LOGLEVEL> log level (default: warning)
 
 B<-p, --pidfile PIDFILE> the pidfile
 
-B<--store STORE> file where to store the state
+B<--store STORE> file where to store the state, it is not mandatory,however recommended to store the simplevisor nodesstatus between restarts
 
 B<--version> print the program version
 
@@ -132,6 +132,6 @@ Given the example configuration, to start the httpd service:
 
 =head1 AUTHOR
 
-Massimo Paladin <massimo.paladin@gmail.com> - Copyright (C) 2012 CERN
+Massimo Paladin <massimo.paladin@gmail.com> - Copyright (C) 2013 CERN
 
 

@@ -12,22 +12,22 @@
     store = /var/cache/simplevisor/simplevisor.json
     
     # pid file
+    # ignored if simplevisor-control is used
     #pidfile = /path/to/pid
     
     # interval between supervision cycles in seconds
     #interval = 120
 	
     # Configure the logging system.
-    # 3 are available: print,syslog,simple
-    log = syslog
+    # 3 are available: stdout,syslog,file
+    log = stdout
 
-    # If logging system is simple you need to specify a log file,
+    # If logging system is file you need to specify a log file,
     # check that the logfile is writable by the specified user.
     #logfile = /var/log/simplevisor/simplevisor.log
 	
-    # If logging system is either print or simple you can
-    # specify a loglevel, it is warning by default:
-    # available log levels: debug,info,warning,error,critical
+    # loglevel is warning by default,
+    # the available log levels are: debug,info,warning,error,critical
     #loglevel = info
 </simplevisor>
 

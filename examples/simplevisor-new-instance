@@ -43,7 +43,7 @@ echo "$SHOME/etc/simplevisor.profile created"
 cat > etc/simplevisor.conf <<EOT
 <simplevisor>
     store = ${SHOME}/data/simplevisor.json
-    # log = (print|syslog|simple)
+    # log = (stdout|syslog|file)
     log = syslog
     #logfile = ${SHOME}/log/simplevisor.log
     # (debug|info|warning|error|critical)
