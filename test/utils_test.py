@@ -38,7 +38,6 @@ UNIFY_KEYS_SETS = (
     (None, None, None),
     (None, "", ""),
     (None, {'hello': 'world'}, {'hello': 'world'}),
-    (None, {b'hello': 'world'}, {'hello': 'world'}),
     (None, {u'hello': 'world'}, {'hello': 'world'}),
     (None, {u'hello': 'world', 'foo': {u'hello': 'world'}},
      {'hello': 'world', 'foo': {'hello': 'world'}}),
