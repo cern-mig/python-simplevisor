@@ -167,6 +167,9 @@ command [path]
 
 simplevisor-control command can be used to run simplevisor as a service.
 
+If this script is used the pidfile value specified in the simplevisor
+configuration file will be ignored.
+
 
 =head1 OPTIONS
 

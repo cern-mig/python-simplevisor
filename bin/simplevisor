@@ -17,7 +17,7 @@ COMMANDS.extend(SERVICE_COMMAND)
 COMMANDS.extend(["pod", "rst", "help"])
 COMMANDS = sorted(set(COMMANDS))
 CHECK_ARG_COMMAND_RE = re.compile("(%s)" % "|".join(COMMANDS))
-LOG_SYSTEMS = "null print syslog simple".split()
+LOG_SYSTEMS = "null file syslog stdout".split()
 CHECK_ARG_LOG_RE = re.compile("(%s)" % ("|".join(LOG_SYSTEMS), ))
 
 PROG = "simplevisor"
@@ -158,17 +158,19 @@ ARGUMENTS = [
         "type": check_arg_log}),
     ("logfile", {
         "long": "--logfile",
-        "help": "log file, ONLY for simple"}),
+        "help": "log file, ONLY for file"}),
     ("loglevel", {
         "long": "--loglevel",
-        "help": "log level, ONLY for simple and print"}),
+        "help": "log level"}),
     ("pidfile", {
         "short": "-p",
         "long": "--pidfile",
         "help": "the pidfile"}),
     ("store", {
         "long": "--store",
-        "help": "file where to store the state"}),
+        "help": "file where to store the state, it is not mandatory,"
+                "however recommended to store the simplevisor nodes"
+                "status between restarts"}),
     ("version", {
         "long": "--version",
         "action": "version",
@@ -189,7 +191,7 @@ ARGUMENTS = [
 
 DEFAULT_OPTIONS = {
     "daemon": False,
-    "log": "syslog",
+    "log": "stdout",
     "loglevel": "warning",
     "interval": 60,
     "path": None,
@@ -273,6 +275,7 @@ def print_rst():
             else:
                 positional = part + positional
         else:
+            clean_name = elopts["long"].replace("--", "")
             optional += "**"
             if "short" in elopts:
                 optional += "%s, " % elopts["short"]
@@ -281,7 +284,13 @@ def print_rst():
                 optional += " %s" % elopts.get("long").replace("-", "").upper()
             else:
                 optional += ""
-            optional += "**\n\t%s\n\n" % elopts.get("help", "")
+            optional += "**\n\t%s" % elopts.get("help", "")
+            if (clean_name in DEFAULT_OPTIONS and
+                    elopts.get("action") != "store_true" and
+                    DEFAULT_OPTIONS.get(clean_name) is not None):
+                optional += " (default: %s)" % \
+                    (DEFAULT_OPTIONS[clean_name])
+            optional += "\n\n"
     out += "**positional arguments:**\n\n"
     out += positional
     out += "**optional arguments:**\n\n"
@@ -337,6 +346,7 @@ def print_pod():
             else:
                 positional = part + positional
         else:
+            clean_name = elopts["long"].replace("--", "")
             optional += "B<"
             if "short" in elopts:
                 optional += "%s, " % elopts["short"]
@@ -345,7 +355,13 @@ def print_pod():
                 optional += " %s" % elopts.get("long").replace("-", "").upper()
             else:
                 optional += ""
-            optional += "> %s\n\n" % elopts.get("help", "")
+            optional += "> %s" % elopts.get("help", "")
+            if (clean_name in DEFAULT_OPTIONS and
+                    elopts.get("action") != "store_true" and
+                    DEFAULT_OPTIONS.get(clean_name) is not None):
+                optional += " (default: %s)" % \
+                    (DEFAULT_OPTIONS[clean_name])
+            optional += "\n\n"
     out += "B<positional arguments:>\n<{LIST_BEGIN}>\n"
     out += positional
     out += "<{LIST_END}>\n"
