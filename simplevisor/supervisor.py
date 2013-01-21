@@ -86,6 +86,7 @@ def new_child(options, inherit=dict()):
     """
     Return a new child.
     """
+    utils.unify_keys(options)
     if "timeout" not in options:
         options["timeout"] = inherit.get("timeout", 60)
     try:
