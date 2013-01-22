@@ -104,9 +104,9 @@ class Simplevisor(object):
         log.LOG.debug("calling %s.%s" % (target.name, command))
         (return_code, out, err) = getattr(target, command)()
         if len(out.strip()) > 0:
-            log.LOG.debug("stdout: %s" % (out.strip(), ))
+            print("stdout: %s" % (out.strip(), ))
         if len(err.strip()) > 0:
-            log.LOG.debug("stderr: %s" % (err.strip(), ))
+            print("stderr: %s" % (err.strip(), ))
         sys.exit(return_code)
 
     def configuration_check(self):
@@ -227,7 +227,7 @@ class Simplevisor(object):
         if not self.config.get("pidfile"):
             raise SimplevisorError("status requires a pidfile")
         (status, message) = pid_status(self.config["pidfile"], 60)
-        print("%s %s" % (status, message))
+        print("%s" % (message, ))
         sys.exit(status)
 
     def initialize_log(self, stdout=False):
