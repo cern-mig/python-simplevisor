@@ -422,6 +422,27 @@ def pid_remove(path):
         return pid
 
 
+def print_only_exception_error():
+    """
+    Print only exception error message.
+    """
+    def out_function(in_function):
+        """ Wrap function. """
+        def out_function(*args, **kwargs):
+            """ Wrapping and catching exceptions. """
+            __name__ = in_function.__name__
+            try:
+                in_function(*args, **kwargs)
+            except SystemExit:
+                raise sys.exc_info()[1]
+            except Exception:
+                (_, error, error_tb) = sys.exc_info()
+                print("%s" % (error,))
+                sys.exit(1)
+        return out_function
+    return out_function
+
+
 def log_exceptions(re_raise=True):
     """
     Log exceptions to configured log and re raise the exception or exit.
