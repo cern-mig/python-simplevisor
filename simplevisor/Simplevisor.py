@@ -49,13 +49,12 @@ class Simplevisor(object):
         elif type(options) != dict:
             raise SimplevisorError(
                 "Simplevisor expect a configuration dictionary.")
-        #if entry_config is None or type(entry_config) == list:
-        #    raise SimplevisorError("Simplevisor expect a single entry.")
         self.config = options
         self.status_file = self.config.get("store")
         self.entry_config = entry_config
         self.running = False
         self.child = supervisor.new_child(self.entry_config)
+        self.initialize_log()
 
     def get_child(self, path=""):
         """ Return child by its path. """
@@ -72,7 +71,6 @@ class Simplevisor(object):
                 pass
         raise ValueError("given path is invalid: %s" % path)
 
-    @utils.log_exceptions(re_raise=False)
     def work(self):
         """ Controller. """
         command = self.config.get("command", "status")
@@ -83,7 +81,6 @@ class Simplevisor(object):
         if self.child is None:
             raise SimplevisorError("no entry found")
         if path is None and isinstance(self.child, Supervisor):
-            self.initialize_log()
             self.load_status()
             getattr(self, command)()
             return
@@ -97,7 +94,6 @@ class Simplevisor(object):
             target = self.get_child(path)
             if target is None:
                 raise ValueError("element with path not found: %s" % (path, ))
-        self.initialize_log()
         if command == "check":
             self.check(target)
             return
@@ -133,8 +129,12 @@ class Simplevisor(object):
         signal.signal(signal.SIGHUP, self.on_signal)
         self.initialize_log()
         self.pre_run()
+        run_function = None
         if self.config.get("daemon"):
             utils.daemonize()
+            run_function = utils.log_exceptions(re_raise=False)(self.run)
+        else:
+            run_function = utils.log_exceptions(re_raise=True)(self.run)
         if self.config.get("pidfile"):
             pid_write(self.config["pidfile"], os.getpid(), excl=True)
         self.run()
@@ -270,7 +270,6 @@ class Simplevisor(object):
     def save_status(self):
         """ Save the status in the specified file. """
         if self.status_file is None:
-            log.LOG.debug("status file not specified")
             return
         try:
             log.LOG.debug("status file: %s" % self.status_file)
