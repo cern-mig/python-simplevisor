@@ -315,7 +315,7 @@ class Simplevisor(object):
 
     def run(self):
         """ Coordinate the job. """
-        log.LOG.info("supervisor started")
+        log.LOG.info("%s started" % (self.prog, ))
         self.running = True
         action = None
         while self.running:

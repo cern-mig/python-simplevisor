@@ -253,8 +253,8 @@ class Supervisor(object):
         This method is not implemented.
         """
         raise NotImplementedError(
-            "status command not supported for a type supervisor, "
-            "look at \"check\" command")
+            "status command not supported on a supervisor node, "
+            "look at \"check\" command instead")
 
     def restart(self):
         """
