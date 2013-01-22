@@ -71,7 +71,7 @@ class Simplevisor(object):
                 pass
         raise ValueError("given path is invalid: %s" % path)
 
-    @utils.print_only_exception_error
+    @utils.print_only_exception_error()
     def work(self):
         """ Controller. """
         command = self.config.get("command", "status")
