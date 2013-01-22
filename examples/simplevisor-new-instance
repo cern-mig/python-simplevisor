@@ -22,6 +22,15 @@ cat > bin/service <<EOT
 
 # chkconfig: - 90 15
 # description: ${NAME} - simplevisor instance
+### BEGIN INIT INFO
+# Provides:          ${NAME}
+# Required-Start:    \$remote_fs \$syslog
+# Required-Stop:     \$remote_fs \$syslog
+# Default-Start:     3 4 5
+# Default-Stop:      0 1 2 6
+# Description:       Simple daemons supervisor: ${NAME}
+# Short-Description: Simple daemons supervisor: ${NAME}
+### END INIT INFO
 
 . "${SHOME}/etc/simplevisor.profile"
 exec "/usr/bin/simplevisor-control" \${1+"\$@"}
