@@ -137,8 +137,7 @@ def check_arg_log(log_type):
 ARGUMENTS = [
     ("conf", {
         "long": "--conf",
-        "help": "configuration file",
-        "required": True, }),
+        "help": "configuration file", }),
     ("daemon", {
         "long": "--daemon",
         "help": "daemonize, ONLY with start",
@@ -154,7 +153,7 @@ ARGUMENTS = [
         "help": "print the help page"}),
     ("log", {
         "long": "--log",
-        "help": "available: %s" % ", ".join(LOG_SYSTEMS),
+        "help": "available: %s" % (", ".join(LOG_SYSTEMS), ),
         "type": check_arg_log}),
     ("logfile", {
         "long": "--logfile",
@@ -379,9 +378,17 @@ def print_pod():
              .replace("\n- ", "\n=item *\n\n")
     print(out)
 
+SIMPLEVISOR_CONFIGURATION_FIELDS = [
+    "store", "pidfile", "interval", "log", "logfile",
+    "loglevel", "path", "command", "daemon", ]
+
 
 def check_restrictions(arguments):
     """ Check arguments restriction. """
+    for key in arguments.keys():
+        if key not in SIMPLEVISOR_CONFIGURATION_FIELDS:
+            raise ValueError(
+                "%s is not a valid configuration property" % key)
     if (arguments["daemon"] and
             arguments["path"] is not None and
             arguments["command"] != "start"):
@@ -399,12 +406,18 @@ def merge_(first, second):
 def main():
     """ Do the work. """
     args = read_args()
-    conf = read_apache_config(os.path.abspath(args.get("conf", None)))
-    entry = conf.get("entry", None)
-    merged = conf.get("simplevisor", dict())
+    configuration_file = args.pop("conf", None)
+    conf = dict()
+    if configuration_file is not None:
+        conf = read_apache_config(os.path.abspath(configuration_file))
+    entry = conf.pop("entry", None)
+    merged = conf.pop("simplevisor", dict())
     merged = merge_(DEFAULT_OPTIONS, merged)
     merged = merge_(merged, args)
     check_restrictions(merged)
+    if conf:
+        raise ValueError(
+            "invalid properties in the configuration: %s" % (conf, ))
     svisor = Simplevisor(unify_keys(merged), unify_keys(entry))
     svisor.work()
 

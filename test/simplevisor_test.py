@@ -21,7 +21,7 @@ import unittest
 OK = True
 FAIL = False
 CREATION_COMBS = [
-    (FAIL, dict()),
+    (OK, dict()),
 ]
 
 

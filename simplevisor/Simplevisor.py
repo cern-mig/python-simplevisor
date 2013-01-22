@@ -30,6 +30,7 @@ from simplevisor.utils import pid_check, pid_quit, pid_read, pid_remove, \
 import pprint
 PP = pprint.PrettyPrinter(indent=2)
 
+QUICK_COMMAND = ["status", "stop", "stop_supervisor", "stop_children"]
 SERVICE_COMMAND = ["start", "stop", "status", "check", "restart"]
 NORMAL_COMMAND = list(SERVICE_COMMAND)
 NORMAL_COMMAND.remove("restart")
@@ -48,8 +49,8 @@ class Simplevisor(object):
         elif type(options) != dict:
             raise SimplevisorError(
                 "Simplevisor expect a configuration dictionary.")
-        if entry_config is None or type(entry_config) == list:
-            raise SimplevisorError("Simplevisor expect a single entry.")
+        #if entry_config is None or type(entry_config) == list:
+        #    raise SimplevisorError("Simplevisor expect a single entry.")
         self.config = options
         self.status_file = self.config.get("store")
         self.entry_config = entry_config
@@ -76,35 +77,37 @@ class Simplevisor(object):
         """ Controller. """
         command = self.config.get("command", "status")
         path = self.config.get("path", None)
+        if path is None and command in QUICK_COMMAND:
+            getattr(self, command)()
+            return
+        if self.child is None:
+            raise SimplevisorError("no entry found")
         if path is None and isinstance(self.child, Supervisor):
             self.initialize_log()
             self.load_status()
-            action = getattr(self, command)
-            action()
+            getattr(self, command)()
             return
-        self.initialize_log(stdout=True)
         if command not in SERVICE_COMMAND:
             raise ValueError("command must be one of: %s" %
                              ", ".join(SERVICE_COMMAND))
-        if isinstance(self.child, Service):
+        if path is None:
             target = self.child
         else:
-            # command service at path
+            # service's command at path
             target = self.get_child(path)
             if target is None:
-                raise ValueError("element at path not found: %s" %
-                                 (path, ))
+                raise ValueError("element with path not found: %s" % (path, ))
         self.initialize_log()
         if command == "check":
             self.check(target)
-        else:
-            log.LOG.debug("calling %s.%s" % (target.name, command))
-            (return_code, out, err) = getattr(target, command)()
-            if len(out.strip()) > 0:
-                log.LOG.debug("stdout: %s" % (out.strip(), ))
-            if len(err.strip()) > 0:
-                log.LOG.debug("stderr: %s" % (err.strip(), ))
-            sys.exit(return_code)
+            return
+        log.LOG.debug("calling %s.%s" % (target.name, command))
+        (return_code, out, err) = getattr(target, command)()
+        if len(out.strip()) > 0:
+            log.LOG.debug("stdout: %s" % (out.strip(), ))
+        if len(err.strip()) > 0:
+            log.LOG.debug("stderr: %s" % (err.strip(), ))
+        sys.exit(return_code)
 
     def configuration_check(self):
         """ Check only the configuration. """
@@ -267,7 +270,7 @@ class Simplevisor(object):
     def save_status(self):
         """ Save the status in the specified file. """
         if self.status_file is None:
-            log.LOG.info("status file not specified")
+            log.LOG.debug("status file not specified")
             return
         try:
             log.LOG.debug("status file: %s" % self.status_file)

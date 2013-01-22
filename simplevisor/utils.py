@@ -39,9 +39,11 @@ def read_apache_config(path):
     """
     Read Apache style config files.
     """
+    if path is None:
+        return None
     cmd = "perl -e 'use Config::General qw(ParseConfig);" + \
           "use JSON qw(to_json);print(to_json({ParseConfig(" + \
-          "-ConfigFile => $ARGV[0])}))' %s" % (path, )
+          "-ConfigFile => $ARGV[0], -InterPolateVars => 1)}))' %s" % (path, )
     proc = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
     out, err = proc.communicate()
     if err:
@@ -266,7 +268,7 @@ def pid_read(path, action=False):
             content = (int(pid_content[0]), None)
         else:
             content = (int(pid_content[0]), pid_content[1].strip())
-    except IOError:
+    except (IOError, ValueError):
         error = sys.exc_info()[1]
         raise IOError("cannot read pidfile %s: %s" % (path, error))
     else:
@@ -464,3 +466,19 @@ def unify_keys(dictionary):
         if type(tmp) is dict:
             unify_keys(tmp)
     return dictionary
+
+
+def get_int_or_die(value, message=None):
+    """
+    Return the integer value or die with the error message provided.
+    """
+    if type(value) == int:
+        return value
+    try:
+        value = int(value)
+    except ValueError:
+        if message is None:
+            raise sys.exc_info()[1]
+        else:
+            raise ValueError(message)
+    return value

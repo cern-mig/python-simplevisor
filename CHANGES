@@ -6,6 +6,8 @@ X.X X X X X
     * [mp] simplevisor-loop updated
     * [mp] documentation improved
     * [mp] log handling improved
+    * [mp] bug fixing
+    * [mp] variable interpolation in configuration file
 
 0.6 Thu Jan 17 2013
     * [mp] bug fixes and improvements

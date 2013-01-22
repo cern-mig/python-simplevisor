@@ -196,6 +196,8 @@ except ImportError:
     from urllib.parse import unquote
 
 MAXIMUM_LOG = 100
+DEFAULT_TIMEOUT = 10
+DEFAULT_EXPECTED = "running"
 
 
 class Service(object):
@@ -203,10 +205,11 @@ class Service(object):
     Service class.
     """
 
-    def __init__(self, name, expected="running",
-                 timeout=10,
+    def __init__(self, name, expected=DEFAULT_EXPECTED,
+                 timeout=DEFAULT_TIMEOUT,
                  control=None, daemon=None, path=None, pattern=None,
-                 restart=None, start=None, status=None, stop=None):
+                 restart=None, start=None, status=None, stop=None,
+                 **kwargs):
         """ Service constructor. """
         self.name = name
         self._opts = {"name": name,
@@ -219,10 +222,18 @@ class Service(object):
                       "start": start,
                       "status": status,
                       "stop": stop,
-                      "timeout": timeout, }
+                      "timeout": utils.get_int_or_die(
+                          timeout,
+                          "timeout value for %s is not a valid integer: %s" %
+                          (name, timeout)), }
         self._status = {"name": name,
                         "log": list(),
                         }
+        for key in kwargs.keys():
+            if not key.startswith("var_"):
+                raise SimplevisorError(
+                    "an invalid property has been specified for %s: %s" %
+                    (name, key))
         self.is_new = True
         try:
             self._validate_opts(self._opts)

@@ -9,7 +9,7 @@ An example of supervisor declaration::
         max_restarts = 10
         max_time = 60
         strategy = one_for_one
-        stop_all = false
+        expected = none
         <children>
             .... other supervisors or services
         </children>
@@ -22,10 +22,10 @@ name
     unique name of the supervisor.
 
 max_restarts
-    max number of restarts (linked with max_time), None to restart infinitely.
+    max number of restarts (linked with max_time), none to restart infinitely.
 
 max_time
-    window time to count the number of restarts, None to restart infinitely.
+    window time to count the number of restarts, none to restart infinitely.
 
 timeout
     the maximum timeout for start, stop, status and restart commands,
@@ -44,9 +44,8 @@ strategy
       process in start order are terminated. Then the terminated
       child process and the rest of the child processes are restarted.
 
-stop_all
-    set to *true* if you want to stop the supervisor and its children.
-    Default value is *false*.
+expected
+    none|running|stopped
 
 children
     children structure.
@@ -64,7 +63,7 @@ Default Parameters
 ::
 
 - name = supervisor
-- stop_all = false
+- expected = none
 - max_restarts = 10
 - max_time = 60
 - timeout = 60
@@ -80,15 +79,21 @@ import sys
 import time
 
 MAXIMUM_RESTARTS = 10
+DEFAULT_EXPECTED = "none"
+DEFAULT_TIMEOUT = 60
+DEFAULT_MAX_RESTARTS = 10
+DEFAULT_MAX_TIME = 60
 
 
 def new_child(options, inherit=dict()):
     """
     Return a new child.
     """
+    if options is None:
+        return None
     utils.unify_keys(options)
     if "timeout" not in options:
-        options["timeout"] = inherit.get("timeout", 60)
+        options["timeout"] = inherit.get("timeout", DEFAULT_TIMEOUT)
     try:
         tmp_type = options.pop("type")
     except KeyError:
@@ -96,10 +101,11 @@ def new_child(options, inherit=dict()):
         log.LOG.error(msg)
         raise SimplevisorError(msg)
     child = None
+    tmp_expected = inherit.get("expected", DEFAULT_EXPECTED)
+    if (tmp_expected != "none"):
+        options["expected"] = tmp_expected
     if tmp_type == "service":
         try:
-            if inherit.get("stop_all", False):
-                options["expected"] = "stopped"
             child = Service(**options)
         except TypeError:
             error = sys.exc_info()[1]
@@ -108,8 +114,6 @@ def new_child(options, inherit=dict()):
             raise SimplevisorError(msg)
     elif tmp_type == "supervisor":
         try:
-            if inherit.get("stop_all", False):
-                options["stop_all"] = "true"
             child = Supervisor(**options)
         except TypeError:
             error = sys.exc_info()[1]
@@ -128,21 +132,39 @@ class Supervisor(object):
     Supervisor class.
     """
 
-    def __init__(self, name="supervisor", stop_all="false",
-                 max_restarts=10, max_time=60, timeout=60,
-                 strategy="one_for_one",
-                 children=dict()):
+    def __init__(self, name="supervisor", expected=DEFAULT_EXPECTED,
+                 max_restarts=DEFAULT_MAX_RESTARTS, max_time=DEFAULT_MAX_TIME,
+                 timeout=DEFAULT_TIMEOUT, strategy="one_for_one",
+                 children=dict(), **kwargs):
         """ Constructor. """
         self.name = name
-        self.stop_all = stop_all == "true"
-        self.max_restarts = max_restarts
-        if self.max_restarts == "" or self.max_restarts == "None":
+        self.expected = expected.lower()
+        if hasattr(max_restarts, "lower") and \
+                max_restarts.lower() in ["", "none"]:
             self.max_restarts = None
-        self.max_time = max_time
-        if self.max_time == "" or self.max_time == "None":
+        else:
+            self.max_restarts = utils.get_int_or_die(
+                max_restarts,
+                "max_restart value for %s is not a valid integer: %s" %
+                (name, max_restarts))
+        if hasattr(max_time, "lower") and \
+                max_time.lower() in ["", "none"]:
             self.max_time = None
-        self.timeout = timeout
+        else:
+            self.max_time = utils.get_int_or_die(
+                max_time,
+                "max_time value for %s is not a valid integer: %s" %
+                (name, max_time))
+        self.timeout = utils.get_int_or_die(
+            timeout,
+            "timeout value for %s is not a valid integer: %s" %
+            (name, timeout))
         self.strategy = strategy
+        for key in kwargs.keys():
+            if not key.startswith("var_"):
+                raise SimplevisorError(
+                    "an invalid property has been specified for %s: %s" %
+                    (name, key))
         self._children = list()
         self._children_dict = dict()
         self._children_name = dict()
@@ -172,7 +194,7 @@ class Supervisor(object):
         Add a child.
         """
         inherit = {"timeout": self.timeout,
-                   "stop_all": self.stop_all}
+                   "expected": self.expected}
         n_child = new_child(options, inherit)
         if n_child is not None:
             if n_child.name in self._children_name:
@@ -383,7 +405,7 @@ class Supervisor(object):
         Return *True* if supervisor is expected to run,
         *False* in other case.
         """
-        return not self.stop_all
+        return self.expected == "running" or self.expected == "none"
 
     def __str__(self):
         """
