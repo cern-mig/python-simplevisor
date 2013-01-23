@@ -249,6 +249,8 @@ def daemonize():
 
 
 #### PID helpers
+DEFAULT_PID_MODE = oct(438)
+
 class PIDError(Exception):
     """ PID related errors. """
 
@@ -294,7 +296,7 @@ def pid_write(path, pid, action=None, excl=False):
             mode = os.O_WRONLY | os.O_CREAT | os.O_EXCL
         else:
             mode = os.O_WRONLY | os.O_CREAT
-        pid_file = os.open(path, mode, 0666)
+        pid_file = os.open(path, mode, DEFAULT_PID_MODE)
         content = "%s\n" % pid
         if action is not None:
             content += "%s\n" % action
