@@ -5,7 +5,7 @@ simplevisor 0.6 - simple daemons supervisor
 =head1 SYNOPSIS
 
 B<simplevisor>
---conf CONF[--daemon][--interval INTERVAL][-h][--log LOG][--logfile LOGFILE][--loglevel LOGLEVEL][-p PIDFILE][--store STORE][--version]
+[--conf CONF][--daemon][--interval INTERVAL][-h][--log LOG][--logfile LOGFILE][--loglevel LOGLEVEL][-p PIDFILE][--store STORE][--version]
 command [path]
 
 =head1 DESCRIPTION
