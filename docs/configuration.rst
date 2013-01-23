@@ -2,18 +2,52 @@ Configuration
 =============
 
 Simplevisor has one main configuration file. The format of the configuration
-file is a simplified Apache Style Config file.
-Following features are supported:
+file is the Apache Style Config, the configuration parsing is handled
+with Perl Config::General module for commodity.
 
-- Apache Style Config syntax
-- comments are allowed with lines starting with #
-- blank lines are ignored
-- file inclusion with <<include relative_file_path.conf>>
+These are the main features supported in the configuration file:
 
-If a certain value is set for a specific feature in both the configuration
-file and the command line then the command line has the priority.
+format
+    Apache Style Config syntax
+comments
+    comments are allowed through lines starting with *#*
+blank lines
+    blank lines are ignored
+file inclusion
+    file inclusion is supported to allow modularization of the configuration
+    file. It is possible to include a file which is in the same folder or in
+    its subtree with the following directive:
+    <<include relative_file_path.conf>>
+variable interpolation
+    variable interpolation is supported in order to reduce verbosity and
+    duplication in the main blocks of the configuration file.
+    
+    *simplevisor* and *entry* sections allow variables declaration,
+    variables are declared like any other fields with the only restriction
+    that their name is prefixed with *var_*::
+    
+        ...
+        var_foo = bar
+        ...
+    
+    You can use variables in the value of a field, you can not use them
+    inside keys and their scope is the subtree of declaration.
+    They can be used surrounded by curly braces and prefixed by a dollar:
+    *${var_name}*.
+    
+    An usage example::
+    
+        ...
+        var_foo = bar
+        property_x = ${var_foo} the rest of the value
+        ...
+    
+    
 
-You can find a configuration example in the examples directory called::
+The options specified through the command line have the priority over
+the options declared in the configuration file.
+
+You can find a configuration example in the *examples* folder, it is called::
 
     simplevisor.conf.example
 
