@@ -294,7 +294,7 @@ def pid_write(path, pid, action=None, excl=False):
             mode = os.O_WRONLY | os.O_CREAT | os.O_EXCL
         else:
             mode = os.O_WRONLY | os.O_CREAT
-        pid_file = os.open(path, mode)
+        pid_file = os.open(path, mode, 0666)
         content = "%s\n" % pid
         if action is not None:
             content += "%s\n" % action
