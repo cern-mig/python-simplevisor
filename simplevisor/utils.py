@@ -249,8 +249,6 @@ def daemonize():
 
 
 #### PID helpers
-DEFAULT_PID_MODE = oct(438)
-
 class PIDError(Exception):
     """ PID related errors. """
 
@@ -296,7 +294,10 @@ def pid_write(path, pid, action=None, excl=False):
             mode = os.O_WRONLY | os.O_CREAT | os.O_EXCL
         else:
             mode = os.O_WRONLY | os.O_CREAT
-        pid_file = os.open(path, mode, DEFAULT_PID_MODE)
+        # int('0666', 8) is for compatibility with python2.4
+        # which support only octal with the form 0666
+        # since python 2.6 0o666 must be used
+        pid_file = os.open(path, mode, int('0666', 8))
         content = "%s\n" % pid
         if action is not None:
             content += "%s\n" % action
