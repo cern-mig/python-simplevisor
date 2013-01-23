@@ -324,7 +324,7 @@ class Simplevisor(object):
             t_end = time.time()
             if return_code == 0:
                 log.LOG.info(
-                    "supervision cycle executed successfully in %d seconds" %
+                    "supervision cycle executed successfully in %.3f seconds" %
                     (t_end - t_start, ))
             else:
                 log.LOG.info(
