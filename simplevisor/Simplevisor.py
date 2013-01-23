@@ -325,8 +325,8 @@ class Simplevisor(object):
         t_end = time.time()
         if return_code == 0:
             log.LOG.info(
-                "supervision cycle executed successfully in %.3f "
-                "seconds: %s services OK, %s services needed adjustment" %
+                "supervision cycle executed successfully in %.3fs: "
+                "%s services OK, %s services needed adjustment" %
                 (t_end - t_start, result.get("ok", "unknown"),
                  result.get("adjusted", "unknown")))
         else:
