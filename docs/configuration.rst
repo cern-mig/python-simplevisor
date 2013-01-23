@@ -53,39 +53,52 @@ You can find a configuration example in the *examples* folder, it is called::
 
 copy and edit the file::
 
-	# The format of the configuration
-	# file is a simplified Apache Style Config file.
-	# Following features are supported:
-	# 
-	# - Apache Style Config syntax
-	# - comments are allowed with lines starting with #
-	# - blank lines are ignored
-	# - file inclusion with <<include relative_file_path.conf>>
-	
-	<simplevisor>
-	    # File used to store the status
-	    store = /var/cache/simplevisor/simplevisor.json
-	    
-	    # pid file
-	    # ignored if simplevisor-control is used
-	    #pidfile = /path/to/pid
-	    
-	    # interval between supervision cycles in seconds
-	    #interval = 120
-		
-	    # Configure the logging system.
-	    # 3 are available: print,syslog,simple
-	    log = syslog
-	
-	    # If logging system is simple you need to specify a log file,
-	    # check that the logfile is writable by the specified user.
-	    #logfile = /var/log/simplevisor/simplevisor.log
-		
-	    # If logging system is either print or simple you can
-	    # specify a loglevel, it is warning by default:
-	    # available log levels: debug,info,warning,error,critical
-	    #loglevel = info
-	</simplevisor>
+    # Simplevisor has one main configuration file. The format of the configuration
+    # file is the Apache Style Config, the configuration parsing is handled
+    # with Perl Config::General module for commodity.
+    #
+    # Following features are supported:
+    # 
+    # - Apache Style Config syntax
+    # - comments are allowed through lines starting with #
+    # - blank lines are ignored
+    # - file inclusion is supported to allow modularization of the
+    #   configuration file. It is possible to include a file which is in the same
+    #   folder or in its subtree with the following directive:
+    #   <<include relative_file_path.conf>>
+    # - variable interpolation is supported in order to reduce verbosity and
+    #   duplication in the main blocks of the configuration file.
+    #   simplevisor and entry sections allow variables declaration, variables
+    #   are declared like any other fields with the only restriction that their
+    #   name is prefixed with var_:
+    #       ...
+    #       var_foo = bar
+    #       property_x = ${var_foo} the rest of the value
+    #       ...
+    #   You can use variables in the value of a field, you can not use them inside
+    #   keys and their scope is the subtree of declaration.
+    
+    <simplevisor>
+        # file used to store the status
+        store = /var/cache/simplevisor/simplevisor.json
+        
+        # pid file, ignored if simplevisor-control is used
+        #pidfile = /path/to/pid
+        
+        # interval between supervision cycles, in seconds
+        #interval = 120
+        
+        # configure the logging system, must be one of: stdout,syslog,file
+        log = stdout
+    
+        # if logging system is file you need to specify a log file,
+        # check that the logfile is writable by the specified user.
+        #logfile = /var/log/simplevisor/simplevisor.log
+        
+        # the loglevel is warning by default,
+        # the available log levels are: debug,info,warning,error,critical
+        #loglevel = info
+    </simplevisor>
 	
 	<<include simplevisor.services.example>>
 
@@ -98,7 +111,6 @@ where *simplevisor.services.example* could look like::
 	    max_restarts = 10
 	    max_time = 60
 	    strategy = one_for_one
-	    stop_all = false
 	    <children>
 		    <entry>
 		        type = service

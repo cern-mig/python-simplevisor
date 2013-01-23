@@ -13,7 +13,6 @@
     max_restarts = 10
     max_time = 60
     strategy = one_for_one
-    expected = none
     <children>
 	    <entry>
 	        type = service
