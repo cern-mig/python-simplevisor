@@ -286,15 +286,17 @@ class Supervisor(object):
         health_output = [msg, health_output]
         return (health, health_output)
 
-    def supervise(self):
+    def supervise(self, result=None):
         """
         This method check that children are running/stopped according
         to the configuration.
         """
+        if result is None:
+            result = dict()
         for child in self._children:
             fail = None
             if isinstance(child, Supervisor):
-                (rcode, _, _) = child.supervise()
+                (rcode, _, _) = child.supervise(result)
                 if rcode != 0:
                     fail = (child, child.start)
             else:  # it is a Service
@@ -314,7 +316,11 @@ class Supervisor(object):
                     else:
                         # FAIL, need to stop
                         fail = (child, child.stop)
-            if fail is not None:
+                if fail is None:
+                    result["ok"] = result.get("ok", 0) + 1
+                else:  # failure
+                    result["adjusted"] = result.get("adjusted", 0) + 1
+            if fail is not None:  # failure
                 log.LOG.info("%s found in an unexpected state: %d" %
                              (fail[0], rcode))
                 self.restarts.append(time.time())

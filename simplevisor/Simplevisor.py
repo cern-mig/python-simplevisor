@@ -313,23 +313,32 @@ class Simplevisor(object):
         self.child.adjust()
         log.LOG.debug("all elements adjusted")
 
+    def supervise(self):
+        """
+        Supervise method helper.
+        """
+        result = dict()
+        t_start = time.time()
+        (return_code, _, _) = self.child.supervise(result)
+        t_end = time.time()
+        if return_code == 0:
+            log.LOG.info(
+                "supervision cycle executed successfully in %.3f"
+                "seconds: %d services OK, %d services needed adjustment" %
+                (t_end - t_start, result.get("ok", "unknown"),
+                 result.get("adjusted", "unknown")))
+        else:
+            log.LOG.error(
+                "supervision interrupted/failed with return code %d:" %
+                (return_code, ))
+
     def run(self):
         """ Coordinate the job. """
         log.LOG.info("%s started" % (self.prog, ))
         self.running = True
         action = None
         while self.running:
-            t_start = time.time()
-            (return_code, _, _) = self.child.supervise()
-            t_end = time.time()
-            if return_code == 0:
-                log.LOG.info(
-                    "supervision cycle executed successfully in %.3f seconds" %
-                    (t_end - t_start, ))
-            else:
-                log.LOG.error(
-                    "supervision cycle failed with return code %d" %
-                    (return_code, ))
+            self.supervise()
             self.save_status()
             if self.config.get("command") == "single":
                 log.LOG.debug("single mode, exiting")
