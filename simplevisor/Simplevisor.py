@@ -319,8 +319,17 @@ class Simplevisor(object):
         self.running = True
         action = None
         while self.running:
-            self.child.supervise()
-            log.LOG.debug("supervised")
+            t_start = time.time()
+            (return_code, _, _) = self.child.supervise()
+            t_end = time.time()
+            if return_code == 0:
+                log.LOG.info(
+                    "supervision cycle executed successfully in %d seconds" %
+                    (t_end - t_start, ))
+            else:
+                log.LOG.info(
+                    "supervision cycle failed with return code %d" %
+                    (return_code, ))
             self.save_status()
             if self.config.get("command") == "single":
                 log.LOG.debug("single mode, exiting")
