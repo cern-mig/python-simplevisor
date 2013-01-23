@@ -317,14 +317,16 @@ class Simplevisor(object):
         """
         Supervise method helper.
         """
-        result = dict()
+        result = {
+            'ok': 0,
+            'adjusted': 0, }
         t_start = time.time()
         (return_code, _, _) = self.child.supervise(result)
         t_end = time.time()
         if return_code == 0:
             log.LOG.info(
                 "supervision cycle executed successfully in %.3f"
-                "seconds: %d services OK, %d services needed adjustment" %
+                "seconds: %s services OK, %s services needed adjustment" %
                 (t_end - t_start, result.get("ok", "unknown"),
                  result.get("adjusted", "unknown")))
         else:
