@@ -327,7 +327,7 @@ class Simplevisor(object):
                     "supervision cycle executed successfully in %.3f seconds" %
                     (t_end - t_start, ))
             else:
-                log.LOG.info(
+                log.LOG.error(
                     "supervision cycle failed with return code %d" %
                     (return_code, ))
             self.save_status()
