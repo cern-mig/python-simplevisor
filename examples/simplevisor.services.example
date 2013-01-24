@@ -10,8 +10,8 @@
 <entry>
     type = supervisor
     name = svisor1
-    max_restarts = 10
-    max_time = 60
+    window = 12
+    adjustments = 3
     strategy = one_for_one
     <children>
 	    <entry>

@@ -85,7 +85,8 @@ copy and edit the file::
         # pid file, ignored if simplevisor-control is used
         #pidfile = /path/to/pid
         
-        # interval between supervision cycles, in seconds
+        # interval (sleep time) between supervision cycles, from the end
+        # of one cycle to the start of the next one, in seconds
         #interval = 120
         
         # configure the logging system, must be one of: stdout,syslog,file
@@ -108,8 +109,8 @@ where *simplevisor.services.example* could look like::
 	<entry>
 	    type = supervisor
 	    name = svisor1
-	    max_restarts = 10
-	    max_time = 60
+	    window = 12
+	    adjustments = 3
 	    strategy = one_for_one
 	    <children>
 		    <entry>

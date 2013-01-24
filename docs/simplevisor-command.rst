@@ -107,7 +107,7 @@ OPTIONS
 	the pidfile
 
 **--store STORE**
-	file where to store the state, it is not mandatory,however recommended to store the simplevisor nodesstatus between restarts
+	file where to store the state, it is not mandatory,however recommended to store the simplevisor nodes status between restarts
 
 **--version**
 	print the program version
