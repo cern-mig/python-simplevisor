@@ -306,11 +306,11 @@ class Supervisor(object):
                 log.LOG.info("applying %s strategy to supervisor %s" %
                              (self._strategy, self.name))
                 getattr(self, self._strategy)(*fail)
-            if self.failed():
-                # the supervisor terminates all the child processes
-                # and then itself
-                self.stop()
-                return (3, "", "")
+                if self.failed():
+                    # the supervisor terminates all the child processes
+                    # and then itself
+                    self.stop()
+                    return (3, "", "")
         if not one_adjustment:
             self._log_cycle(False)
         return (0, "", "")
