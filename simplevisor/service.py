@@ -163,6 +163,9 @@ Parameters
         - else it will look for it in the process table either looking
           for the start command or the provided pattern and then kill it.
 
+*timeout*
+    the maximum timeout for any service command, set to 60 seconds by default.
+
 Required Parameters
 -------------------
 
@@ -177,7 +180,7 @@ Default Parameters
 ::
 
 - expected = running
-- timeout = 10
+- timeout = 60
 - all the others are default to None
 
 
@@ -196,7 +199,7 @@ except ImportError:
     from urllib.parse import unquote
 
 MAXIMUM_LOG = 100
-DEFAULT_TIMEOUT = 10
+DEFAULT_TIMEOUT = 60
 DEFAULT_EXPECTED = "running"
 
 
@@ -234,7 +237,7 @@ class Service(object):
                 raise SimplevisorError(
                     "an invalid property has been specified for %s: %s" %
                     (name, key))
-        self.is_new = True
+        self._is_new = True
         try:
             self._validate_opts(self._opts)
         except ValueError:
@@ -318,7 +321,7 @@ class Service(object):
             log.LOG.debug("%s returned: %s" % (" ".join(cmd), result))
             return result
         except utils.ProcessTimedout:
-            log.LOG.warning("%s timedout %d seconds" %
+            log.LOG.warning("%s timed out %d seconds" %
                             (" ".join(cmd), self._opts["timeout"]))
             return (1, "", "timeout")
         except utils.ProcessError:
@@ -327,12 +330,12 @@ class Service(object):
                             (" ".join(cmd), error))
             return (1, "", "%s" % error)
 
-    def adjust(self, timeout=5):
+    def adjust(self):
         """
         Start/stop according to expected status.
         """
         log.LOG.debug("adjusting service: %s" % self._opts["name"])
-        self.is_new = False
+        self._is_new = False
         to_verify = False
         (rcode, _, _) = self.status()
         if rcode == 0:
@@ -361,7 +364,7 @@ class Service(object):
                 self._status_log("start", result)
             to_verify = True
         if to_verify:
-            t_max = time.time() + timeout
+            t_max = time.time() + self._opts["timeout"]
             while time.time() <= t_max:
                 checked_status, _ = self.check()
                 if checked_status:
@@ -542,7 +545,7 @@ class Service(object):
         """
         if status is None:
             return
-        self.is_new = False
+        self._is_new = False
         self._status = status
 
     def dump_status(self):

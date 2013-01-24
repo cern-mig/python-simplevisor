@@ -6,8 +6,8 @@ An example of supervisor declaration::
     <entry>
         type = supervisor
         name = svisor1
-        max_restarts = 10
-        max_time = 60
+        window = 12
+        adjustments = 3
         strategy = one_for_one
         expected = none
         <children>
@@ -18,20 +18,19 @@ An example of supervisor declaration::
 Parameters
 ----------
 
-name
+*name*
     unique name of the supervisor.
 
-max_restarts
-    max number of restarts (linked with max_time), none to restart infinitely.
+*window*
+    window of supervision cycles which should be considered when defining
+    if a supervisor is in a failing state.
 
-max_time
-    window time to count the number of restarts, none to restart infinitely.
+*adjustments*
+    maximum number of cycles on which a child adjustment was needed
+    in the given window of supervision cycle in order to consider
+    it a failure.
 
-timeout
-    the maximum timeout for start, stop, status and restart commands,
-    set to one minute by default.
-
-strategy
+*strategy*
     - one_for_one: if a child process terminates, only that process
       is restarted.
 
@@ -44,10 +43,10 @@ strategy
       process in start order are terminated. Then the terminated
       child process and the rest of the child processes are restarted.
 
-expected
+*expected*
     none|running|stopped
 
-children
+*children*
     children structure.
 
 Required Parameters
@@ -64,9 +63,8 @@ Default Parameters
 
 - name = supervisor
 - expected = none
-- max_restarts = 10
-- max_time = 60
-- timeout = 60
+- window = 12
+- adjustments = 3
 - strategy = one_for_one
 
 Copyright (C) 2013 CERN
@@ -78,11 +76,9 @@ from simplevisor.service import Service
 import sys
 import time
 
-MAXIMUM_RESTARTS = 10
 DEFAULT_EXPECTED = "none"
-DEFAULT_TIMEOUT = 60
-DEFAULT_MAX_RESTARTS = 10
-DEFAULT_MAX_TIME = 60
+DEFAULT_WINDOW = 12
+DEFAULT_ADJUSTMENTS = 3
 
 
 def new_child(options, inherit=dict()):
@@ -92,14 +88,11 @@ def new_child(options, inherit=dict()):
     if options is None:
         return None
     utils.unify_keys(options)
-    if "timeout" not in options:
-        options["timeout"] = inherit.get("timeout", DEFAULT_TIMEOUT)
     try:
         tmp_type = options.pop("type")
     except KeyError:
-        msg = "type not specified for entry: %s" % (options, )
-        log.LOG.error(msg)
-        raise SimplevisorError(msg)
+        raise SimplevisorError(
+            "type not specified for entry: %s" % (options, ))
     child = None
     tmp_expected = inherit.get("expected", DEFAULT_EXPECTED)
     if (tmp_expected != "none"):
@@ -109,21 +102,18 @@ def new_child(options, inherit=dict()):
             child = Service(**options)
         except TypeError:
             error = sys.exc_info()[1]
-            msg = "Service entry not valid:\n%s\n%s" % (options, error)
-            log.LOG.error(msg)
-            raise SimplevisorError(msg)
+            raise SimplevisorError(
+                "Service entry not valid:\n%s\n%s" % (options, error))
     elif tmp_type == "supervisor":
         try:
             child = Supervisor(**options)
         except TypeError:
             error = sys.exc_info()[1]
-            msg = "Supervisor entry not valid:\n%s\n%s" % (options, error)
-            log.LOG.error(msg)
-            raise SimplevisorError(msg)
+            raise SimplevisorError(
+                "Supervisor entry not valid:\n%s\n%s" % (options, error))
     else:
-        msg = "entry type non supported: %s" % (tmp_type,)
-        log.LOG.error(msg)
-        raise SimplevisorError(msg)
+        raise SimplevisorError(
+            "entry type non supported: %s" % (tmp_type,))
     return child
 
 
@@ -133,33 +123,20 @@ class Supervisor(object):
     """
 
     def __init__(self, name="supervisor", expected=DEFAULT_EXPECTED,
-                 max_restarts=DEFAULT_MAX_RESTARTS, max_time=DEFAULT_MAX_TIME,
-                 timeout=DEFAULT_TIMEOUT, strategy="one_for_one",
-                 children=dict(), **kwargs):
+                 window=DEFAULT_WINDOW, adjustments=DEFAULT_ADJUSTMENTS,
+                 strategy="one_for_one", children=dict(), **kwargs):
         """ Constructor. """
         self.name = name
-        self.expected = expected.lower()
-        if hasattr(max_restarts, "lower") and \
-                max_restarts.lower() in ["", "none"]:
-            self.max_restarts = None
-        else:
-            self.max_restarts = utils.get_int_or_die(
-                max_restarts,
-                "max_restart value for %s is not a valid integer: %s" %
-                (name, max_restarts))
-        if hasattr(max_time, "lower") and \
-                max_time.lower() in ["", "none"]:
-            self.max_time = None
-        else:
-            self.max_time = utils.get_int_or_die(
-                max_time,
-                "max_time value for %s is not a valid integer: %s" %
-                (name, max_time))
-        self.timeout = utils.get_int_or_die(
-            timeout,
-            "timeout value for %s is not a valid integer: %s" %
-            (name, timeout))
-        self.strategy = strategy
+        self._expected = expected.lower()
+        self._window = utils.get_int_or_die(
+            window,
+            "window value for %s is not a valid integer: %s" %
+            (name, window))
+        self._adjustments = utils.get_int_or_die(
+            adjustments,
+            "adjustments value for %s is not a valid integer: %s" %
+            (name, adjustments))
+        self._strategy = strategy
         for key in kwargs.keys():
             if not key.startswith("var_"):
                 raise SimplevisorError(
@@ -171,9 +148,9 @@ class Supervisor(object):
         self.add_child_set(children.get("entry", []))
         if len(self._children) == 0:
             raise SimplevisorError(
-                "A supervisor must have at least one child.")
-        self.restarts = list()
-        self.is_new = True
+                "a supervisor must have at least one child.")
+        self._cycles = list()
+        self._is_new = True
 
     def add_child_set(self, children):
         """
@@ -193,13 +170,12 @@ class Supervisor(object):
         """
         Add a child.
         """
-        inherit = {"timeout": self.timeout,
-                   "expected": self.expected}
+        inherit = {"expected": self._expected, }
         n_child = new_child(options, inherit)
         if n_child is not None:
             if n_child.name in self._children_name:
                 raise SimplevisorError(
-                    "Two entries with the same name: %s" % n_child.name)
+                    "two entries with the same name: %s" % (n_child.name, ))
             self._children.append(n_child)
             self._children_dict[n_child.get_id()] = n_child
             self._children_name[n_child.name] = n_child
@@ -221,8 +197,8 @@ class Supervisor(object):
         """
         Start/stop all elements according to their expected state.
         """
-        self.is_new = False
-        log.LOG.debug("adjust supervisor: %s" % self.name)
+        self._is_new = False
+        log.LOG.debug("adjust supervisor: %s" % (self.name, ))
         for child in self._children:
             child.adjust()
 
@@ -274,15 +250,15 @@ class Supervisor(object):
         health = True
         health_output = list()
         for child in self._children:
-            log.LOG.debug("check for child %s" % child.name)
+            log.LOG.debug("check for child %s" % (child.name, ))
             (phealth, output) = child.check()
             log.LOG.debug("child %s: %s, %s" % (child.name, phealth, output))
             health_output.extend(output)
             health = health and phealth
         if health:
-            msg = "%s: OK, as expected" % self.name
+            msg = "%s: OK, as expected" % (self.name, )
         else:
-            msg = "%s: WARNING, not expected" % self.name
+            msg = "%s: WARNING, not expected" % (self.name, )
         health_output = [msg, health_output]
         return (health, health_output)
 
@@ -293,6 +269,7 @@ class Supervisor(object):
         """
         if result is None:
             result = dict()
+        one_adjustment = False
         for child in self._children:
             fail = None
             if isinstance(child, Supervisor):
@@ -323,15 +300,18 @@ class Supervisor(object):
             if fail is not None:  # failure
                 log.LOG.info("%s found in an unexpected state: %d" %
                              (fail[0], rcode))
-                self.restarts.append(time.time())
+                if not one_adjustment:
+                    one_adjustment = True
+                    self._log_cycle(True)
                 log.LOG.info("applying %s strategy to supervisor %s" %
-                             (self.strategy, self.name))
-                getattr(self, self.strategy)(*fail)
+                             (self._strategy, self.name))
+                getattr(self, self._strategy)(*fail)
             if self.failed():
                 # the supervisor terminates all the child processes
                 # and then itself
                 self.stop()
                 return (3, "", "")
+        self._log_cycle(False)
         return (0, "", "")
 
     def one_for_one(self, child, child_action):
@@ -384,25 +364,26 @@ class Supervisor(object):
             if temp_child.is_enabled():
                 temp_child.start()
 
+    def _log_cycle(self, one_adjustment):
+        """
+        Log one cycle result.
+        """
+        self._cycles.append((time.time(), one_adjustment))
+        # shorten it, keep only the window of interest
+        self._cycles = self._cycles[-self._window:]
+
     def failed(self):
         """
-        Return True if there has been more than *max_restarts* restarts
-        in the last *max_time* seconds of time.
+        Return True if there has been more adjustments actions than
+        the provided *adjustments* value in the last *window* of
+        supervision cycles configured.
         """
-        if self.max_restarts is None or self.max_time is None:
-            self.restarts = self.restarts[-MAXIMUM_RESTARTS:]
-            return False
-        num = 0
-        new = list()
-        now = time.time()
-        for restart in self.restarts:
-            if now - restart <= self.max_time:
-                new.append(restart)
-                num += 1
-        self.restarts = new
-        if num > self.max_restarts:
-            log.LOG.error("%s handled %d restarts in less than %d seconds" %
-                          (self.name, num, self.max_time))
+        adjusted = len(
+            [1 for (_, adjusted) in self._cycles[-self._window:] if adjusted])
+        if adjusted > self._adjustments:
+            log.LOG.error(
+                "%s handled %d adjustments in %s supervision cycles" %
+                (self.name, adjusted, self._window))
             return True
         return False
 
@@ -411,13 +392,13 @@ class Supervisor(object):
         Return *True* if supervisor is expected to run,
         *False* in other case.
         """
-        return self.expected == "running" or self.expected == "none"
+        return self._expected == "running" or self._expected == "none"
 
     def __str__(self):
         """
         Return the string representation.
         """
-        return "supervisor %s" % self.name
+        return "supervisor %s" % (self.name, )
 
     def get_id(self):
         """
@@ -431,14 +412,14 @@ class Supervisor(object):
         """
         if status is None:
             return
-        self.is_new = False
-        cstatus = status.pop("children", dict())
+        self._is_new = False
+        children_status = status.pop("children", dict())
         for identifier, child in self._children_dict.items():
-            if identifier in cstatus:
-                child.load_status(cstatus[identifier])
-        keys = {"restarts": list(), }
+            if identifier in children_status:
+                child.load_status(children_status[identifier])
+        keys = {"cycles": list(), }
         for key, val in keys.items():
-            setattr(self, key, status.pop(key, val))
+            setattr(self, "_%s" % (key, ), status.pop(key, val))
 
     def dump_status(self):
         """
@@ -447,8 +428,8 @@ class Supervisor(object):
         children_status = dict()
         for child in self._children:
             children_status[child.get_id()] = child.dump_status()
-        values = dict()
-        values["name"] = self.name
-        values["restarts"] = self.restarts
-        values["children"] = children_status
+        values = {
+            'name': self.name,
+            'cycles': self._cycles,
+            'children': children_status, }
         return values

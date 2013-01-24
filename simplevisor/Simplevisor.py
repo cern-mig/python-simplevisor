@@ -21,14 +21,10 @@ from simplevisor.errors import SimplevisorError
 from simplevisor.log import get_log
 import simplevisor.log as log
 from simplevisor.supervisor import Supervisor
-from simplevisor.service import Service
 from simplevisor import service, supervisor
 import simplevisor.utils as utils
 from simplevisor.utils import pid_check, pid_quit, pid_read, pid_remove, \
     pid_status, pid_touch, pid_write
-
-import pprint
-PP = pprint.PrettyPrinter(indent=2)
 
 QUICK_COMMAND = ["status", "stop", "stop_supervisor", "stop_children"]
 SERVICE_COMMAND = ["start", "stop", "status", "check", "restart"]
@@ -138,7 +134,7 @@ class Simplevisor(object):
             run_function = utils.log_exceptions(re_raise=True)(self.run)
         if self.config.get("pidfile"):
             pid_write(self.config["pidfile"], os.getpid(), excl=True)
-        self.run()
+        run_function()
         if self.config.get("pidfile"):
             pid_remove(self.config.get("pidfile"))
 
