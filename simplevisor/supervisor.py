@@ -311,7 +311,8 @@ class Supervisor(object):
                 # and then itself
                 self.stop()
                 return (3, "", "")
-        self._log_cycle(False)
+        if not one_adjustment:
+            self._log_cycle(False)
         return (0, "", "")
 
     def one_for_one(self, child, child_action):
