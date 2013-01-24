@@ -134,7 +134,13 @@ class Simplevisor(object):
             run_function = utils.log_exceptions(re_raise=True)(self.run)
         if self.config.get("pidfile"):
             pid_write(self.config["pidfile"], os.getpid(), excl=True)
-        run_function()
+        try:
+            run_function()
+        except:
+            self.save_status()
+            if self.config.get("pidfile"):
+                pid_remove(self.config.get("pidfile"))
+            raise sys.exc_info()[1]
         if self.config.get("pidfile"):
             pid_remove(self.config.get("pidfile"))
 
