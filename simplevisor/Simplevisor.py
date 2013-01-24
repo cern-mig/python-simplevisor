@@ -326,9 +326,7 @@ class Simplevisor(object):
                 (t_end - t_start, result.get("ok", "unknown"),
                  result.get("adjusted", "unknown")))
         else:
-            log.LOG.error(
-                "supervision interrupted/failed with return code %d:" %
-                (return_code, ))
+            raise SimplevisorError("supervision interrupted/failed")
 
     def run(self):
         """ Coordinate the job. """
