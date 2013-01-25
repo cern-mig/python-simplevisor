@@ -39,17 +39,17 @@ class Simplevisor(object):
     """ Simplevisor class. """
     prog = "simplevisor"
 
-    def __init__(self, options=None, entry_config=None):
+    def __init__(self, config=None, child_configuration=None):
         """ Initialize Simplevisor. """
-        if options is None:
-            options = dict()
-        elif type(options) != dict:
+        if config is None:
+            config = dict()
+        elif type(config) != dict:
             raise SimplevisorError(
                 "Simplevisor expect a configuration dictionary.")
-        self._config = options
+        self._config = config
         self._status_file = self._config.get("store")
         self._running = False
-        self._child = supervisor.new_child(entry_config)
+        self._child = supervisor.new_child(child_configuration)
         self.initialize_log()
 
     def get_child(self, path=""):
@@ -226,7 +226,7 @@ class Simplevisor(object):
             sys.exit(1)
 
     def status(self):
-        """ Do status action. """
+        """ Execute status command. """
         if not self._config.get("pidfile"):
             raise SimplevisorError("status requires a pidfile")
         (status, message) = pid_status(self._config["pidfile"], 60)
