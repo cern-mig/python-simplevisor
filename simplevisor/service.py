@@ -239,7 +239,7 @@ class Service(object):
                     (name, key))
         self._is_new = True
         try:
-            self._validate_opts(self._opts)
+            self._validate_opts()
         except ValueError:
             error = sys.exc_info()[1]
             raise SimplevisorError(
@@ -270,8 +270,9 @@ class Service(object):
                 msg = "%s service pattern not valid: %s" % error
                 raise ValueError(msg)
 
-    def _validate_opts(self, options):
+    def _validate_opts(self):
         """ Validate options. """
+        options = self._opts
         # at least start or control
         reqany(options, None, "start", "control")
         # either start or control
@@ -337,15 +338,15 @@ class Service(object):
         log.LOG.debug("adjusting service: %s" % self._opts["name"])
         self._is_new = False
         to_verify = False
-        (rcode, _, _) = self.status()
-        if rcode == 0:
+        (return_code, _, _) = self.status()
+        if return_code == 0:
             if self._opts["expected"] == "stopped":
                 result = self.stop()
                 log.LOG.info("%s stopped with %s" %
                              (self._opts["name"], result))
                 self._status_log("stop", result)
                 to_verify = True
-        elif rcode == 3:
+        elif return_code == 3:
             if self._opts["expected"] == "running":
                 result = self.start()
                 log.LOG.info("%s started with %s" %
@@ -353,10 +354,10 @@ class Service(object):
                 self._status_log("start", result)
                 to_verify = True
         else:  # unknown/dead/hang...
-            stop_res = self.stop()
-            self._status_log("stop", stop_res)
+            stop_result = self.stop()
+            self._status_log("stop", stop_result)
             log.LOG.info("%s stopped for cleaning %s" %
-                         (self._opts["name"], stop_res))
+                         (self._opts["name"], stop_result))
             if self._opts["expected"] == "running":
                 result = self.start()
                 log.LOG.info("%s started with %s" %
@@ -371,9 +372,9 @@ class Service(object):
                     return
                 time.sleep(0.2)
             log.LOG.error(
-                "service %s could not be adjusted." % self._opts["name"])
+                "service %s could not be adjusted." % (self._opts["name"], ))
             raise SimplevisorError("service %s could not be adjusted." %
-                                   self._opts["name"])
+                                   (self._opts["name"], ))
 
     def start(self):
         """
@@ -446,7 +447,7 @@ class Service(object):
         output = "OK"
         if self.is_enabled():
             if status == 0:
-                output = "%s: OK, running, as expected" % self.name
+                output = "%s: OK, running, as expected" % (self.name, )
             elif status == 3:
                 check_status = False
                 output = "%s: WARNING, not running, not expected" % \
@@ -528,7 +529,7 @@ class Service(object):
         """
         Return the string representation.
         """
-        return "service %s" % self._opts["name"]
+        return "service %s" % (self._opts["name"], )
 
     def get_id(self):
         """

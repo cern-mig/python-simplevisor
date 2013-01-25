@@ -81,12 +81,14 @@ DEFAULT_WINDOW = 12
 DEFAULT_ADJUSTMENTS = 3
 
 
-def new_child(options, inherit=dict()):
+def new_child(options, inherit=None):
     """
     Return a new child.
     """
     if options is None:
         return None
+    if inherit is None:
+        inherit = dict()
     utils.unify_keys(options)
     try:
         tmp_type = options.pop("type")
@@ -208,8 +210,8 @@ class Supervisor(object):
         """
         result = (0, "", "")
         for child in self._children:
-            presult = child.start()
-            result = utils.merge_status(result, presult)
+            partial_result = child.start()
+            result = utils.merge_status(result, partial_result)
             log.LOG.debug("%s started with %s" % (self.name, result))
         return result
 
@@ -219,8 +221,8 @@ class Supervisor(object):
         """
         result = (0, [], [])
         for child in self._children:
-            presult = child.stop()
-            result = utils.merge_status(result, presult)
+            partial_result = child.stop()
+            result = utils.merge_status(result, partial_result)
             log.LOG.debug("%s stopped with %s" % (self.name, result))
         return result
 
@@ -238,8 +240,8 @@ class Supervisor(object):
         """
         result = (0, [], [])
         for child in self._children:
-            presult = child.restart()
-            result = utils.merge_status(result, presult)
+            partial_result = child.restart()
+            result = utils.merge_status(result, partial_result)
             log.LOG.debug("%s restarted with %s" % (self.name, result))
         return result
 
@@ -250,7 +252,7 @@ class Supervisor(object):
         health = True
         health_output = list()
         for child in self._children:
-            log.LOG.debug("check for child %s" % (child.name, ))
+            log.LOG.debug("checking for child %s" % (child.name, ))
             (phealth, output) = child.check()
             log.LOG.debug("child %s: %s, %s" % (child.name, phealth, output))
             health_output.extend(output)
