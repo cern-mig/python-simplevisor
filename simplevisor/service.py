@@ -404,7 +404,7 @@ class Service(object):
                 utils.kill_pids(pids, self._opts["timeout"])
                 log.LOG.info("%s killed by killing processes: %s" %
                              (self._opts["name"],
-                             " ".join(map(str, pids))))
+                             " ".join([str(p) for p in pids])))
                 result = (0, "", "")
         else:
             result = self.__execute(self.get_cmd("stop"))
