@@ -18,7 +18,6 @@ Welcome to simplevisor's documentation!
    simplevisor-control-command.rst 
    supervisor
    service
-   log
 
 Getting Started
 ---------------
