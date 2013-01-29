@@ -235,14 +235,14 @@ def daemonize():
         sys.stderr.write("fork #2 failed: %d (%s)\n"
                          % (error.errno, error.strerror))
         sys.exit(1)
-    if (type(sys.stdin) is not file):
+    if (sys.stdin.isatty()):
         stdin = open(os.devnull, 'r')
         os.dup2(stdin.fileno(), sys.stdin.fileno())
-    if (type(sys.stdout) is not file):
+    if (sys.stdout.isatty()):
         sys.stdout.flush()
         stdout = open(os.devnull, 'a+')
         os.dup2(stdout.fileno(), sys.stdout.fileno())
-    if (type(sys.stderr) is not file):
+    if (sys.stderr.isatty()):
         sys.stderr.flush()
         stderr = open(os.devnull, 'a+')
         os.dup2(stderr.fileno(), sys.stderr.fileno())
