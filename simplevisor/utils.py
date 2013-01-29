@@ -9,6 +9,7 @@ import os
 import signal
 from simplevisor.log import log_debug, log_error, log_warning
 from subprocess import Popen, PIPE
+import stat
 import sys
 import time
 import traceback
