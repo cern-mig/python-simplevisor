@@ -1,5 +1,8 @@
 Change log for python-simplevisor
 
+X X X X X
+    * [mp] handling correctly file redirection when daemonizing
+
 0.7 Mon Jan 28 2013
     * [mp] better handling of json module import
     * [mp] fixing bug regarding function call with keywords in python < 2.6.5
