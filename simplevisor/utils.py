@@ -208,6 +208,20 @@ def send_signal(daemon, sig):
             sys.exit(1)
 
 
+#### File helper
+def is_regular_file(element):
+    if type(element) is file:
+        fstat = os.fstat(el.fileno())
+    elif type(element) is str:
+        fstat = os.stat(element)
+    elif type(element) is int:
+        fstat = os.fstat(el)
+    else:
+        raise ValueError(
+            "is_regular_file accept: file, str or file descriptor no.")
+    return stat.S_ISREG(fstat.st_mode)
+
+
 #### Daemon helper
 def daemonize():
     """ Daemonize. UNIX double fork mechanism. """
@@ -235,14 +249,14 @@ def daemonize():
         sys.stderr.write("fork #2 failed: %d (%s)\n"
                          % (error.errno, error.strerror))
         sys.exit(1)
-    if (sys.stdin.isatty()):
+    if (not is_regular_file(sys.stdin)):
         stdin = open(os.devnull, 'r')
         os.dup2(stdin.fileno(), sys.stdin.fileno())
-    if (sys.stdout.isatty()):
+    if (not is_regular_file(sys.stdout)):
         sys.stdout.flush()
         stdout = open(os.devnull, 'a+')
         os.dup2(stdout.fileno(), sys.stdout.fileno())
-    if (sys.stderr.isatty()):
+    if (not is_regular_file(sys.stderr)):
         sys.stderr.flush()
         stderr = open(os.devnull, 'a+')
         os.dup2(stderr.fileno(), sys.stderr.fileno())
