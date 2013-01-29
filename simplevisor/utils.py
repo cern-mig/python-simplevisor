@@ -211,11 +211,11 @@ def send_signal(daemon, sig):
 #### File helper
 def is_regular_file(element):
     if type(element) is file:
-        fstat = os.fstat(el.fileno())
+        fstat = os.fstat(element.fileno())
     elif type(element) is str:
         fstat = os.stat(element)
     elif type(element) is int:
-        fstat = os.fstat(el)
+        fstat = os.fstat(element)
     else:
         raise ValueError(
             "is_regular_file accept: file, str or file descriptor no.")
