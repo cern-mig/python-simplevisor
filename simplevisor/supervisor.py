@@ -300,7 +300,7 @@ class Supervisor(object):
                 else:  # failure
                     result["adjusted"] = result.get("adjusted", 0) + 1
             if fail is not None:  # failure
-                log.LOG.info("%s found in an unexpected state: %d" %
+                log.LOG.warning("%s found in an unexpected state: %d" %
                              (fail[0], rcode))
                 if not one_adjustment:
                     one_adjustment = True
