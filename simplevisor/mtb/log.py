@@ -1,4 +1,6 @@
 """
+Logging utilities used by :py:mod:`mtb` module.
+
 Three unified log classes to manage in a coherent way logs
 between different logging systems:
 
@@ -18,11 +20,11 @@ stdout
 
 Copyright (C) 2013 CERN
 """
-
 import datetime
-from simplevisor import errors
 import logging
+import sys
 import syslog
+import traceback
 
 
 class SysLog(object):
@@ -220,10 +222,9 @@ class NullLog(object):
     def _print(self, criticality, message):
         """ Custom print. """
 
-LOG_SYSTEM = {"null": NullLog,
-              "stdout": StdOutLog,
-              "file": FileLog,
-              "syslog": SysLog, }
+
+class LogSystemNotSupported(Exception):
+    """ Raised when a log system which is not supported is specified. """
 
 
 def get_log(type_t):
@@ -233,13 +234,11 @@ def get_log(type_t):
     try:
         log = LOG_SYSTEM[type_t]
     except KeyError:
-        raise errors.LogSystemNotSupported(
+        raise LogSystemNotSupported(
             "%s is not valid as log system, must be one of: %s" %
             (type_t, ", ".join(LOG_SYSTEM.keys()), ))
     else:
         return log
-
-LOG = StdOutLog("stdout")
 
 
 def log_debug(message):
@@ -255,3 +254,59 @@ def log_warning(message):
 def log_error(message):
     """ Log an error message on LOG. """
     LOG.error(message)
+
+
+LOG_SYSTEM = {"null": NullLog,
+              "stdout": StdOutLog,
+              "file": FileLog,
+              "syslog": SysLog, }
+LOG = StdOutLog("stdout")
+
+
+################################ Useful decorators for logging
+
+def print_only_exception_error():
+    """
+    Print only exception error message.
+    """
+    def out_function(in_function):
+        """ Wrap function. """
+        def out_function(*args, **kwargs):
+            """ Wrapping and catching exceptions. """
+            __name__ = in_function.__name__
+            try:
+                in_function(*args, **kwargs)
+            except SystemExit:
+                raise sys.exc_info()[1]
+            except Exception:
+                # (_, error, error traceback)
+                (_, error, _) = sys.exc_info()
+                print("%s" % (error,))
+                sys.exit(1)
+        return out_function
+    return out_function
+
+
+def log_exceptions(re_raise=True):
+    """
+    Log exceptions to configured log and re raise the exception or exit.
+    """
+    def out_function(in_function):
+        """ Wrap function. """
+        def out_function(*args, **kwargs):
+            """ Wrapping and catching exceptions. """
+            __name__ = in_function.__name__
+            try:
+                in_function(*args, **kwargs)
+            except SystemExit:
+                raise sys.exc_info()[1]
+            except Exception:
+                (_, error, error_tb) = sys.exc_info()
+                log_debug("%s" % (" ".join(traceback.format_tb(error_tb)),))
+                log_error("%s" % (error,))
+                if re_raise:
+                    raise error
+                else:
+                    sys.exit(1)
+        return out_function
+    return out_function

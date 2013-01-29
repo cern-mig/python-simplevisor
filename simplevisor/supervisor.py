@@ -69,12 +69,18 @@ Default Parameters
 
 Copyright (C) 2013 CERN
 """
-from simplevisor.errors import SimplevisorError
-import simplevisor.log as log
-import simplevisor.utils as utils
-from simplevisor.service import Service
 import sys
 import time
+
+from simplevisor.mtb.conf import unify_keys
+import simplevisor.mtb.log as log
+from simplevisor.mtb.proc import merge_status
+from simplevisor.mtb.modules import md5_hash
+from simplevisor.mtb.validation import get_int_or_die
+
+from simplevisor.errors import SimplevisorError
+from simplevisor.service import Service
+
 
 DEFAULT_EXPECTED = "none"
 DEFAULT_WINDOW = 12
@@ -89,7 +95,7 @@ def new_child(options, inherit=None):
         return None
     if inherit is None:
         inherit = dict()
-    utils.unify_keys(options)
+    unify_keys(options)
     try:
         tmp_type = options.pop("type")
     except KeyError:
@@ -130,11 +136,11 @@ class Supervisor(object):
         """ Constructor. """
         self.name = name
         self._expected = expected.lower()
-        self._window = utils.get_int_or_die(
+        self._window = get_int_or_die(
             window,
             "window value for %s is not a valid integer: %s" %
             (name, window))
-        self._adjustments = utils.get_int_or_die(
+        self._adjustments = get_int_or_die(
             adjustments,
             "adjustments value for %s is not a valid integer: %s" %
             (name, adjustments))
@@ -211,7 +217,7 @@ class Supervisor(object):
         result = (0, "", "")
         for child in self._children:
             partial_result = child.start()
-            result = utils.merge_status(result, partial_result)
+            result = merge_status(result, partial_result)
             log.LOG.debug("%s started with %s" % (self.name, result))
         return result
 
@@ -222,7 +228,7 @@ class Supervisor(object):
         result = (0, [], [])
         for child in self._children:
             partial_result = child.stop()
-            result = utils.merge_status(result, partial_result)
+            result = merge_status(result, partial_result)
             log.LOG.debug("%s stopped with %s" % (self.name, result))
         return result
 
@@ -241,7 +247,7 @@ class Supervisor(object):
         result = (0, [], [])
         for child in self._children:
             partial_result = child.restart()
-            result = utils.merge_status(result, partial_result)
+            result = merge_status(result, partial_result)
             log.LOG.debug("%s restarted with %s" % (self.name, result))
         return result
 
@@ -301,7 +307,7 @@ class Supervisor(object):
                     result["adjusted"] = result.get("adjusted", 0) + 1
             if fail is not None:  # failure
                 log.LOG.warning("%s found in an unexpected state: %d" %
-                             (fail[0], rcode))
+                                (fail[0], rcode))
                 if not one_adjustment:
                     one_adjustment = True
                     self._log_cycle(True)
@@ -407,7 +413,7 @@ class Supervisor(object):
         """
         Return the id of the supervisor.
         """
-        return utils.md5_hash(self.name).hexdigest()
+        return md5_hash(self.name).hexdigest()
 
     def load_status(self, status):
         """

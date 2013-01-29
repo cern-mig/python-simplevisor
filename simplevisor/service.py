@@ -188,15 +188,14 @@ Copyright (C) 2013 CERN
 """
 import re
 from simplevisor.errors import SimplevisorError
-import simplevisor.log as log
+import simplevisor.mtb.log as log
 import sys
 import time
-from simplevisor import utils
-from simplevisor.config_utils import mutex, reqall, reqany
-try:
-    from urllib import unquote
-except ImportError:
-    from urllib.parse import unquote
+from simplevisor.mtb.proc import \
+    timed_process, ProcessTimedout, ProcessError, \
+    kill_pids, merge_status, pidof
+from simplevisor.mtb.modules import md5_hash, unquote
+from simplevisor.mtb.validation import mutex, reqall, reqany, get_int_or_die
 
 MAXIMUM_LOG = 100
 DEFAULT_TIMEOUT = 60
@@ -225,14 +224,14 @@ class Service(object):
                       "start": start,
                       "status": status,
                       "stop": stop,
-                      "timeout": utils.get_int_or_die(
+                      "timeout": get_int_or_die(
                           timeout,
                           "timeout value for %s is not a valid integer: %s" %
                           (name, timeout)), }
         self._status = {"name": name,
                         "log": list(),
                         }
-        for key in kwargs.keys():
+        for key in kwargs:
             if not key.startswith("var_"):
                 raise SimplevisorError(
                     "an invalid property has been specified for %s: %s" %
@@ -318,14 +317,14 @@ class Service(object):
             env = {"PATH": self._opts["path"]}
         try:
             log.LOG.debug("executing %s" % " ".join(cmd))
-            result = utils.timed_process(cmd, self._opts["timeout"], env)
+            result = timed_process(cmd, self._opts["timeout"], env)
             log.LOG.debug("%s returned: %s" % (" ".join(cmd), result))
             return result
-        except utils.ProcessTimedout:
+        except ProcessTimedout:
             log.LOG.warning("%s timed out %d seconds" %
                             (" ".join(cmd), self._opts["timeout"]))
             return (1, "", "timeout")
-        except utils.ProcessError:
+        except ProcessError:
             error = sys.exc_info()[1]
             log.LOG.warning("error running %s: %s" %
                             (" ".join(cmd), error))
@@ -402,7 +401,7 @@ class Service(object):
                              (self._opts["name"], ))
             else:
                 pids = [x[0] for x in pid_info]
-                utils.kill_pids(pids, self._opts["timeout"])
+                kill_pids(pids, self._opts["timeout"])
                 log.LOG.info("%s killed by killing processes: %s" %
                              (self._opts["name"],
                              " ".join([str(p) for p in pids])))
@@ -496,7 +495,7 @@ class Service(object):
         else:
             rstop = self.stop()
             rstart = self.start()
-            rjoint = utils.merge_status(rstop, rstart)
+            rjoint = merge_status(rstop, rstart)
             log.LOG.info("%s stop+start with %s" % (self.name, rjoint))
             self._status_log("stop+start", rjoint)
             return rjoint
@@ -505,7 +504,7 @@ class Service(object):
         """ Return the pid of the service. """
         pat_re = self._opts.get("pattern_re", None)
         if pat_re is not None:
-            return utils.pidof(pat_re)
+            return pidof(pat_re)
         return None
 
     def _status_log(self, operation, output):
@@ -538,7 +537,7 @@ class Service(object):
         text_id = "%s|%s|%s" % (self._opts["name"],
                                 self._opts["expected"],
                                 " ".join(self.get_cmd("start")),)
-        return utils.md5_hash(text_id).hexdigest()
+        return md5_hash(text_id).hexdigest()
 
     def load_status(self, status):
         """

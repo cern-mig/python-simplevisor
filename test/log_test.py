@@ -15,16 +15,18 @@ limitations under the License.
 Copyright (C) 2013 CERN
 """
 
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from io import StringIO
-import simplevisor.log as slog
-from test.utils import parametrized
 import os
 import shutil
 import sys
 import unittest
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import StringIO
+
+import simplevisor.mtb.log as log
+from simplevisor.mtb.test import parametrized
+
 
 OK = True
 FAIL = False
@@ -50,7 +52,7 @@ def capture(func, *args, **kwargs):
 
 
 class LogTest(unittest.TestCase):
-    """ Test log. """
+    """ Test :py:mod:`mtb.log` utilities module. """
 
     def setUp(self):
         """ Setup the test environment for the log test. """
@@ -66,16 +68,16 @@ class LogTest(unittest.TestCase):
         """ Restore the test environment and delete the test folder. """
         shutil.rmtree(TEST_DIR, True)
 
-    @parametrized("log_n log_s".split(), slog.LOG_SYSTEM.items())
+    @parametrized("log_n log_s".split(), log.LOG_SYSTEM.items())
     def test_init(self, log_n, log_s):
         """ Test log system creation. """
         print("running log system creation for %s"
               % (log_n,))
         log_s("foo")
-        slog.get_log(log_n)
+        log.get_log(log_n)
         print("...test log system creation ok")
 
-    @parametrized("log_n log_s".split(), slog.LOG_SYSTEM.items())
+    @parametrized("log_n log_s".split(), log.LOG_SYSTEM.items())
     def test_log_operations(self, log_n, log_s):
         """ Test log system operations. """
         print("running log operations checking for %s"

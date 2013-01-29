@@ -1,9 +1,10 @@
 """
-Common config utilities module.
+Validation utilities for :py:mod:`mtb` module.
 
 
 Copyright (C) 2013 CERN
 """
+import sys
 
 
 def mutex(container, *options):
@@ -43,3 +44,19 @@ def reqany(container, first, *options):
                          (", ".join(options)))
     raise ValueError("option %s requires one of: %s" %
                      (first, ", ".join(options)))
+
+
+def get_int_or_die(value, message=None):
+    """
+    Return the integer value or die with the error message provided.
+    """
+    if type(value) == int:
+        return value
+    try:
+        value = int(value)
+    except ValueError:
+        if message is None:
+            raise sys.exc_info()[1]
+        else:
+            raise ValueError(message)
+    return value

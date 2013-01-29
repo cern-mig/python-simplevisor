@@ -7,10 +7,11 @@ import os
 import re
 import sys
 
+from simplevisor.mtb.conf import read_apache_config, unify_keys
+
 import simplevisor
 from simplevisor.Simplevisor import Simplevisor, \
     NORMAL_COMMAND, SERVICE_COMMAND
-from simplevisor.utils import read_apache_config, unify_keys
 
 COMMANDS = list(NORMAL_COMMAND)
 COMMANDS.extend(SERVICE_COMMAND)

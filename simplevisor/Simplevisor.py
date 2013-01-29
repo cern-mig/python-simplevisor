@@ -8,23 +8,20 @@ import os
 import signal
 import sys
 import time
-try:
-    import simplejson as json
-except (SyntaxError, ImportError):
-    import json
-    try:
-        getattr(json, "dumps")
-    except AttributeError:
-        raise ImportError("No available json module.")
+
+import simplevisor.mtb.log as log
+from simplevisor.mtb.pid import \
+    pid_check, pid_quit, pid_read, pid_remove, \
+    pid_status, pid_touch, pid_write
+from simplevisor.mtb.prnt import print_nested_list
+from simplevisor.mtb.proc import daemonize
+from simplevisor.mtb.modules import json
+from simplevisor.mtb.validation import get_int_or_die
 
 from simplevisor.errors import SimplevisorError
-from simplevisor.log import get_log
-import simplevisor.log as log
 from simplevisor.supervisor import Supervisor
 from simplevisor import service, supervisor
-import simplevisor.utils as utils
-from simplevisor.utils import pid_check, pid_quit, pid_read, pid_remove, \
-    pid_status, pid_touch, pid_write
+
 
 QUICK_COMMAND = ["status", "stop", "stop_supervisor", "stop_children"]
 SERVICE_COMMAND = ["start", "stop", "status", "check", "restart"]
@@ -67,7 +64,7 @@ class Simplevisor(object):
                 pass
         raise ValueError("given path is invalid: %s" % path)
 
-    @utils.print_only_exception_error()
+    @log.print_only_exception_error()
     def work(self):
         """ Controller. """
         command = self._config.get("command", "status")
@@ -128,10 +125,10 @@ class Simplevisor(object):
         self.pre_run()
         run_function = None
         if self._config.get("daemon"):
-            utils.daemonize()
-            run_function = utils.log_exceptions(re_raise=False)(self.run)
+            daemonize()
+            run_function = log.log_exceptions(re_raise=False)(self.run)
         else:
-            run_function = utils.log_exceptions(re_raise=True)(self.run)
+            run_function = log.log_exceptions(re_raise=True)(self.run)
         if self._config.get("pidfile"):
             pid_write(self._config["pidfile"], os.getpid(), excl=True)
         try:
@@ -219,7 +216,7 @@ class Simplevisor(object):
         """
         child = child or self._child
         (child_status, output) = child.check()
-        utils.print_nested_list(output, level=0, indent=2)
+        print_nested_list(output, level=0, indent=2)
         if child_status:
             sys.exit(0)
         else:
@@ -241,9 +238,9 @@ class Simplevisor(object):
         to stdout independently from the configuration.
         """
         if stdout:
-            log.LOG = get_log("stdout")("simplevisor", **self._config)
+            log.LOG = log.get_log("stdout")("simplevisor", **self._config)
         else:
-            log.LOG = get_log(self._config.get("log", "stdout"))(
+            log.LOG = log.get_log(self._config.get("log", "stdout"))(
                 "simplevisor", **self._config)
 
     def load_status(self):
@@ -298,7 +295,7 @@ class Simplevisor(object):
     def sleep_interval(self):
         """ Return the interval between every supervision cycle. """
         value = self._config.get("interval", DEFAULT_INTERVAL)
-        result = utils.get_int_or_die(
+        result = get_int_or_die(
             value,
             "interval value must be an integer: %s" % (value, ))
         return result

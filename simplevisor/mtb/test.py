@@ -1,4 +1,9 @@
-""" Test utilities. """
+"""
+Test utilities for :py:mod:`mtb` module.
+
+
+Copyright (C) 2013 CERN
+"""
 
 
 def parametrized(arg_list, values):
