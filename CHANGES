@@ -1,6 +1,6 @@
 Change log for python-simplevisor
 
-X X X X X
+0.7.1 Tue Jan 29 2013
     * [mp] handling correctly file redirection when daemonizing
 
 0.7 Mon Jan 28 2013

@@ -1,6 +1,6 @@
 =head1 NAME
 
-simplevisor 0.7 - simple daemons supervisor
+simplevisor 0.7.1 - simple daemons supervisor
 
 =head1 SYNOPSIS
 
