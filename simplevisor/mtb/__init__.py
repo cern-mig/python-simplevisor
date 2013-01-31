@@ -1,5 +1,5 @@
 """
-MyToolBox is a set of reusable code.
+MyToolBox is a collection of reusable tools.
 
 
 Author: Massimo.Paladin@gmail.com
