@@ -18,7 +18,7 @@ AUTHOR = 'Massimo Paladin'
 AUTHOR_EMAIL = 'massimo.paladin@gmail.com'
 LICENSE = "ASL 2.0"
 PLATFORMS = "Any"
-URL = "https://github.com/mpaladin/python-simplevisor"
+URL = "https://github.com/cern-mig/python-simplevisor"
 CLASSIFIERS = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
