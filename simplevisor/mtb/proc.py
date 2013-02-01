@@ -6,10 +6,12 @@ Copyright (C) 2013 CERN
 """
 import os
 import signal
-from simplevisor.mtb.file import is_regular_file
 from subprocess import Popen, PIPE
 import sys
 import time
+
+from mtb.file import is_regular_file
+
 
 CHECK_TIME = 0.05  # milliseconds
 

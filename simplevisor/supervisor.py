@@ -72,11 +72,11 @@ Copyright (C) 2013 CERN
 import sys
 import time
 
-from simplevisor.mtb.conf import unify_keys
-import simplevisor.mtb.log as log
-from simplevisor.mtb.proc import merge_status
-from simplevisor.mtb.modules import md5_hash
-from simplevisor.mtb.validation import get_int_or_die
+from mtb.conf import unify_keys
+import mtb.log as log
+from mtb.proc import merge_status
+from mtb.modules import md5_hash
+from mtb.validation import get_int_or_die
 
 from simplevisor.errors import SimplevisorError
 from simplevisor.service import Service

@@ -4,9 +4,21 @@ Configuration utilities for :py:mod:`mtb` module.
 
 Copyright (C) 2013 CERN
 """
-from simplevisor.mtb.modules import json
-from simplevisor.mtb import PY2, PY3
+from mtb.modules import json
+from mtb import PY2, PY3
 from subprocess import Popen, PIPE
+
+
+def _normalize_bool(tree):
+    """ Normalize boolean in the dict. """
+    for key, value in tree.items():
+        if type(value) == dict:
+            _normalize_bool(value)
+        elif type(value) in [str, unicode]:
+            if value.lower() == "true":
+                tree[key] = True
+            elif value.lower() == "false":
+                tree[key] = False
 
 
 def read_apache_config(path):
@@ -21,8 +33,9 @@ def read_apache_config(path):
     proc = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
     out, err = proc.communicate()
     if err:
-        raise ValueError(err)
+        raise ValueError(str(err).strip())
     data = json.loads(out)
+    _normalize_bool(data)
     return data
 
 

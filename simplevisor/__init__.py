@@ -43,3 +43,9 @@ DATE = "29 Jan 2013"
 __author__ = AUTHOR
 __version__ = VERSION
 __date__ = DATE
+
+import sys
+import simplevisor.mtb as mtb
+
+if "mtb" not in sys.modules:
+    sys.modules["mtb"] = mtb

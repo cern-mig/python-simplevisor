@@ -9,14 +9,14 @@ import signal
 import sys
 import time
 
-import simplevisor.mtb.log as log
-from simplevisor.mtb.pid import \
+import mtb.log as log
+from mtb.pid import \
     pid_check, pid_quit, pid_read, pid_remove, \
     pid_status, pid_touch, pid_write
-from simplevisor.mtb.prnt import print_nested_list
-from simplevisor.mtb.proc import daemonize
-from simplevisor.mtb.modules import json
-from simplevisor.mtb.validation import get_int_or_die
+from mtb.prnt import print_nested_list
+from mtb.proc import daemonize
+from mtb.modules import json
+from mtb.validation import get_int_or_die
 
 from simplevisor.errors import SimplevisorError
 from simplevisor.supervisor import Supervisor

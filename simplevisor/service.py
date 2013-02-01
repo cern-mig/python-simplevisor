@@ -188,14 +188,14 @@ Copyright (C) 2013 CERN
 """
 import re
 from simplevisor.errors import SimplevisorError
-import simplevisor.mtb.log as log
 import sys
 import time
-from simplevisor.mtb.proc import \
+
+from mtb.modules import md5_hash, unquote
+from mtb.proc import \
     timed_process, ProcessTimedout, ProcessError, \
     kill_pids, merge_status, pidof
-from simplevisor.mtb.modules import md5_hash, unquote
-from simplevisor.mtb.validation import mutex, reqall, reqany, get_int_or_die
+from mtb.validation import mutex, reqall, reqany, get_int_or_die
 
 MAXIMUM_LOG = 100
 DEFAULT_TIMEOUT = 60
