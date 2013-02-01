@@ -191,6 +191,7 @@ from simplevisor.errors import SimplevisorError
 import sys
 import time
 
+import mtb.log as log
 from mtb.modules import md5_hash, unquote
 from mtb.proc import \
     timed_process, ProcessTimedout, ProcessError, \
