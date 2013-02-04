@@ -2,7 +2,7 @@
 python-simplevisor
 ==================
 
-.. image:: https://secure.travis-ci.org/mpaladin/python-simplevisor.png?branch=master
+.. image:: https://secure.travis-ci.org/cern-mig/python-simplevisor.png?branch=master
 
 Overview
 ========
