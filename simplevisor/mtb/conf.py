@@ -23,15 +23,26 @@ def _normalize_bool(tree):
                 tree[key] = False
 
 
-def read_apache_config(path):
+def read_apache_config(path, options=None):
     """
     Read Apache style config files.
     """
     if path is None:
         return None
+    if options is None:
+        options = dict()
+    options_value = list()
+    for key, value in options.items():
+        perl_value = value
+        if perl_value is True:
+            perl_value = "1"
+        elif perl_value is False:
+            perl_value = "0"
+        options_value.append("%s => %s" % (key, perl_value))
+    options_value = ", ".join(options_value)
     cmd = "perl -e 'use Config::General qw(ParseConfig);" + \
           "use JSON qw(to_json);print(to_json({ParseConfig(" + \
-          "-ConfigFile => $ARGV[0], -InterPolateVars => 1)}))' %s" % (path, )
+          "-ConfigFile => $ARGV[0], %s)}))' %s" % (path, options_value )
     proc = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
     out, err = proc.communicate()
     if err:
