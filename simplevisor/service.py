@@ -335,7 +335,11 @@ class Service(object):
         """
         Start/stop according to expected status.
         """
-        log.LOG.debug("adjusting service: %s" % self._opts["name"])
+        if not self._is_new:
+            log.LOG.debug(
+                "skipping service adjustment: %s" % (self._opts["name"], ))
+            return
+        log.LOG.debug("adjusting service: %s" % (self._opts["name"], ))
         self._is_new = False
         to_verify = False
         (return_code, _, _) = self.status()
