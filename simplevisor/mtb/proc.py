@@ -93,7 +93,7 @@ class ProcessError(Exception):
     """
 
 
-def timed_process(args, timeout=None, env=None):
+def timed_process(args, timeout=None, env=None, shell=False):
     """
     Execute a command using :py:mod:`subprocess` module,
     if timeout is specified the process is killed if it does
@@ -114,7 +114,7 @@ def timed_process(args, timeout=None, env=None):
     if env is None:
         env = {"PATH": "/usr/bin:/usr/sbin:/bin:/sbin"}
     try:
-        proc = Popen(args, stdout=PIPE, stderr=PIPE, shell=False,
+        proc = Popen(args, stdout=PIPE, stderr=PIPE, shell=shell,
                      env=env)
     except OSError:
         error = sys.exc_info()[1]

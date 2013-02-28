@@ -4,8 +4,10 @@ Configuration utilities for :py:mod:`mtb` module.
 
 Copyright (C) 2013 CERN
 """
+import os
 import re
 from subprocess import Popen, PIPE
+import tempfile
 
 from mtb.modules import json
 from mtb import PY2, PY3
@@ -50,6 +52,28 @@ def read_apache_config(path, options=None):
     data = json.loads(out)
     _normalize_bool(data)
     return data
+
+
+def write_apache_config(path, conf):
+    """
+    Write Apache style config files.
+    """
+    tmp, tmp_path = tempfile.mkstemp()
+    tmp = open(tmp_path, "w+")
+    tmp.write(json.dumps(conf))
+    tmp.close()
+    cmd = "perl -e 'use Config::General; " \
+        "use JSON qw(from_json); " \
+        "open FILE, \"%s\" or die \"Could not open file: %s\"; " \
+        "$json = join(\"\", <FILE>); close FILE; " \
+        "$loaded = from_json($json); " \
+        "Config::General->new->save_file(\"%s\", $loaded); '" \
+        % (tmp_path, tmp_path, path.replace("@", "\@"))
+    proc = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
+    out, err = proc.communicate()
+    if err:
+        raise ValueError(str(err).strip())
+    os.remove(tmp_path)
 
 
 def unify_keys(dictionary):
