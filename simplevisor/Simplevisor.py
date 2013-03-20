@@ -315,9 +315,9 @@ class Simplevisor(object):
             'ok': 0,
             'adjusted': 0, }
         t_start = time.time()
-        (return_code, _, _) = self._child.supervise(result)
+        successful = self._child.supervise(result)
         t_end = time.time()
-        if return_code == 0:
+        if successful:
             log.LOG.info(
                 "supervision cycle executed successfully in %.3fs: "
                 "%s services OK, %s services needed adjustment" %
