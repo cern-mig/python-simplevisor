@@ -303,10 +303,9 @@ class Simplevisor(object):
     def pre_run(self):
         """ Before detaching. """
         if isinstance(self._child, service.Service):
-            (rcode, _, _) = self._child.start()
+            (rcode, _, _) = self._child.cond_start()
             sys.exit(rcode)
-        self._child.adjust()
-        log.LOG.debug("all elements adjusted")
+        self._child.start()
 
     def supervise(self):
         """
