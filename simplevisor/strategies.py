@@ -206,5 +206,3 @@ class OneForAll(SupervisionStrategy):
         """ Implement adjust. """
         self.stop(children)
         self.start(children)
-
-
