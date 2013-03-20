@@ -215,23 +215,24 @@ class Service(object):
                  **kwargs):
         """ Service constructor. """
         self.name = name
-        self._opts = {"name": name,
-                      "expected": expected,
-                      "control": control,
-                      "daemon": daemon,
-                      "path": path,
-                      "pattern": pattern,
-                      "restart": restart,
-                      "start": start,
-                      "status": status,
-                      "stop": stop,
-                      "timeout": get_int_or_die(
-                          timeout,
-                          "timeout value for %s is not a valid integer: %s" %
-                          (name, timeout)), }
-        self._status = {"name": name,
-                        "log": list(),
-                        }
+        self._opts = {
+            "name": name,
+            "expected": expected,
+            "control": control,
+            "daemon": daemon,
+            "path": path,
+            "pattern": pattern,
+            "restart": restart,
+            "start": start,
+            "status": status,
+            "stop": stop,
+            "timeout": get_int_or_die(
+                timeout,
+                "timeout value for %s is not a valid integer: %s" %
+                (name, timeout)), }
+        self._status = {
+            "name": name,
+            "log": list(), }
         for key in kwargs:
             if not key.startswith("var_"):
                 raise SimplevisorError(
@@ -243,7 +244,7 @@ class Service(object):
         except ValueError:
             error = sys.exc_info()[1]
             raise SimplevisorError(
-                "Service %s configuration error: %s" % (self.name, error))
+                "service %s configuration error: %s" % (self.name, error))
         if control is None and daemon is not None:
             self._opts["start"] = (
                 "/usr/bin/simplevisor-loop -c 1 "
@@ -331,32 +332,29 @@ class Service(object):
                             (" ".join(cmd), error))
             return (1, "", "%s" % error)
 
-    def adjust(self):
+    def cond_adjust(self, careful=False):
         """
         Start/stop according to expected status.
+
+        @return: True if adjustment performed, False otherwise
         """
-        if not self._is_new:
-            log.LOG.debug(
-                "skipping service adjustment: %s" % (self._opts["name"], ))
-            return
-        log.LOG.debug("adjusting service: %s" % (self._opts["name"], ))
-        self._is_new = False
-        to_verify = False
+        log.LOG.debug("cond adjust service: %s" % (self.name, ))
+        changed = False
         (return_code, _, _) = self.status()
         if return_code == 0:
-            if self._opts["expected"] == "stopped":
+            if not self.is_enabled():
                 result = self.stop()
                 log.LOG.info("%s stopped with %s" %
                              (self._opts["name"], result))
                 self._status_log("stop", result)
-                to_verify = True
+                changed = True
         elif return_code == 3:
             if self._opts["expected"] == "running":
                 result = self.start()
                 log.LOG.info("%s started with %s" %
                              (self._opts["name"], result))
                 self._status_log("start", result)
-                to_verify = True
+                changed = True
         else:  # unknown/dead/hang...
             stop_result = self.stop()
             self._status_log("stop", stop_result)
@@ -367,18 +365,100 @@ class Service(object):
                 log.LOG.info("%s started with %s" %
                              (self._opts["name"], result))
                 self._status_log("start", result)
-            to_verify = True
-        if to_verify:
+            changed = True
+        if careful and changed:
             t_max = time.time() + self._opts["timeout"]
             while time.time() <= t_max:
                 checked_status, _ = self.check()
                 if checked_status:
+                    return changed
+                time.sleep(0.2)
+            error_message = "error adjusting service %s" % (self.name, )
+            log.LOG.error(error_message)
+            raise SimplevisorError(error_message)
+        return changed
+
+    def cond_start(self, careful=False):
+        """
+        Conditional start based on status.
+        """
+        log.LOG.debug(
+            "conditional start for service: %s" % (self.name, ))
+        changed = False
+        (return_code, _, _) = self.status()
+        if return_code == 0:
+            if self._opts["expected"] == "stopped":
+                result = self.stop()
+                log.LOG.info(
+                    "%s stopped with result: %s" % (self.name, result))
+                self._status_log("stop", result)
+                changed = True
+        elif return_code == 3:
+            if self._opts["expected"] == "running":
+                result = self.start()
+                log.LOG.info(
+                    "%s started with result: %s" % (self.name, result))
+                self._status_log("start", result)
+                changed = True
+        else:  # unknown/dead/hang...
+            stop_result = self.stop()
+            self._status_log("stop", stop_result)
+            log.LOG.info(
+                "%s stopped for cleaning %s" % (self.name, stop_result))
+            if self._opts["expected"] == "running":
+                result = self.start()
+                log.LOG.info("%s started with result: %s" %
+                             (self.name, result))
+                self._status_log("start", result)
+            changed = True
+        if careful and changed:
+            t_max = time.time() + self._opts["timeout"]
+            while time.time() <= t_max:
+                checked_status, _ = self.check()
+                if checked_status:
+                    return changed
+                time.sleep(0.2)
+            error_message = "error starting service: %s" % (self.name, )
+            log.LOG.error(error_message)
+            raise SimplevisorError(error_message)
+        return changed
+
+    def cond_stop(self, careful=False):
+        """
+        Conditional stop based on status.
+        """
+        log.LOG.debug(
+            "conditional stop for service: %s" % (self.name, ))
+        changed = False
+        (return_code, _, _) = self.status()
+        if return_code == 0:
+            result = self.stop()
+            log.LOG.info(
+                "service %s found running, stopped with result: %s" %
+                (self.name, result))
+            self._status_log("stop", result)
+            changed = True
+        elif return_code != 3:  # unknown/dead/hang...
+            result = self.stop()
+            self._status_log("stop", result)
+            log.LOG.info(
+                "service %s found in dirty state: %s, stopped for cleaning"
+                "with result: %s" %
+                (self.name, return_code, result))
+            changed = True
+        if careful and changed:
+            t_max = time.time() + self._opts["timeout"]
+            return_code = 0
+            while time.time() <= t_max:
+                (return_code, _, _) = self.status()
+                if return_code == 3:
                     return
                 time.sleep(0.2)
-            log.LOG.error(
-                "service %s could not be adjusted." % (self._opts["name"], ))
-            raise SimplevisorError("service %s could not be adjusted." %
-                                   (self._opts["name"], ))
+            error_message = "error stopping service %s, expected return" \
+                "code: 3, received: %s" % (self.name, return_code)
+            log.LOG.error(error_message)
+            raise SimplevisorError(error_message)
+        return changed
 
     def start(self):
         """

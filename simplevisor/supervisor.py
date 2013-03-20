@@ -74,7 +74,6 @@ import time
 
 from mtb.conf import unify_keys
 import mtb.log as log
-from mtb.proc import merge_status
 from mtb.modules import md5_hash
 from mtb.validation import get_int_or_die
 
@@ -82,6 +81,11 @@ from simplevisor.errors import SimplevisorError
 from simplevisor.service import Service
 
 
+ALLOWED_STRATEGIES = {
+    'one_for_one': 'OneForOne',
+    'rest_for_one': 'RestForOne',
+    'one_for_all': 'OneForAll',
+}
 DEFAULT_EXPECTED = "none"
 DEFAULT_WINDOW = 12
 DEFAULT_ADJUSTMENTS = 3
@@ -130,6 +134,14 @@ class Supervisor(object):
     Supervisor class.
     """
 
+    @classmethod
+    def _strategy_by_name(cls, name):
+        if not hasattr(cls, "strategies"):
+            cls.strategies = getattr(__import__(
+                "simplevisor.strategies"),
+                "strategies")
+        return getattr(cls.strategies, name)
+
     def __init__(self, name="supervisor", expected=DEFAULT_EXPECTED,
                  window=DEFAULT_WINDOW, adjustments=DEFAULT_ADJUSTMENTS,
                  strategy="one_for_one", children=dict(), **kwargs):
@@ -138,32 +150,37 @@ class Supervisor(object):
         self._expected = expected.lower()
         self._window = get_int_or_die(
             window,
-            "window value for %s is not a valid integer: %s" %
+            "supervisor %s should have a valid integer window value: %s" %
             (name, window))
         self._adjustments = get_int_or_die(
             adjustments,
-            "adjustments value for %s is not a valid integer: %s" %
+            "supervisor %s should have a valid integer adjustments value: %s" %
             (name, adjustments))
-        self._strategy = strategy
+        if strategy not in ALLOWED_STRATEGIES:
+            raise ValueError(
+                "supervisor %s does not support given strategy: %s" &
+                strategy)
+        self._strategy_name = strategy
+        self._strategy = Supervisor._strategy_by_name(
+            ALLOWED_STRATEGIES[strategy])(self)
         for key in kwargs.keys():
             if not key.startswith("var_"):
                 raise SimplevisorError(
-                    "an invalid property has been specified for %s: %s" %
+                    "an invalid property has been specified for"
+                    "supervisor %s: %s" %
                     (name, key))
         self._children = list()
-        self._children_dict = dict()
-        self._children_name = dict()
+        self._children_by_id = dict()
+        self._children_by_name = dict()
         self.add_child_set(children.get("entry", []))
         if len(self._children) == 0:
             raise SimplevisorError(
-                "a supervisor must have at least one child.")
+                "empty supervisor found: %s" % (self.name, ))
         self._cycles = list()
         self._is_new = True
 
     def add_child_set(self, children):
-        """
-        Add a child set.
-        """
+        """ Add a child set. """
         if type(children) == dict:
             self.add_child(children)
         elif type(children) == list:
@@ -175,62 +192,39 @@ class Supervisor(object):
                 "unknown given")
 
     def add_child(self, options):
-        """
-        Add a child.
-        """
+        """ Add a child. """
         inherit = {"expected": self._expected, }
         n_child = new_child(options, inherit)
         if n_child is not None:
-            if n_child.name in self._children_name:
+            if n_child.name in self._children_by_name:
                 raise SimplevisorError(
                     "two entries with the same name: %s" % (n_child.name, ))
             self._children.append(n_child)
-            self._children_dict[n_child.get_id()] = n_child
-            self._children_name[n_child.name] = n_child
+            self._children_by_id[n_child.get_id()] = n_child
+            self._children_by_name[n_child.name] = n_child
 
     def get_child(self, path):
-        """
-        Return a child by its path.
-        """
+        """ Return a child by its path. """
         first = path.pop(0)
-        if first in self._children_name:
+        if first in self._children_by_name:
             if not path:
                 # found
-                return self._children_name[first]
+                return self._children_by_name[first]
             else:
-                return self._children_name[first].get_child(path)
-        raise ValueError("not found")
-
-    def adjust(self):
-        """
-        Start/stop all elements according to their expected state.
-        """
-        self._is_new = False
-        log.LOG.debug("adjust supervisor: %s" % (self.name, ))
-        for child in self._children:
-            child.adjust()
+                return self._children_by_name[first].get_child(path)
+        raise ValueError("path not found: %s" % (path, ))
 
     def start(self):
         """
         This method takes care of starting the supervisor and its children.
         """
-        result = (0, "", "")
-        for child in self._children:
-            partial_result = child.start()
-            result = merge_status(result, partial_result)
-            log.LOG.debug("%s started with %s" % (self.name, result))
-        return result
+        self._strategy.start(self._children)
 
     def stop(self):
         """
         This method takes care of stopping the supervisor and its children.
         """
-        result = (0, [], [])
-        for child in self._children:
-            partial_result = child.stop()
-            result = merge_status(result, partial_result)
-            log.LOG.debug("%s stopped with %s" % (self.name, result))
-        return result
+        self._strategy.stop(self._children)
 
     def status(self):
         """
@@ -244,12 +238,8 @@ class Supervisor(object):
         """
         This method takes care of restarting the supervisor.
         """
-        result = (0, [], [])
-        for child in self._children:
-            partial_result = child.restart()
-            result = merge_status(result, partial_result)
-            log.LOG.debug("%s restarted with %s" % (self.name, result))
-        return result
+        self._strategy.stop(self._children)
+        self._strategy.start(self._children)
 
     def check(self):
         """
@@ -258,16 +248,18 @@ class Supervisor(object):
         health = True
         health_output = list()
         for child in self._children:
-            log.LOG.debug("checking for child %s" % (child.name, ))
+            log.LOG.debug("checking child: %s" % (child.name, ))
             (phealth, output) = child.check()
-            log.LOG.debug("child %s: %s, %s" % (child.name, phealth, output))
+            log.LOG.debug(
+                "child check result for %s: %s, %s" %
+                (child.name, phealth, output))
             health_output.extend(output)
             health = health and phealth
         if health:
             msg = "%s: OK, as expected" % (self.name, )
         else:
             msg = "%s: WARNING, not expected" % (self.name, )
-        health_output = [msg, health_output]
+        health_output = [msg, health_output, ]
         return (health, health_output)
 
     def supervise(self, result=None):
@@ -275,108 +267,58 @@ class Supervisor(object):
         This method check that children are running/stopped according
         to the configuration.
         """
-        if result is None:
-            result = dict()
-        one_adjustment = False
-        for child in self._children:
-            fail = None
-            if isinstance(child, Supervisor):
-                (rcode, _, _) = child.supervise(result)
-                if rcode != 0:
-                    fail = (child, child.start)
-            else:  # it is a Service
-                (rcode, _, _) = child.status()
-                if rcode == 0:
-                    if not child.is_enabled():
-                        # FAIL, need to stop it
-                        fail = (child, child.stop)
-                elif rcode == 3:
-                    if child.is_enabled():
-                        # FAIL, need to start it
-                        fail = (child, child.start)
-                else:  # unknown/dead/hang ...
-                    if child.is_enabled():
-                        # FAIL, need to restart
-                        fail = (child, child.restart)
-                    else:
-                        # FAIL, need to stop
-                        fail = (child, child.stop)
-                if fail is None:
-                    result["ok"] = result.get("ok", 0) + 1
-                else:  # failure
-                    result["adjusted"] = result.get("adjusted", 0) + 1
-            if fail is not None:  # failure
-                log.LOG.warning("%s found in an unexpected state: %d" %
-                                (fail[0], rcode))
-                if not one_adjustment:
-                    one_adjustment = True
-                    self._log_cycle(True)
-                log.LOG.info("applying %s strategy to supervisor %s" %
-                             (self._strategy, self.name))
-                getattr(self, self._strategy)(*fail)
-                if self.failed():
-                    # the supervisor terminates all the child processes
-                    # and then itself
-                    self.stop()
-                    return (3, "", "")
-        if not one_adjustment:
-            self._log_cycle(False)
-        return (0, "", "")
+        successful = self._strategy.supervise(result)
+        self.log_adjustment(not successful)  # negated
+        if (not successful) and self.failed():
+            # the supervisor should stop the children
+            self.stop()
+            return False
+        return True
 
-    def one_for_one(self, child, child_action):
-        """
-        Implement *one_for_one* strategy.
+#    def one_for_all(self, child, child_action):
+#        """
+#        Implement *one_for_all* strategy.
+#
+#        If a child process terminates, all other child processes are
+#        terminated and then all child processes, including the terminated
+#        one, are restarted.
+#        """
+#        for temp_child in self._children:
+#            if temp_child is child:
+#                continue
+#            if temp_child.is_enabled():
+#                temp_child.stop()
+#        for temp_child in self._children:
+#            if temp_child is child:
+#                child_action()
+#                continue
+#            if temp_child.is_enabled():
+#                temp_child.start()
+#
+#    def rest_for_one(self, child, child_action):
+#        """
+#        Implement *rest_for_one* strategy.
+#
+#        If a child process terminates, the *rest* of the child processes
+#        (i.e. the child processes after the terminated process in start order)
+#        are terminated. Then the terminated child process and the rest
+#        of the child processes are restarted.
+#        """
+#        index = self._children.index(child)
+#        for temp_child in self._children[index:]:
+#            if temp_child is child:
+#                continue
+#            if temp_child.is_enabled():
+#                temp_child.stop()
+#        for temp_child in self._children[index:]:
+#            if temp_child is child:
+#                child_action()
+#                continue
+#            if temp_child.is_enabled():
+#                temp_child.start()
 
-        If a child process terminates, only that process is restarted.
-        """
-        child_action()
-
-    def one_for_all(self, child, child_action):
-        """
-        Implement *one_for_all* strategy.
-
-        If a child process terminates, all other child processes are
-        terminated and then all child processes, including the terminated
-        one, are restarted.
-        """
-        for temp_child in self._children:
-            if temp_child is child:
-                continue
-            if temp_child.is_enabled():
-                temp_child.stop()
-        for temp_child in self._children:
-            if temp_child is child:
-                child_action()
-                continue
-            if temp_child.is_enabled():
-                temp_child.start()
-
-    def rest_for_one(self, child, child_action):
-        """
-        Implement *rest_for_one* strategy.
-
-        If a child process terminates, the *rest* of the child processes
-        (i.e. the child processes after the terminated process in start order)
-        are terminated. Then the terminated child process and the rest
-        of the child processes are restarted.
-        """
-        index = self._children.index(child)
-        for temp_child in self._children[index:]:
-            if temp_child is child:
-                continue
-            if temp_child.is_enabled():
-                temp_child.stop()
-        for temp_child in self._children[index:]:
-            if temp_child is child:
-                child_action()
-                continue
-            if temp_child.is_enabled():
-                temp_child.start()
-
-    def _log_cycle(self, one_adjustment):
-        """
-        Log one cycle result.
-        """
+    def log_adjustment(self, one_adjustment):
+        """ Log cycle adjustment. """
         self._cycles.append((time.time(), one_adjustment))
         # shorten it, keep only the window of interest
         self._cycles = self._cycles[-self._window:]
@@ -423,7 +365,7 @@ class Supervisor(object):
             return
         self._is_new = False
         children_status = status.pop("children", dict())
-        for identifier, child in self._children_dict.items():
+        for identifier, child in self._children_by_id.items():
             if identifier in children_status:
                 child.load_status(children_status[identifier])
         keys = {"cycles": list(), }
