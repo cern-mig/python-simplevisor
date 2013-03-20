@@ -267,7 +267,7 @@ class Supervisor(object):
         This method check that children are running/stopped according
         to the configuration.
         """
-        successful = self._strategy.supervise(result)
+        successful = self._strategy.supervise(self._children, result)
         self.log_adjustment(not successful)  # negated
         if (not successful) and self.failed():
             # the supervisor should stop the children
