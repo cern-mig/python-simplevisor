@@ -275,48 +275,6 @@ class Supervisor(object):
             return False
         return True
 
-#    def one_for_all(self, child, child_action):
-#        """
-#        Implement *one_for_all* strategy.
-#
-#        If a child process terminates, all other child processes are
-#        terminated and then all child processes, including the terminated
-#        one, are restarted.
-#        """
-#        for temp_child in self._children:
-#            if temp_child is child:
-#                continue
-#            if temp_child.is_enabled():
-#                temp_child.stop()
-#        for temp_child in self._children:
-#            if temp_child is child:
-#                child_action()
-#                continue
-#            if temp_child.is_enabled():
-#                temp_child.start()
-#
-#    def rest_for_one(self, child, child_action):
-#        """
-#        Implement *rest_for_one* strategy.
-#
-#        If a child process terminates, the *rest* of the child processes
-#        (i.e. the child processes after the terminated process in start order)
-#        are terminated. Then the terminated child process and the rest
-#        of the child processes are restarted.
-#        """
-#        index = self._children.index(child)
-#        for temp_child in self._children[index:]:
-#            if temp_child is child:
-#                continue
-#            if temp_child.is_enabled():
-#                temp_child.stop()
-#        for temp_child in self._children[index:]:
-#            if temp_child is child:
-#                child_action()
-#                continue
-#            if temp_child.is_enabled():
-#                temp_child.start()
-
     def log_adjustment(self, one_adjustment):
         """ Log cycle adjustment. """
         self._cycles.append((time.time(), one_adjustment))
