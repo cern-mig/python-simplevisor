@@ -198,7 +198,7 @@ from mtb.proc import \
     kill_pids, merge_status, pidof
 from mtb.validation import mutex, reqall, reqany, get_int_or_die
 
-MAXIMUM_LOG = 100
+MAX_LOG_MESSAGES = 100
 DEFAULT_TIMEOUT = 60
 DEFAULT_EXPECTED = "running"
 
@@ -600,7 +600,7 @@ class Service(object):
         self._status["log"].append({"time": time.time(),
                                     "operation": operation,
                                     "output": output})
-        self._status["log"] = self._status["log"][-MAXIMUM_LOG:]
+        self._status["log"] = self._status["log"][-MAX_LOG_MESSAGES:]
 
     def is_enabled(self):
         """

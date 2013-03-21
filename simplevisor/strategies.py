@@ -3,6 +3,8 @@ Strategies implemented.
 
 Copyright (C) 2013 CERN
 """
+import mtb.log as log
+
 from simplevisor.service import Service
 from simplevisor.supervisor import Supervisor
 
@@ -69,6 +71,9 @@ class OneForOne(SupervisionStrategy):
                 successful = child.supervise(result)
                 if not successful:
                     # start it, it should be stopped already
+                    log.LOG.info(
+                        "supervisor %s stopped, starting it again" %
+                        (child.name, ))
                     child.start()
                     adjusted = True
             elif isinstance(child, Service):
@@ -168,7 +173,7 @@ class DependentStrategy(SupervisionStrategy):
         return True
 
 
-class RestForOne(SupervisionStrategy):
+class RestForOne(DependentStrategy):
     """
     Implements *rest_for_one* strategy.
 
@@ -184,12 +189,14 @@ class RestForOne(SupervisionStrategy):
 
     def adjust(self, children, child):
         """ Implement adjust. """
+        log.LOG.info(
+            "applying rest_for_one strategy because of: %s" % (child.name, ))
         children_subset = children[children.index(child):]
         self.stop(children_subset)
         self.start(children_subset)
 
 
-class OneForAll(SupervisionStrategy):
+class OneForAll(DependentStrategy):
     """
     Implements *one_for_all* strategy.
 
@@ -204,5 +211,7 @@ class OneForAll(SupervisionStrategy):
 
     def adjust(self, children, _):
         """ Implement adjust. """
+        log.LOG.info(
+            "applying one_for_all strategy because of: %s" % (child.name, ))
         self.stop(children)
         self.start(children)
