@@ -241,6 +241,12 @@ def get_log(type_t):
         return log
 
 
+def set_log(new_log):
+    """ Set LOG to provided log system. """
+    global LOG
+    LOG = new_log
+
+
 def log_debug(message):
     """ Log a debug message on LOG. """
     LOG.debug(message)

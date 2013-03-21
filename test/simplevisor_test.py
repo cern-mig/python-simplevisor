@@ -35,14 +35,8 @@ class SimplevisorTest(unittest.TestCase):
             if shouldpass:
                 Simplevisor(**options)
                 continue
-            # else
-            try:
-                Simplevisor(**options)
-                self.fail(
-                    "exception should have been raised for:\nSimplevisor(%s)" %
-                    options)
-            except SimplevisorError:
-                pass
+            else:
+                self.assertRaises(Exception, Simplevisor, **options)
         print("...Simplevisor init ok")
 
 if __name__ == "__main__":

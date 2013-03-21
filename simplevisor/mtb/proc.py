@@ -26,6 +26,15 @@ def merge_status(main, other):
     return (new_code, new_out, new_err)
 
 
+def which(file):
+    """ Correspond to standard UNIX which command. """
+    for path in os.environ["PATH"].split(":"):
+        cur = os.path.join(path, file)
+        if os.path.exists(cur):
+            return cur
+    return None
+
+
 def pidof(pattern_re):
     """
     Given a compiled :py:mod:`re` return a tuple containing the *pid* and

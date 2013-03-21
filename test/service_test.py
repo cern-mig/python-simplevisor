@@ -16,12 +16,16 @@ Copyright (C) 2013 CERN
 """
 from simplevisor.errors import SimplevisorError
 from simplevisor.service import Service
+
+from mtb.proc import which
+
 import unittest
 
 OK = True
 FAIL = False
 CREATION_COMBINATIONS = [
     (FAIL, {"name": "foo", }),
+    (FAIL, {"name": "foo", "foo": "bar", }),
     (OK, {"name": "foo", "control": "foo", }),
     (OK, {"name": "foo", "control": "foo", "expected": "stopped", }),
     (FAIL, {"name": "foo", "control": "foo", "start": "foo", }),
@@ -45,14 +49,8 @@ class ServiceTest(unittest.TestCase):
             if shouldpass:
                 Service(**options)
                 continue
-            # else
-            try:
-                Service(**options)
-                self.fail(
-                    "exception should have been raised for:\nService(%s)" %
-                    options)
-            except SimplevisorError:
-                pass
+            else:
+                self.assertRaises(Exception, Service, **options)
         print("...service creation ok")
 
     def test_daemon_option(self):
@@ -66,15 +64,15 @@ class ServiceTest(unittest.TestCase):
             start=start,
             stop="stop command",
             status="status command")
+        common = "%s --pidfile %s" % (which("simplevisor-loop"), pidfile, )
         self.assertEqual(
-            "/usr/bin/simplevisor-loop -c 1 "
-            "--pidfile %s --daemon %s" % (pidfile, start),
+            "%s -c 1 --daemon %s" % (common, start),
             service._opts["start"])
         self.assertEqual(
-            "/usr/bin/simplevisor-loop --pidfile %s --quit" % (pidfile, ),
+            "%s --quit" % (common, ),
             service._opts["stop"])
         self.assertEqual(
-            "/usr/bin/simplevisor-loop --pidfile %s --status" % (pidfile, ),
+            "%s --status" % (common, ),
             service._opts["status"])
         print("...service daemon option ok")
 

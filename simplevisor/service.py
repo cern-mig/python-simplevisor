@@ -186,8 +186,8 @@ Default Parameters
 
 Copyright (C) 2013 CERN
 """
+import os
 import re
-from simplevisor.errors import SimplevisorError
 import sys
 import time
 
@@ -195,8 +195,10 @@ import mtb.log as log
 from mtb.modules import md5_hash, unquote
 from mtb.proc import \
     timed_process, ProcessTimedout, ProcessError, \
-    kill_pids, merge_status, pidof
+    kill_pids, merge_status, pidof, which
 from mtb.validation import mutex, reqall, reqany, get_int_or_die
+
+from simplevisor.errors import SimplevisorError
 
 MAX_LOG_MESSAGES = 100
 DEFAULT_TIMEOUT = 60
@@ -235,24 +237,23 @@ class Service(object):
             "log": list(), }
         for key in kwargs:
             if not key.startswith("var_"):
-                raise SimplevisorError(
-                    "an invalid property has been specified for %s: %s" %
-                    (name, key))
+                raise ValueError(
+                    "an invalid property has been specified for "
+                    "service %s: %s" % (name, key))
         self._is_new = True
         try:
             self._validate_opts()
         except ValueError:
             error = sys.exc_info()[1]
             raise SimplevisorError(
-                "service %s configuration error: %s" % (self.name, error))
+                "service %s not configured properly: %s" % (self.name, error))
         if control is None and daemon is not None:
+            common_path = "%s --pidfile %s" % \
+                (which("simplevisor-loop"), daemon, )
             self._opts["start"] = (
-                "/usr/bin/simplevisor-loop -c 1 "
-                "--pidfile %s --daemon %s" % (daemon, start))
-            self._opts["stop"] = (
-                "/usr/bin/simplevisor-loop --pidfile %s --quit" % (daemon, ))
-            self._opts["status"] = (
-                "/usr/bin/simplevisor-loop --pidfile %s --status" % (daemon, ))
+                "%s -c 1 --daemon %s" % (common_path, start))
+            self._opts["stop"] = ("%s --quit" % (common_path, ))
+            self._opts["status"] = ("%s --status" % (common_path, ))
         elif control is None and status is None:
             if sys.platform != "linux2":
                 msg = "don't know how to read process table, you " + \
@@ -379,9 +380,7 @@ class Service(object):
         return changed
 
     def cond_start(self, careful=False):
-        """
-        Conditional start based on status.
-        """
+        """ Conditional start based on status. """
         log.LOG.debug(
             "conditional start for service: %s" % (self.name, ))
         changed = False
@@ -621,7 +620,7 @@ class Service(object):
         """
         text_id = "%s|%s|%s" % (self._opts["name"],
                                 self._opts["expected"],
-                                " ".join(self.get_cmd("start")),)
+                                " ".join(self.get_cmd("start")), )
         return md5_hash(text_id).hexdigest()
 
     def load_status(self, status):

@@ -218,12 +218,18 @@ class Supervisor(object):
         """
         This method takes care of starting the supervisor and its children.
         """
+        log.LOG.debug(
+            "calling start on supervisor %s.%s" %
+            (self.name, self._strategy_name))
         self._strategy.start(self._children)
 
     def stop(self):
         """
         This method takes care of stopping the supervisor and its children.
         """
+        log.LOG.debug(
+            "calling stop on supervisor %s.%s" %
+            (self.name, self._strategy_name))
         self._strategy.stop(self._children)
 
     def status(self):
@@ -238,6 +244,9 @@ class Supervisor(object):
         """
         This method takes care of restarting the supervisor.
         """
+        log.LOG.debug(
+            "calling stop+start on supervisor %s.%s" %
+            (self.name, self._strategy_name))
         self._strategy.stop(self._children)
         self._strategy.start(self._children)
 
@@ -267,6 +276,9 @@ class Supervisor(object):
         This method check that children are running/stopped according
         to the configuration.
         """
+        log.LOG.debug(
+            "calling supervisor on supervisor %s.%s" %
+            (self.name, self._strategy_name))
         successful = self._strategy.supervise(self._children, result)
         self.log_adjustment(not successful)  # negated
         if (not successful) and self.failed():
