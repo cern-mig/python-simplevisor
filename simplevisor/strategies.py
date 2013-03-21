@@ -126,7 +126,7 @@ class DependentStrategy(SupervisionStrategy):
         """
         Stop children carefully and in reverse order.
         """
-        for child in children.reverse():  # reverse order
+        for child in reversed(children):  # reverse order
             if isinstance(child, Supervisor):
                 child.stop()
             elif isinstance(child, Service):

@@ -92,13 +92,21 @@ class SupervisorTest(unittest.TestCase):
     def test_start(self):
         """ Test supervisor start. """
         print("running supervisor start test")
-        sup1 = Supervisor(**copy.deepcopy(T_SUP1_OK))
-        sup1.start()
-        time.sleep(1)
-        (check, check_output) = sup1.check()
-        print("check output: %s\n%s" % (check, check_output))
-        sup1.stop()
-        self.assertTrue(check, "sup1 check should be successful")
+        for strategy in ['one_for_one', 'rest_for_one', 'one_for_all']:
+            print("testing %s strategy" % (strategy, ))
+            current = copy.deepcopy(T_SUP1_OK)
+            current['children']['entry'][1]['strategy'] = strategy
+            current['strategy'] = strategy
+            sup1 = Supervisor(**current)
+            sup1.start()
+            time.sleep(1)
+            (check, check_output) = sup1.check()
+            self.assertTrue(check, "sup1 check should be successful")
+            successful = sup1.supervise()
+            self.assertTrue(
+                successful, "sup1 supervise should have been successful")
+            print("check output: %s\n%s" % (check, check_output))
+            sup1.stop()
         print("...supervisor start ok")
         
 
