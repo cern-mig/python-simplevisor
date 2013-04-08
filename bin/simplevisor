@@ -172,10 +172,6 @@ ARGUMENTS = [
         "help": "file where to store the state, it is not mandatory,"
                 "however recommended to store the simplevisor nodes "
                 "status between restarts"}),
-    ("strict", {
-        "long": "--strict",
-        "help": "strict start, no failures allowed during start",
-        "action": "store_true"}),
     ("version", {
         "long": "--version",
         "action": "version",
@@ -201,8 +197,7 @@ DEFAULT_OPTIONS = {
     "interval": 60,
     "path": None,
     "pidfile": None,
-    "store": None,
-    "strict": False, }
+    "store": None, }
 
 
 def get_parser():
@@ -387,7 +382,7 @@ def print_pod():
 
 SIMPLEVISOR_CONFIGURATION_FIELDS = [
     "store", "pidfile", "interval", "log", "logfile",
-    "loglevel", "path", "command", "daemon", "strict", ]
+    "loglevel", "path", "command", "daemon", ]
 
 
 def check_restrictions(arguments):
