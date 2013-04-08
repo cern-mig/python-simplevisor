@@ -277,7 +277,7 @@ class Simplevisor(object):
             try:
                 status = {self._child.get_id(): self._child.dump_status()}
                 json.dump(status, staus_f)
-                log.LOG.debug("status saved: %s" % status)
+                log.LOG.debug("status saved: %s" % (status, ))
             except StandardError:
                 error_type, error, _ = sys.exc_info()
                 msg = "error writing status file %s: %s - %s" % \

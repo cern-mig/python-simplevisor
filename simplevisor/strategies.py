@@ -66,6 +66,7 @@ class OneForOne(SupervisionStrategy):
         if result is None:
             result = dict()
         logged = False
+        adjusted = False
         for child in children:
             if isinstance(child, Supervisor):
                 successful = child.supervise(result)

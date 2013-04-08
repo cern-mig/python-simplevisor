@@ -268,7 +268,7 @@ class Service(object):
                               (pat, name))
             except re.error:
                 error = sys.exc_info()[1]
-                msg = "%s service pattern not valid: %s" % error
+                msg = "%s service pattern not valid: %s" % (name, error)
                 raise ValueError(msg)
 
     def _validate_opts(self):
@@ -300,7 +300,7 @@ class Service(object):
         """
         Return a command given the sub command.
         """
-        base = []
+        base = list()
         if self._opts["control"] is not None:  # standard use case
             if self._opts[subcmd] is None:
                 base = self._opts["control"].split()
@@ -325,12 +325,12 @@ class Service(object):
         except ProcessTimedout:
             log.LOG.warning("%s timed out %d seconds" %
                             (" ".join(cmd), self._opts["timeout"]))
-            return (1, "", "timeout")
+            return 1, "", "timeout"
         except ProcessError:
             error = sys.exc_info()[1]
             log.LOG.warning("error running %s: %s" %
                             (" ".join(cmd), error))
-            return (1, "", "%s" % error)
+            return 1, "", "%s" % error
 
     def cond_adjust(self, careful=False):
         """
@@ -550,7 +550,7 @@ class Service(object):
                 check_status = False
                 output = "%s: WARNING, in \"dirty\" state: %d" % \
                          (self.name, status)
-        return (check_status, [output, ])
+        return check_status, [output, ]
 
     def restart(self):
         """
