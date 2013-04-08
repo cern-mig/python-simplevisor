@@ -300,6 +300,7 @@ class Supervisor(object):
         """
         This method check that children are running/stopped according
         to the configuration.
+        :param result: dictionary where children result should be added
         """
         log.LOG.debug(
             "calling supervisor on supervisor %s.%s" %
@@ -358,6 +359,7 @@ class Supervisor(object):
     def load_status(self, status):
         """
         Load the status from the previous run.
+        :param status: status dictionary
         """
         if status is None:
             return
