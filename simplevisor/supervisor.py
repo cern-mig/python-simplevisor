@@ -136,6 +136,10 @@ class Supervisor(object):
 
     @classmethod
     def _strategy_by_name(cls, name):
+        """
+        Return the strategy by its name.
+        :param name: the name of the strategy
+        """
         if not hasattr(cls, "strategies"):
             cls.strategies = getattr(__import__(
                 "simplevisor.strategies"),
@@ -144,8 +148,19 @@ class Supervisor(object):
 
     def __init__(self, name="supervisor", expected=DEFAULT_EXPECTED,
                  window=DEFAULT_WINDOW, adjustments=DEFAULT_ADJUSTMENTS,
-                 strategy="one_for_one", children=dict(), **kwargs):
-        """ Constructor. """
+                 strategy="one_for_one", children=None, **kwargs):
+        """
+        Constructor.
+        :param name: the supervisor name
+        :param expected: the expected status (running|stopped)
+        :param window: the window of adjustments cycles to consider
+        :param adjustments: the maximum number of adjustments allowed
+        :param strategy: the strategy to be applied
+        :param children: the list of children attached to the supervisor
+        :param kwargs: extra parameters
+        """
+        if children is None:
+            children = dict()
         self.name = name
         self._expected = expected.lower()
         self._window = get_int_or_die(
@@ -158,8 +173,8 @@ class Supervisor(object):
             (name, adjustments))
         if strategy not in ALLOWED_STRATEGIES:
             raise ValueError(
-                "supervisor %s does not support given strategy: %s" &
-                strategy)
+                "supervisor %s does not support given strategy: %s" %
+                (name, strategy, ))
         self._strategy_name = strategy
         self._strategy = Supervisor._strategy_by_name(
             ALLOWED_STRATEGIES[strategy])(self)
@@ -180,7 +195,11 @@ class Supervisor(object):
         self._is_new = True
 
     def add_child_set(self, children):
-        """ Add a child set. """
+        """
+        Add a set of children.
+        :param children: the list of children, if a dict is given it will be
+        interpreted as a single child
+        """
         if type(children) == dict:
             self.add_child(children)
         elif type(children) == list:
@@ -192,7 +211,10 @@ class Supervisor(object):
                 "unknown given")
 
     def add_child(self, options):
-        """ Add a child. """
+        """
+        Add a child.
+        :param options: the child configuration
+        """
         inherit = {"expected": self._expected, }
         n_child = new_child(options, inherit)
         if n_child is not None:
@@ -204,7 +226,11 @@ class Supervisor(object):
             self._children_by_name[n_child.name] = n_child
 
     def get_child(self, path):
-        """ Return a child by its path. """
+        """
+        Return a child by its path.
+        :param path: a list which identifies the path tokens to identify a
+        single child by its name
+        """
         first = path.pop(0)
         if first in self._children_by_name:
             if not path:
@@ -269,7 +295,7 @@ class Supervisor(object):
         else:
             msg = "%s: WARNING, not expected" % (self.name, )
         health_output = [msg, health_output, ]
-        return (health, health_output)
+        return health, health_output
 
     def supervise(self, result=None):
         """
@@ -288,7 +314,10 @@ class Supervisor(object):
         return True
 
     def log_adjustment(self, one_adjustment):
-        """ Log cycle adjustment. """
+        """ Log cycle adjustment.
+        :param one_adjustment: if at least an adjustment has been performed
+        :rtype : bool
+        """
         self._cycles.append((time.time(), one_adjustment))
         # shorten it, keep only the window of interest
         self._cycles = self._cycles[-self._window:]
