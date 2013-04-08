@@ -209,7 +209,7 @@ class OneForAll(DependentStrategy):
         """ Constructor. """
         super(OneForAll, self).__init__(parent)
 
-    def adjust(self, children, _):
+    def adjust(self, children, child):
         """ Implement adjust. """
         log.LOG.info(
             "applying one_for_all strategy because of: %s" % (child.name, ))
