@@ -186,7 +186,6 @@ Default Parameters
 
 Copyright (C) 2013 CERN
 """
-import os
 import re
 import sys
 import time
