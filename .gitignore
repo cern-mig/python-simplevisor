@@ -5,6 +5,7 @@
 .idea
 MANIFEST
 docs/_build
+experimental
 
 #dev
 examples/simplevisor.conf
