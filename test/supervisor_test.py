@@ -50,6 +50,8 @@ T_SUP2_OK = {
     'entry': [T_SVC3_OK, ], }}
 T_SUP1_OK = {
     'name': 'sup1',
+    'window': 5,
+    'adjustments': 3,
     'children': {
     'entry': [T_SVC1_OK, T_SUP2_OK, T_SVC2_OK], }}
 
@@ -128,19 +130,59 @@ class SupervisorTest(unittest.TestCase):
             successful = sup1.supervise()
             self.assertTrue(
                 successful, "sup1 supervise should have been successful")
-            child1 = sup1.get_child(["svc1"])
+
+            for child_path in [
+                    [current['children']['entry'][0]['name'], ],
+                    [current['children']['entry'][1]['name'],
+                     current['children']['entry'][1]['children']
+                     ['entry'][0]['name'], ], ]:
+                child = sup1.get_child(child_path)
+                child.cond_stop(careful=True)
+                (child_status, _, _) = child.status()
+                self.assertEquals(
+                    child_status, 3,
+                    "%s should be stopped: %s" % (child.name, child_status))
+                successful = sup1.supervise()
+                self.assertTrue(
+                    successful, "sup1 supervise should have been successful")
+                (check, check_output) = sup1.check()
+                self.assertTrue(
+                    check, "sup1 check should be successful, got: %s\n%s" %
+                    (check, check_output))
+                (child_status, _, _) = child.status()
+                self.assertEqual(
+                    child_status, 0,
+                    "%s should be started: %s" % (child.name, child_status))
+
+            for i in range(5):
+                self.assertTrue(sup1.supervise())
+                self.assertTrue(sup1.check()[0])
+            self.assertEqual(0, sup1.adjustments())
+
+            child1 = sup1.get_child(
+                [current['children']['entry'][0]['name'], ])
+            for i in range(3):
+                child1.cond_stop(careful=True)
+                self.assertEquals(child1.status()[0], 3)
+                self.assertEqual(i, sup1.adjustments(), sup1._cycles)
+                self.assertTrue(
+                    sup1.supervise(),
+                    "supervision failed during cycle nr. %d" % (i, ))
+                self.assertEquals(child1.status()[0], 0)
+                self.assertEqual(i + 1, sup1.adjustments(), sup1._cycles)
+                self.assertFalse(sup1.failed())
             child1.cond_stop(careful=True)
-            (child1_status, _, _) = child1.status()
-            self.assertNotEqual(child1_status, 0, "svc1 should be stopped")
-            successful = sup1.supervise()
-            self.assertTrue(
-                successful, "sup1 supervise should have been successful")
-            (child1_status, _, _) = child1.status()
-            self.assertEqual(child1_status, 0, "svc1 should be started")
+            self.assertEquals(child1.status()[0], 3)
+            self.assertFalse(sup1.supervise())
+            self.assertTrue(sup1.failed())
+            self.assertFalse(sup1.check()[0])
+
             sup1.stop()
-            time.sleep(1)
+            (check, check_output) = sup1.check()
+            self.assertFalse(check, "sup1 should be stopped")
+            print("check stop output: %s\n%s" % (check, check_output))
         print("...supervisor start ok")
-        
+
 
 if __name__ == "__main__":
     unittest.main()
