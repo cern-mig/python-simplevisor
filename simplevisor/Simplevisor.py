@@ -123,7 +123,6 @@ class Simplevisor(object):
         signal.signal(signal.SIGHUP, self.on_signal)
         self.initialize_log()
         self.pre_run()
-        run_function = None
         if self._config.get("daemon"):
             daemonize()
             run_function = log.log_exceptions(re_raise=False)(self.run)
@@ -187,7 +186,7 @@ class Simplevisor(object):
         self.send_action("stop_children")
 
     def send_action(self, action="stop_children"):
-        """ Tell the supervsisor to execute an action. """
+        """ Tell the supervisor to execute an action. """
         if not self._config.get("pidfile"):
             raise SimplevisorError("%s requires a pidfile" % action)
         pid = pid_read(self._config["pidfile"])
@@ -273,10 +272,10 @@ class Simplevisor(object):
             return
         try:
             log.LOG.debug("status file: %s" % self._status_file)
-            staus_f = open(self._status_file, "w")
+            status_f = open(self._status_file, "w")
             try:
                 status = {self._child.get_id(): self._child.dump_status()}
-                json.dump(status, staus_f)
+                json.dump(status, status_f)
                 log.LOG.debug("status saved: %s" % (status, ))
             except StandardError:
                 error_type, error, _ = sys.exc_info()
@@ -284,7 +283,7 @@ class Simplevisor(object):
                       (self._status_file, error_type, error)
                 log.LOG.error(msg)
                 raise SimplevisorError(msg)
-            staus_f.close()
+            status_f.close()
         except IOError:
             error = sys.exc_info()[1]
             msg = "error writing to status file %s: %s" % \

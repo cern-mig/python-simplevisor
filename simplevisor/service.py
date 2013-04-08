@@ -300,7 +300,6 @@ class Service(object):
         """
         Return a command given the sub command.
         """
-        base = list()
         if self._opts["control"] is not None:  # standard use case
             if self._opts[subcmd] is None:
                 base = self._opts["control"].split()
@@ -526,7 +525,6 @@ class Service(object):
         """
         (status, _, _) = self.status()
         check_status = True
-        output = "OK"
         if self.is_enabled():
             if status == 0:
                 output = "%s: OK, running, as expected" % (self.name, )

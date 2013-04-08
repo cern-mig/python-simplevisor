@@ -149,7 +149,6 @@ class DependentStrategy(SupervisionStrategy):
             result = dict()
         logged = False
         for child in children:
-            to_be_adjusted = False
             if isinstance(child, Supervisor):
                 to_be_adjusted = not child.supervise(result)
             elif isinstance(child, Service):

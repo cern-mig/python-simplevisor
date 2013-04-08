@@ -105,9 +105,8 @@ def new_child(options, inherit=None):
     except KeyError:
         raise SimplevisorError(
             "type not specified for entry: %s" % (options, ))
-    child = None
     tmp_expected = inherit.get("expected", DEFAULT_EXPECTED)
-    if (tmp_expected != "none"):
+    if tmp_expected != "none":
         options["expected"] = tmp_expected
     if tmp_type == "service":
         try:

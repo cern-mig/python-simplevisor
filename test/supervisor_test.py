@@ -14,10 +14,7 @@ limitations under the License.
 
 Copyright (C) 2013 CERN
 """
-import simplevisor
-from simplevisor.errors import SimplevisorError
 from simplevisor.supervisor import Supervisor
-from simplevisor.service import Service
 
 #import mtb.log as log
 #log.set_log(log.StdOutLog("test", loglevel="debug"))

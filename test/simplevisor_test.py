@@ -14,7 +14,6 @@ limitations under the License.
 
 Copyright (C) 2013 CERN
 """
-from simplevisor.errors import SimplevisorError
 from simplevisor.Simplevisor import Simplevisor
 import unittest
 
