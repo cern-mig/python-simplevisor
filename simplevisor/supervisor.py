@@ -306,7 +306,6 @@ class Supervisor(object):
             "calling supervisor on supervisor %s.%s" %
             (self.name, self._strategy_name))
         successful = self._strategy.supervise(self._children, result)
-        self.log_adjustment(not successful)  # negated
         if (not successful) and self.failed():
             # the supervisor should stop the children
             self.stop()
@@ -322,14 +321,20 @@ class Supervisor(object):
         # shorten it, keep only the window of interest
         self._cycles = self._cycles[-self._window:]
 
+    def adjustments(self):
+        """
+        Return the number of adjustments in the logged cycles.
+        """
+        return len(
+            [1 for (_, adjusted) in self._cycles[-self._window:] if adjusted])
+
     def failed(self):
         """
         Return True if there has been more adjustments actions than
         the provided *adjustments* value in the last *window* of
         supervision cycles configured.
         """
-        adjusted = len(
-            [1 for (_, adjusted) in self._cycles[-self._window:] if adjusted])
+        adjusted = self.adjustments()
         if adjusted > self._adjustments:
             log.LOG.error(
                 "%s handled %d adjustments in %s supervision cycles" %
