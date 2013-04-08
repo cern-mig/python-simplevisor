@@ -89,9 +89,35 @@ class SupervisorTest(unittest.TestCase):
                 self.assertRaises(Exception, Supervisor, **options)
         print("...supervisor init ok")
 
-    def test_start(self):
-        """ Test supervisor start. """
-        print("running supervisor start test")
+    def test_start_supervise_stop(self):
+        """ Test supervisor start supervise stop. """
+        print("running supervisor start-supervise-stop test")
+        for strategy in ['one_for_one', 'rest_for_one', 'one_for_all']:
+            print("testing %s strategy" % (strategy, ))
+            current = copy.deepcopy(T_SUP1_OK)
+            current['children']['entry'][1]['strategy'] = strategy
+            current['strategy'] = strategy
+            sup1 = Supervisor(**current)
+            sup1.start()
+            time.sleep(1)
+            (check, check_output) = sup1.check()
+            self.assertTrue(
+                check, "sup1 check should be successful, got: %s\n%s" %
+                (check, check_output))
+            successful = sup1.supervise()
+            self.assertTrue(
+                successful, "sup1 supervise should have been successful")
+            print("check supervise output: %s\n%s" % (check, check_output))
+            sup1.stop()
+            time.sleep(1)
+            (check, check_output) = sup1.check()
+            self.assertFalse(check, "sup1 should be stopped")
+            print("check stop output: %s\n%s" % (check, check_output))
+        print("...supervisor start ok")
+
+    def test_start_kill_supervise(self):
+        """ Test supervisor start - kill - supervise. """
+        print("running supervisor start-kill-supervise test")
         for strategy in ['one_for_one', 'rest_for_one', 'one_for_all']:
             print("testing %s strategy" % (strategy, ))
             current = copy.deepcopy(T_SUP1_OK)
@@ -105,8 +131,17 @@ class SupervisorTest(unittest.TestCase):
             successful = sup1.supervise()
             self.assertTrue(
                 successful, "sup1 supervise should have been successful")
-            print("check output: %s\n%s" % (check, check_output))
+            child1 = sup1.get_child(["svc1"])
+            child1.cond_stop(careful=True)
+            (child1_status, _, _) = child1.status()
+            self.assertNotEqual(child1_status, 0, "svc1 should be stopped")
+            successful = sup1.supervise()
+            self.assertTrue(
+                successful, "sup1 supervise should have been successful")
+            (child1_status, _, _) = child1.status()
+            self.assertEqual(child1_status, 0, "svc1 should be started")
             sup1.stop()
+            time.sleep(1)
         print("...supervisor start ok")
         
 
