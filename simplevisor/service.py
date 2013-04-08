@@ -290,6 +290,8 @@ class Service(object):
     def get_child(self, path):
         """
         Return a child by its path.
+        :param path: list containing the tokens representing the path to the
+        requested child
         """
         first = path.pop(0)
         if first == self.name:
@@ -299,6 +301,7 @@ class Service(object):
     def get_cmd(self, subcmd):
         """
         Return a command given the sub command.
+        :param subcmd: the subcommand
         """
         if self._opts["control"] is not None:  # standard use case
             if self._opts[subcmd] is None:
@@ -312,7 +315,10 @@ class Service(object):
         return base
 
     def __execute(self, cmd):
-        """ Execute the given command. """
+        """
+        Execute the given command.
+        :param cmd: list containing the command to execute
+        """
         env = None
         if self._opts["path"] is not None:
             env = {"PATH": self._opts["path"]}
@@ -335,6 +341,9 @@ class Service(object):
         """
         Start/stop according to expected status.
 
+        :param careful: specify if the action should be careful,
+        which means it will make sure that action was performed
+        successfully and that the service is in the expected status
         @return: True if adjustment performed, False otherwise
         """
         log.LOG.debug("cond adjust service: %s" % (self.name, ))
@@ -378,7 +387,13 @@ class Service(object):
         return changed
 
     def cond_start(self, careful=False):
-        """ Conditional start based on status. """
+        """
+        Conditional start based on status.
+
+        :param careful: specify if the action should be careful,
+        which means it will make sure that action was performed
+        successfully and that the service is in the expected status
+        """
         log.LOG.debug(
             "conditional start for service: %s" % (self.name, ))
         changed = False
@@ -423,6 +438,10 @@ class Service(object):
     def cond_stop(self, careful=False):
         """
         Conditional stop based on status.
+
+        :param careful: specify if the action should be careful,
+        which means it will make sure that action was performed
+        successfully and that the service is in the expected status
         """
         log.LOG.debug(
             "conditional stop for service: %s" % (self.name, ))
