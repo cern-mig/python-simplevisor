@@ -13,7 +13,7 @@ before_install:
   - sudo apt-get install cpanminus -y
 # command to install dependencies
 install:
-  - cpanm No::Worries
+  - cpanm --notest --mirror http://cpan.mirrors.travis-ci.org No::Worries
   - pip install simplejson --use-mirrors || echo "ok"
   - pip install argparse --use-mirrors || echo "ok"
   - pip install pep8 --use-mirrors
