@@ -17,6 +17,10 @@ Copyright (C) 2013 CERN
 from simplevisor.service import Service
 
 from mtb.proc import which
+import mtb.log as log
+
+log.set_log(
+    log.get_log("stdout")("simplevisor-test", loglevel="info"))
 
 import copy
 import os
