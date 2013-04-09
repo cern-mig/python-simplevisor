@@ -10,6 +10,7 @@ python:
   - "3.3"
 # command to install dependencies
 install:
+  - cpanm No::Worries
   - pip install simplejson --use-mirrors || echo "ok"
   - pip install argparse --use-mirrors || echo "ok"
   - pip install pep8 --use-mirrors
