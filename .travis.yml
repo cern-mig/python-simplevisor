@@ -15,6 +15,7 @@ before_install:
 install:
   - cpanm -v --notest --mirror http://cpan.mirrors.travis-ci.org No::Worries
   - which perl
+  - export PERL5LIB=$PERL5LIB:~/perl5/lib/perl5/
   - /usr/bin/perl -e "use No::Worries"
   - perl -e "use No::Worries"
   - pip install simplejson --use-mirrors || echo "ok"
