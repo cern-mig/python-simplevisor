@@ -120,11 +120,12 @@ def timed_process(args, timeout=None, env=None, shell=False):
     env
         a dictionary representing the environment
     """
-    if env is None:
-        env = {"PATH": "/usr/bin:/usr/sbin:/bin:/sbin"}
+    extra = dict()
+    if env is not None:
+        extra['env'] = env
     try:
         proc = Popen(args, stdout=PIPE, stderr=PIPE, shell=shell,
-                     env=env)
+                     **extra)
     except OSError:
         error = sys.exc_info()[1]
         raise ProcessError("OSError %s" % error)

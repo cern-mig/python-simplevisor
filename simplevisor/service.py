@@ -324,9 +324,10 @@ class Service(object):
         Execute the given command.
         :param cmd: list containing the command to execute
         """
-        env = None
         if self._opts["path"] is not None:
             env = {"PATH": self._opts["path"], }
+        else:
+            env = {"PATH": "/usr/bin:/usr/sbin:/bin:/sbin"}
         cmd_str = " ".join(cmd)
         try:
             log.LOG.debug("executing %s" % (cmd_str, ))
