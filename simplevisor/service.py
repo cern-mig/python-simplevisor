@@ -186,6 +186,7 @@ Default Parameters
 
 Copyright (C) 2013 CERN
 """
+import os
 import re
 import sys
 import time
@@ -247,8 +248,12 @@ class Service(object):
             raise SimplevisorError(
                 "service %s not configured properly: %s" % (self.name, error))
         if control is None and daemon is not None:
-            common_path = "%s --pidfile %s" % \
-                (which("simplevisor-loop"), daemon, )
+            si_loop = which("simplevisor-loop")
+            if si_loop is None:
+                raise RuntimeError(
+                    "cannot find simplevisor-loop in the environment: %s" %
+                    (os.environ["PATH"], ))
+            common_path = "%s --pidfile %s" % (si_loop, daemon, )
             self._opts["start"] = (
                 "%s -c 1 --daemon %s" % (common_path, start))
             self._opts["stop"] = ("%s --quit" % (common_path, ))
@@ -321,21 +326,21 @@ class Service(object):
         """
         env = None
         if self._opts["path"] is not None:
-            env = {"PATH": self._opts["path"]}
+            env = {"PATH": self._opts["path"], }
+        cmd_str = " ".join(cmd)
         try:
-            log.LOG.debug("executing %s" % " ".join(cmd))
+            log.LOG.debug("executing %s" % (cmd_str, ))
             result = timed_process(cmd, self._opts["timeout"], env)
-            log.LOG.debug("%s returned: %s" % (" ".join(cmd), result))
+            log.LOG.debug("%s returned: %s" % (cmd_str, result))
             return result
         except ProcessTimedout:
             log.LOG.warning("%s timed out %d seconds" %
-                            (" ".join(cmd), self._opts["timeout"]))
+                            (cmd_str, self._opts["timeout"]))
             return 1, "", "timeout"
         except ProcessError:
             error = sys.exc_info()[1]
-            log.LOG.warning("error running %s: %s" %
-                            (" ".join(cmd), error))
-            return 1, "", "%s" % error
+            log.LOG.warning("error running %s: %s" % (cmd_str, error))
+            return 1, "", "%s" % (error, )
 
     def cond_adjust(self, careful=False):
         """

@@ -77,10 +77,11 @@ class ServiceTest(unittest.TestCase):
                 self.assertRaises(Exception, Service, **options)
         print("...service creation ok")
 
-    def test_start(self):
+    def test_start_stop(self):
         """
-        Test service start.
+        Test service start - stop.
         """
+        print("running service start - stop tests")
         for opts in [copy.deepcopy(T_SVC1_OK), copy.deepcopy(T_SVC2_OK), ]:
             svc = Service(**opts)
             svc.cond_start(careful=True)
@@ -97,6 +98,7 @@ class ServiceTest(unittest.TestCase):
             self.assertFalse(
                 svc.check()[0],
                 "check should have returned true for %s" % (svc.name, ))
+        print("...service start-stop ok")
 
     def test_daemon_option(self):
         """ Test daemon option. """
