@@ -23,13 +23,13 @@ def merge_status(main, other):
     new_code = main[0] | other[0]
     new_out = "%s%s" % (main[1], other[1])
     new_err = "%s%s" % (main[2], other[2])
-    return (new_code, new_out, new_err)
+    return new_code, new_out, new_err
 
 
-def which(file):
+def which(program):
     """ Correspond to standard UNIX which command. """
     for path in os.environ["PATH"].split(":"):
-        cur = os.path.join(path, file)
+        cur = os.path.join(path, program)
         if os.path.exists(cur):
             return cur
     return None
@@ -133,7 +133,7 @@ def timed_process(args, timeout=None, env=None, shell=False):
         raise ProcessError("ValueError %s" % error)
     if timeout is None:
         out, err = proc.communicate()
-        return (proc.poll(), out, err)
+        return proc.poll(), out, err
     maxt = time.time() + timeout
     while proc.poll() is None and time.time() < maxt:
         time.sleep(CHECK_TIME)
@@ -150,7 +150,7 @@ def timed_process(args, timeout=None, env=None, shell=False):
                               (" ".join(args), timeout))
     else:
         out, err = proc.communicate()
-        return (proc.poll(), out, err)
+        return proc.poll(), out, err
 
 
 def send_signal(daemon, sig):
@@ -197,14 +197,14 @@ def daemonize():
         sys.stderr.write("fork #2 failed: %d (%s)\n"
                          % (error.errno, error.strerror))
         sys.exit(1)
-    if (not is_regular_file(sys.stdin)):
+    if not is_regular_file(sys.stdin):
         stdin = open(os.devnull, 'r')
         os.dup2(stdin.fileno(), sys.stdin.fileno())
-    if (not is_regular_file(sys.stdout)):
+    if not is_regular_file(sys.stdout):
         sys.stdout.flush()
         stdout = open(os.devnull, 'a+')
         os.dup2(stdout.fileno(), sys.stdout.fileno())
-    if (not is_regular_file(sys.stderr)):
+    if not is_regular_file(sys.stderr):
         sys.stderr.flush()
         stderr = open(os.devnull, 'a+')
         os.dup2(stderr.fileno(), sys.stderr.fileno())

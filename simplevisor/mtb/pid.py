@@ -23,7 +23,7 @@ def pid_read(path, action=False):
     content = (None, None)
     if not os.path.exists(path):
         if action:
-            return ("", None)
+            return "", None
         return ""
     try:
         pid_file = open(path, "r")
@@ -72,12 +72,10 @@ def pid_write(path, pid, action=None, excl=False):
         raise IOError("cannot write to %s: %s" % (path, error.strerror))
     except OSError:
         error = sys.exc_info()[1]
-        raise IOError("cannot open pidfile %s: %s" %
-                      (path, error.strerror))
+        raise IOError("cannot open pidfile %s: %s" % (path, error.strerror))
     else:
         os.close(pid_file)
         return pid
-    return None
 
 
 def pid_check(path):
@@ -154,24 +152,24 @@ def pid_status(path, maxage=None):
     """ Return the pid status. """
     pid = pid_read(path)
     if pid is None:
-        return (None, None)
+        return None, None
     if not pid:
-        return (3, "does not seem to be running")
+        return 3, "does not seem to be running"
     try:
         os.kill(pid, 0)
     except OSError:
-        return (3, "pid %s does not seem to be running anymore" % pid)
+        return 3, "pid %s does not seem to be running anymore" % (pid, )
     if maxage is None:
-        return (0, "seems to be running")
+        return 0, "seems to be running"
     try:
         stat = os.stat(path)
     except OSError:
-        return (3, "(pid %d) does not have its pidfile anymore" % pid)
+        return 3, "(pid %d) does not have its pidfile anymore" % (pid, )
     fileage = time.time() - stat.st_mtime
     mdate = datetime.datetime.fromtimestamp(stat.st_mtime)
     if fileage > maxage:
-        return (1, "(pid %d) is not running since %s" % (pid, mdate))
-    return (0, "(pid %d) was active on %s" % (pid, mdate))
+        return 1, "(pid %d) is not running since %s" % (pid, mdate)
+    return 0, "(pid %d) was active on %s" % (pid, mdate)
 
 
 def pid_remove(path):

@@ -70,7 +70,7 @@ def write_apache_config(path, conf):
         "Config::General->new->save_file(\"%s\", $loaded); '" \
         % (tmp_path, tmp_path, path.replace("@", "\@"))
     proc = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
-    out, err = proc.communicate()
+    _, err = proc.communicate()
     if err:
         raise ValueError(str(err).strip())
     os.remove(tmp_path)
