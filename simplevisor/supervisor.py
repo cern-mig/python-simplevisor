@@ -359,7 +359,7 @@ class Supervisor(object):
         """
         Return the id of the supervisor.
         """
-        return md5_hash(self.name).hexdigest()
+        return md5_hash(self.name.encode()).hexdigest()
 
     def load_status(self, status):
         """

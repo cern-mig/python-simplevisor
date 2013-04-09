@@ -644,11 +644,12 @@ class Service(object):
     def get_id(self):
         """
         Return the id of the service.
+        :rtype : str the string representing the service
         """
         text_id = "%s|%s|%s" % (self._opts["name"],
                                 self._opts["expected"],
                                 " ".join(self.get_cmd("start")), )
-        return md5_hash(text_id).hexdigest()
+        return md5_hash(text_id.encode()).hexdigest()
 
     def load_status(self, status):
         """
