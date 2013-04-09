@@ -15,8 +15,8 @@ before_install:
 # command to install dependencies
 install:
   - sudo cpanm -v --notest --mirror http://cpan.mirrors.travis-ci.org No::Worries
-  - pip install simplejson --use-mirrors || echo "ok"
-  - pip install argparse --use-mirrors || echo "ok"
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.5' ]]; then pip install simplejson --use-mirrors; fi
+  - pip install argparse --use-mirrors || echo "no needed from 3.2 on, ok"
   - pip install pep8 --use-mirrors
 # command to run tests
 script:
