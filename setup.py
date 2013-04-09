@@ -1,4 +1,6 @@
+from distutils.core import setup, Command
 import simplevisor
+import os
 import sys
 
 _no_data_files = "--no-data-files"
@@ -37,8 +39,6 @@ CLASSIFIERS = [
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
 
-from distutils.core import setup, Command
-
 
 class test(Command):
     user_options = []
@@ -50,6 +50,7 @@ class test(Command):
         pass
 
     def run(self):
+        os.environ["PATH"] += os.pathsep + "./bin"
         from test import run_tests
         run_tests.main()
 
