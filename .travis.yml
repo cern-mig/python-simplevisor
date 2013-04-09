@@ -1,6 +1,6 @@
-notifications:
-  email:
-    - mig-travis@cern.ch
+#notifications:
+#  email:
+#    - mig-travis@cern.ch
 language: python
 python:
   - "2.5"
@@ -8,6 +8,9 @@ python:
   - "2.7"
   - "3.2"
   - "3.3"
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install cpanm
 # command to install dependencies
 install:
   - cpanm No::Worries
