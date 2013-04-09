@@ -8,20 +8,18 @@ python:
   - "2.7"
   - "3.2"
   - "3.3"
+# install cpanminus
 before_install:
   - sudo apt-get update
   - sudo apt-get install cpanminus -y
 # command to install dependencies
 install:
   - sudo cpanm -v --notest --mirror http://cpan.mirrors.travis-ci.org No::Worries
-  - which perl
-#  - export PERL5LIB=$PERL5LIB:~/perl5/lib/perl5/
-  - /usr/bin/perl -e "use No::Worries"
   - pip install simplejson --use-mirrors || echo "ok"
   - pip install argparse --use-mirrors || echo "ok"
   - pip install pep8 --use-mirrors
 # command to run tests
 script:
   - pep8 simplevisor/ bin/simplevisor test/
-  - python setup.py test
   - python setup.py install --no-data-files
+  - python setup.py test
