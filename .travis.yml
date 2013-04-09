@@ -13,11 +13,10 @@ before_install:
   - sudo apt-get install cpanminus -y
 # command to install dependencies
 install:
-  - cpanm -v --notest --mirror http://cpan.mirrors.travis-ci.org No::Worries
+  - sudo cpanm -v --notest --mirror http://cpan.mirrors.travis-ci.org No::Worries
   - which perl
-  - export PERL5LIB=$PERL5LIB:~/perl5/lib/perl5/
+#  - export PERL5LIB=$PERL5LIB:~/perl5/lib/perl5/
   - /usr/bin/perl -e "use No::Worries"
-  - perl -e "use No::Worries"
   - pip install simplejson --use-mirrors || echo "ok"
   - pip install argparse --use-mirrors || echo "ok"
   - pip install pep8 --use-mirrors
