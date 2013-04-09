@@ -401,23 +401,23 @@ class Service(object):
         """
         log.LOG.debug(
             "conditional start for service: %s" % (self.name, ))
-        changed = False
+        changed = None
         (return_code, _, _) = self.status()
-        result = ""
+        result = (0, "", "")
         if return_code == 0:
             if self._opts["expected"] == "stopped":
                 result = self.stop()
                 log.LOG.info(
                     "%s stopped with result: %s" % (self.name, result))
                 self._status_log("stop", result)
-                changed = True
+                changed = "stop"
         elif return_code == 3:
             if self._opts["expected"] == "running":
                 result = self.start()
                 log.LOG.info(
                     "%s started with result: %s" % (self.name, result))
                 self._status_log("start", result)
-                changed = True
+                changed = "start"
         else:  # unknown/dead/hang...
             stop_result = self.stop()
             self._status_log("stop", stop_result)
@@ -428,19 +428,23 @@ class Service(object):
                 log.LOG.info("%s started with result: %s" %
                              (self.name, result))
                 self._status_log("start", result)
-            changed = True
-        if careful and changed:
+            changed = "stop+start"
+        if changed and result[0] != 0:
+            error_message = "error during service %s action %s: %s" % \
+                (self.name, changed, result, )
+            log.LOG.error(error_message)
+            raise SimplevisorError(error_message)
+        if careful and (changed is not None):
             t_max = time.time() + self._opts["timeout"]
             while time.time() <= t_max:
                 checked_status, _ = self.check()
                 if checked_status:
-                    return changed
+                    return changed is not None
                 time.sleep(0.2)
-            error_message = "error starting service %s %s" % \
-                (self.name, result, )
+            error_message = "error starting service: %s" % (self.name, )
             log.LOG.error(error_message)
             raise SimplevisorError(error_message)
-        return changed
+        return changed is not None
 
     def cond_stop(self, careful=False):
         """
