@@ -403,6 +403,7 @@ class Service(object):
             "conditional start for service: %s" % (self.name, ))
         changed = False
         (return_code, _, _) = self.status()
+        result = ""
         if return_code == 0:
             if self._opts["expected"] == "stopped":
                 result = self.stop()
@@ -435,7 +436,8 @@ class Service(object):
                 if checked_status:
                     return changed
                 time.sleep(0.2)
-            error_message = "error starting service: %s" % (self.name, )
+            error_message = "error starting service %s %s" % \
+                (self.name, result, )
             log.LOG.error(error_message)
             raise SimplevisorError(error_message)
         return changed
