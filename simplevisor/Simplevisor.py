@@ -180,7 +180,7 @@ class Simplevisor(object):
         self.stop("stop_supervisor")
 
     def stop_children(self):
-        """ Tell the supervisor to stop without touching the children. """
+        """ Tell the supervisor to stop the children. """
         if not self._config.get("pidfile"):
             raise SimplevisorError("stop requires a pidfile")
         self.send_action("stop_children")
@@ -237,10 +237,10 @@ class Simplevisor(object):
         to stdout independently from the configuration.
         """
         if stdout:
-            log.LOG = log.get_log("stdout")("simplevisor", **self._config)
+            log.LOG = log.get_log("stdout")(self.prog, **self._config)
         else:
             log.LOG = log.get_log(self._config.get("log", "stdout"))(
-                "simplevisor", **self._config)
+                self.prog, **self._config)
 
     def load_status(self):
         """ Load saved status. """
@@ -302,7 +302,7 @@ class Simplevisor(object):
     def pre_run(self):
         """ Before detaching. """
         if isinstance(self._child, service.Service):
-            (rcode, _, _) = self._child.cond_start()
+            (rcode, _, _) = self._child.cond_start(careful=True)
             sys.exit(rcode)
         self._child.start()
 
@@ -358,5 +358,5 @@ class Simplevisor(object):
         if action != "stop_supervisor":
             log.LOG.info("stopping all the children")
             self._child.stop()
-        log.LOG.info("stopping the supervisor")
+        log.LOG.info("stopping %s" % (self.prog, ))
         self.save_status()

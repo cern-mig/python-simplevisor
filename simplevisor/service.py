@@ -238,21 +238,21 @@ class Service(object):
         for key in kwargs:
             if not key.startswith("var_"):
                 raise ValueError(
-                    "an invalid property has been specified for "
-                    "service %s: %s" % (name, key))
+                    "invalid property for service %s: %s" % (name, key))
         self._is_new = True
         try:
             self._validate_opts()
         except ValueError:
             error = sys.exc_info()[1]
             raise SimplevisorError(
-                "service %s not configured properly: %s" % (self.name, error))
+                "service %s is not properly configured: %s" %
+                (self.name, error))
         if control is None and daemon is not None:
             si_loop = which("simplevisor-loop")
             if si_loop is None:
                 raise RuntimeError(
-                    "cannot find simplevisor-loop in the environment: %s" %
-                    (os.environ["PATH"], ))
+                    "cannot find simplevisor-loop command in the "
+                    "environment: %s" % (os.environ["PATH"], ))
             common_path = "%s --pidfile %s" % (si_loop, daemon, )
             self._opts["start"] = (
                 "%s -c 1 --daemon %s" % (common_path, start))
@@ -260,21 +260,21 @@ class Service(object):
             self._opts["status"] = ("%s --status" % (common_path, ))
         elif control is None and status is None:
             if sys.platform != "linux2":
-                msg = "don't know how to read process table, you " + \
-                      "must specify a status command for service %s" % name
-                raise ValueError(msg)
+                raise ValueError(
+                    "don't know how to read process table, you must specify "
+                    "a status command for service: %s" % (name, ))
             if pattern is not None:
                 pat = pattern
             else:
                 pat = " ".join(self.get_cmd("start"))
             try:
                 self._opts["pattern_re"] = re.compile(pat)
-                log.LOG.debug("using %s as pattern for service %s" %
-                              (pat, name))
+                log.LOG.debug(
+                    "using %s as pattern for service %s" % (pat, name))
             except re.error:
                 error = sys.exc_info()[1]
-                msg = "%s service pattern not valid: %s" % (name, error)
-                raise ValueError(msg)
+                raise ValueError(
+                    "%s service pattern not valid: %s" % (name, error))
 
     def _validate_opts(self):
         """ Validate options. """
@@ -303,19 +303,19 @@ class Service(object):
             return self
         raise ValueError("not found")
 
-    def get_cmd(self, subcmd):
+    def get_cmd(self, sub_command):
         """
         Return a command given the sub command.
-        :param subcmd: the subcommand
+        :param sub_command: the sub-command
         """
         if self._opts["control"] is not None:  # standard use case
-            if self._opts[subcmd] is None:
+            if self._opts[sub_command] is None:
                 base = self._opts["control"].split()
-                base.append(subcmd)
+                base.append(sub_command)
             else:
-                base = self._opts[subcmd].split()
+                base = self._opts[sub_command].split()
         else:  # other use case
-            base = self._opts[subcmd].split()
+            base = self._opts[sub_command].split()
         base = [unquote(token) for token in base]
         return base
 
@@ -327,7 +327,7 @@ class Service(object):
         if self._opts["path"] is not None:
             env = {"PATH": self._opts["path"], }
         else:
-            env = {"PATH": "/usr/bin:/usr/sbin:/bin:/sbin"}
+            env = {"PATH": "/usr/bin:/usr/sbin:/bin:/sbin", }
         cmd_str = " ".join(cmd)
         try:
             log.LOG.debug("executing %s" % (cmd_str, ))
@@ -335,8 +335,8 @@ class Service(object):
             log.LOG.debug("%s returned: %s" % (cmd_str, result))
             return result
         except ProcessTimedout:
-            log.LOG.warning("%s timed out %d seconds" %
-                            (cmd_str, self._opts["timeout"]))
+            log.LOG.warning(
+                "%s timed out %d seconds" % (cmd_str, self._opts["timeout"]))
             return 1, "", "timeout"
         except ProcessError:
             error = sys.exc_info()[1]
@@ -352,32 +352,36 @@ class Service(object):
         successfully and that the service is in the expected status
         @return: True if adjustment performed, False otherwise
         """
-        log.LOG.debug("cond adjust service: %s" % (self.name, ))
+        log.LOG.debug("conditional adjust for service: %s" % (self.name, ))
         changed = False
         (return_code, _, _) = self.status()
         if return_code == 0:
             if not self.is_enabled():
                 result = self.stop()
-                log.LOG.info("%s stopped with %s" %
-                             (self._opts["name"], result))
+                log.LOG.info(
+                    "service %s stopped with result: %s" %
+                    (self.name, result))
                 self._status_log("stop", result)
                 changed = True
         elif return_code == 3:
             if self._opts["expected"] == "running":
                 result = self.start()
-                log.LOG.info("%s started with %s" %
-                             (self._opts["name"], result))
+                log.LOG.info(
+                    "service %s started with result: %s" %
+                    (self.name, result))
                 self._status_log("start", result)
                 changed = True
         else:  # unknown/dead/hang...
             stop_result = self.stop()
             self._status_log("stop", stop_result)
-            log.LOG.info("%s stopped for cleaning %s" %
-                         (self._opts["name"], stop_result))
+            log.LOG.info(
+                "service %s stopped for cleaning with result: %s" %
+                (self.name, stop_result))
             if self._opts["expected"] == "running":
                 result = self.start()
-                log.LOG.info("%s started with %s" %
-                             (self._opts["name"], result))
+                log.LOG.info(
+                    "service %s started with result: %s" %
+                    (self.name, result))
                 self._status_log("start", result)
             changed = True
         if careful and changed:
@@ -400,8 +404,7 @@ class Service(object):
         which means it will make sure that action was performed
         successfully and that the service is in the expected status
         """
-        log.LOG.debug(
-            "conditional start for service: %s" % (self.name, ))
+        log.LOG.debug("conditional start for service: %s" % (self.name, ))
         changed = None
         (return_code, _, _) = self.status()
         result = (0, "", "")
@@ -409,25 +412,29 @@ class Service(object):
             if self._opts["expected"] == "stopped":
                 result = self.stop()
                 log.LOG.info(
-                    "%s stopped with result: %s" % (self.name, result))
+                    "service %s stopped with result: %s" %
+                    (self.name, result))
                 self._status_log("stop", result)
                 changed = "stop"
         elif return_code == 3:
             if self._opts["expected"] == "running":
                 result = self.start()
                 log.LOG.info(
-                    "%s started with result: %s" % (self.name, result))
+                    "service %s started with result: %s" %
+                    (self.name, result))
                 self._status_log("start", result)
                 changed = "start"
         else:  # unknown/dead/hang...
             stop_result = self.stop()
             self._status_log("stop", stop_result)
             log.LOG.info(
-                "%s stopped for cleaning %s" % (self.name, stop_result))
+                "service %s stopped for cleaning with result: %s" %
+                (self.name, stop_result))
             if self._opts["expected"] == "running":
                 result = self.start()
-                log.LOG.info("%s started with result: %s" %
-                             (self.name, result))
+                log.LOG.info(
+                    "service %s started with result: %s" %
+                    (self.name, result))
                 self._status_log("start", result)
             changed = "stop+start"
         if changed and result[0] != 0:
@@ -455,8 +462,7 @@ class Service(object):
         which means it will make sure that action was performed
         successfully and that the service is in the expected status
         """
-        log.LOG.debug(
-            "conditional stop for service: %s" % (self.name, ))
+        log.LOG.debug("conditional stop for service: %s" % (self.name, ))
         changed = False
         (return_code, _, _) = self.status()
         if return_code == 0:
@@ -491,7 +497,7 @@ class Service(object):
     def start(self):
         """
         This method takes care of starting the service using the
-        start command. If no start command is provided...
+        start command.
         """
         result = self.__execute(self.get_cmd("start"))
         self._status_log("start", result)
@@ -510,14 +516,14 @@ class Service(object):
             pid_info = self.pidof()
             if pid_info is None:
                 result = (0, "", "")
-                log.LOG.info("%s already stopped" %
-                             (self._opts["name"], ))
+                log.LOG.info(
+                    "service %s already stopped" % (self.name, ))
             else:
                 pids = [x[0] for x in pid_info]
                 kill_pids(pids, self._opts["timeout"])
-                log.LOG.info("%s killed by killing processes: %s" %
-                             (self._opts["name"],
-                             " ".join([str(p) for p in pids])))
+                log.LOG.info(
+                    "%s killed by killing processes: %s" %
+                    (self.name, " ".join([str(p) for p in pids])))
                 result = (0, "", "")
         else:
             result = self.__execute(self.get_cmd("stop"))
@@ -540,10 +546,10 @@ class Service(object):
         if self._opts["control"] is None and self._opts["status"] is None:
             pid_info = self.pidof()
             if pid_info is None:
-                log.LOG.debug("%s not running" % (self._opts["name"], ))
+                log.LOG.debug("%s not running" % (self.name, ))
                 result = (3, "", "")
             else:
-                log.LOG.debug("%s running" % (self._opts["name"], ))
+                log.LOG.debug("%s running" % (self.name, ))
                 result = (0, "", "")
         else:
             result = self.__execute(self.get_cmd("status"))
@@ -601,16 +607,17 @@ class Service(object):
 
         if restart_cmd:
             result = self.__execute(self.get_cmd("restart"))
-            log.LOG.info("%s restarted with %s" % (self.name, result))
+            log.LOG.info(
+                "service %s restarted with result: %s" % (self.name, result))
             self._status_log("restart", result)
-            return result
         else:
-            rstop = self.stop()
-            rstart = self.start()
-            rjoint = merge_status(rstop, rstart)
-            log.LOG.info("%s stop+start with %s" % (self.name, rjoint))
-            self._status_log("stop+start", rjoint)
-            return rjoint
+            stop_result = self.stop()
+            start_result = self.start()
+            result = merge_status(stop_result, start_result)
+            log.LOG.info(
+                "service %s stop+start result: %s" % (self.name, result))
+            self._status_log("stop+start", result)
+        return result
 
     def pidof(self):
         """ Return the pid of the service. """
@@ -640,14 +647,14 @@ class Service(object):
         """
         Return the string representation.
         """
-        return "service %s" % (self._opts["name"], )
+        return "service %s" % (self.name, )
 
     def get_id(self):
         """
         Return the id of the service.
         :rtype : str the string representing the service
         """
-        text_id = "%s|%s|%s" % (self._opts["name"],
+        text_id = "%s|%s|%s" % (self.name,
                                 self._opts["expected"],
                                 " ".join(self.get_cmd("start")), )
         return md5_hash(text_id.encode()).hexdigest()
@@ -665,7 +672,7 @@ class Service(object):
         """
         Return the status to be saved for future runs.
         """
-        # removing log for now
+        # removing log for the time being
         if "log" in self._status:
             del(self._status["log"])
         return self._status

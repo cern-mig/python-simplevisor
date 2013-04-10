@@ -5,7 +5,7 @@ An example of supervisor declaration::
 
     <entry>
         type = supervisor
-        name = svisor1
+        name = supervisor1
         window = 12
         adjustments = 3
         strategy = one_for_one
@@ -186,7 +186,7 @@ class Supervisor(object):
         self._children = list()
         self._children_by_id = dict()
         self._children_by_name = dict()
-        self.add_child_set(children.get("entry", []))
+        self.add_child_set(children.get("entry", list()))
         if len(self._children) == 0:
             raise SimplevisorError(
                 "empty supervisor found: %s" % (self.name, ))
@@ -199,29 +199,33 @@ class Supervisor(object):
         :param children: the list of children, if a dict is given it will be
         interpreted as a single child
         """
-        if type(children) == dict:
+        given_type = type(children)
+        if given_type == dict:
             self.add_child(children)
-        elif type(children) == list:
+        elif given_type == list:
             for child in children:
                 self.add_child(child)
         else:
             raise ValueError(
-                "should be a list of children or a single child, "
-                "unknown given")
+                "supervisor %s accept a list of children or a single child, "
+                "%s given" % (self.name, given_type))
 
     def add_child(self, options):
         """
         Add a child.
         :param options: the child configuration
         """
-        inherit = {"expected": self._expected, }
-        n_child = new_child(options, inherit)
+        n_child = new_child(options, {"expected": self._expected, })
         if n_child is not None:
             if n_child.name in self._children_by_name:
                 raise SimplevisorError(
-                    "two entries with the same name: %s" % (n_child.name, ))
+                    "supervisor %s got two entries with the same name: %s" %
+                    (self.name, n_child.name))
+            # list where order is preserved
             self._children.append(n_child)
+            # dict for fast access by id
             self._children_by_id[n_child.get_id()] = n_child
+            # dict for fast access by name
             self._children_by_name[n_child.name] = n_child
 
     def get_child(self, path):
@@ -246,7 +250,7 @@ class Supervisor(object):
         log.LOG.debug(
             "calling start on supervisor %s.%s" %
             (self.name, self._strategy_name))
-        self._strategy.start(self._children)
+        return self._strategy.start(self._children)
 
     def stop(self):
         """
@@ -255,7 +259,7 @@ class Supervisor(object):
         log.LOG.debug(
             "calling stop on supervisor %s.%s" %
             (self.name, self._strategy_name))
-        self._strategy.stop(self._children)
+        return self._strategy.stop(self._children)
 
     def status(self):
         """
@@ -273,28 +277,28 @@ class Supervisor(object):
             "calling stop+start on supervisor %s.%s" %
             (self.name, self._strategy_name))
         self._strategy.stop(self._children)
-        self._strategy.start(self._children)
+        return self._strategy.start(self._children)
 
     def check(self):
         """
         This method check the children status against the expected one.
         """
-        health = True
+        healthy = True
         health_output = list()
         for child in self._children:
             log.LOG.debug("checking child: %s" % (child.name, ))
-            (phealth, output) = child.check()
+            (child_health, output) = child.check()
             log.LOG.debug(
                 "child check result for %s: %s, %s" %
-                (child.name, phealth, output))
+                (child.name, child_health, output))
             health_output.extend(output)
-            health = health and phealth
-        if health:
+            healthy = healthy and child_health
+        if healthy:
             msg = "%s: OK, as expected" % (self.name, )
         else:
             msg = "%s: WARNING, not expected" % (self.name, )
         health_output = [msg, health_output, ]
-        return health, health_output
+        return healthy, health_output
 
     def supervise(self, result=None):
         """
@@ -303,7 +307,7 @@ class Supervisor(object):
         :param result: dictionary where children result should be added
         """
         log.LOG.debug(
-            "calling supervisor on supervisor %s.%s" %
+            "calling supervise on supervisor %s.%s" %
             (self.name, self._strategy_name))
         successful = self._strategy.supervise(self._children, result)
         if (not successful) and self.failed():
