@@ -77,7 +77,7 @@ import mtb.log as log
 from mtb.modules import md5_hash
 from mtb.validation import get_int_or_die
 
-from simplevisor.errors import SimplevisorError
+from simplevisor.errors import SimplevisorError, ServiceError
 from simplevisor.service import Service
 
 
@@ -250,7 +250,12 @@ class Supervisor(object):
         log.LOG.debug(
             "calling start on supervisor %s.%s" %
             (self.name, self._strategy_name))
-        return self._strategy.start(self._children)
+        try:
+            result = self._strategy.start(self._children)
+        except ServiceError:
+            error = sys.exc_info()[1]
+            result = error.result
+        return result
 
     def stop(self):
         """
@@ -259,7 +264,12 @@ class Supervisor(object):
         log.LOG.debug(
             "calling stop on supervisor %s.%s" %
             (self.name, self._strategy_name))
-        return self._strategy.stop(self._children)
+        try:
+            result = self._strategy.stop(self._children)
+        except ServiceError:
+            error = sys.exc_info()[1]
+            result = error.result
+        return result
 
     def status(self):
         """
@@ -276,8 +286,10 @@ class Supervisor(object):
         log.LOG.debug(
             "calling stop+start on supervisor %s.%s" %
             (self.name, self._strategy_name))
-        self._strategy.stop(self._children)
-        return self._strategy.start(self._children)
+        result = self.stop()
+        if result[0] != 0:
+            return result
+        return self.start()
 
     def check(self):
         """

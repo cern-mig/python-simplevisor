@@ -14,6 +14,7 @@ limitations under the License.
 
 Copyright (C) 2013 CERN
 """
+from simplevisor.errors import ServiceError
 from simplevisor.service import Service
 
 from mtb.proc import which
@@ -22,7 +23,7 @@ import mtb.log as log
 log.set_log(
     log.get_log("stdout")("simplevisor-test", loglevel="info"))
 
-import copy
+from copy import deepcopy
 import os
 import shutil
 import unittest
@@ -37,8 +38,13 @@ T_SVC1_OK = {
     'daemon': os.path.join(TEST_DIR, 'svc1.pid'), }
 T_SVC2_OK = {
     'name': 'svc2',
-    'start': 'sleep 101',
+    'start': 'sleep 102',
     'daemon': os.path.join(TEST_DIR, 'svc2.pid'), }
+T_SVC3_FAIL = {
+    'name': 'svc3',
+    'start': 'sleeeeep 103',
+    'status': 'sleeep',
+    'stop': 'echo hello'}
 CREATION_COMBINATIONS = [
     (FAIL, {"name": "foo", }),
     (FAIL, {"name": "foo", "foo": "bar", }),
@@ -52,8 +58,9 @@ CREATION_COMBINATIONS = [
             "stop": "stop", "status": "status", }),
     (OK, {"name": "foo", "start": "start",
           "stop": "stop", "status": "status", }),
-    (OK, copy.deepcopy(T_SVC1_OK)),
-    (OK, copy.deepcopy(T_SVC2_OK)),
+    (OK, deepcopy(T_SVC1_OK)),
+    (OK, deepcopy(T_SVC2_OK)),
+    (OK, deepcopy(T_SVC3_FAIL))
 ]
 
 
@@ -81,12 +88,23 @@ class ServiceTest(unittest.TestCase):
                 self.assertRaises(Exception, Service, **options)
         print("...service creation ok")
 
+    def test_start_fail(self):
+        """
+        Test service start fail.
+        """
+        print("running service start failure expected")
+        opts = deepcopy(T_SVC3_FAIL)
+        svc = Service(**opts)
+        self.assertRaises(ServiceError, svc.cond_start)
+        self.assertRaises(ServiceError, svc.cond_start, careful=True)
+        print("...service start failure expected ok")
+
     def test_start_stop(self):
         """
         Test service start - stop.
         """
         print("running service start - stop tests")
-        for opts in [copy.deepcopy(T_SVC1_OK), copy.deepcopy(T_SVC2_OK), ]:
+        for opts in [deepcopy(T_SVC1_OK), deepcopy(T_SVC2_OK), ]:
             svc = Service(**opts)
             svc.cond_start(careful=True)
             self.assertEquals(

@@ -5,6 +5,7 @@ Copyright (C) 2013 CERN
 """
 import mtb.log as log
 
+from simplevisor.errors import ServiceError
 from simplevisor.service import Service
 from simplevisor.supervisor import Supervisor
 
@@ -18,12 +19,15 @@ class SupervisionStrategy(object):
 
     def start(self, children):
         """ Start children according to implemented strategy. """
+        raise NotImplementedError("method to be overridden")
 
     def stop(self, children):
         """ Start children according to implemented strategy. """
+        raise NotImplementedError("method to be overridden")
 
     def supervise(self, children, result=None):
         """ Supervise children according to implemented strategy. """
+        raise NotImplementedError("method to be overridden")
 
 
 class OneForOne(SupervisionStrategy):
@@ -71,28 +75,31 @@ class OneForOne(SupervisionStrategy):
             if isinstance(child, Supervisor):
                 successful = child.supervise(result)
                 if not successful:
-                    # start it, it should be stopped already
+                    # start it, it should have stopped by itself
                     log.LOG.info(
-                        "supervisor %s stopped, starting it again" %
+                        "supervisor %s stopped, starting it" %
                         (child.name, ))
                     child.start()
                     adjusted = True
             elif isinstance(child, Service):
-                adjusted = child.cond_adjust()
-                if adjusted:
-                    result["adjusted"] = result.get("adjusted", 0) + 1
-                else:  # not adjusted
-                    result["ok"] = result.get("ok", 0) + 1
+                try:
+                    adjusted = child.cond_adjust()
+                    if adjusted:
+                        result["adjusted"] = result.get("adjusted", 0) + 1
+                    else:  # not adjusted
+                        result["ok"] = result.get("ok", 0) + 1
+                except ServiceError:
+                    result["failed"] = result.get("failed", 0) + 1
+                    adjusted = True
             else:  # unexpected
                 raise AssertionError(
                     "unexpected child type: %s" % (type(child), ))
-            if adjusted:
-                if not logged:
-                    logged = True
-                    self._parent.log_adjustment(True)
-                    if self._parent.failed():
-                        # the supervisor should stop the children
-                        return False
+            if adjusted and (not logged):
+                logged = True
+                self._parent.log_adjustment(True)
+                if self._parent.failed():
+                    # the supervisor should stop the children
+                    return False
         if not logged:
             self._parent.log_adjustment(False)
         return True
@@ -148,6 +155,7 @@ class DependentStrategy(SupervisionStrategy):
         if result is None:
             result = dict()
         logged = False
+        interrupt = False
         for child in children:
             if isinstance(child, Supervisor):
                 to_be_adjusted = not child.supervise(result)
@@ -161,13 +169,26 @@ class DependentStrategy(SupervisionStrategy):
                 raise AssertionError(
                     "unexpected child type: %s" % (type(child), ))
             if to_be_adjusted:
-                self.adjust(children, child)
+                try:
+                    self.adjust(children, child)
+                except ServiceError:
+                    interrupt = True
+                    result["adjusted"] = result.get("adjusted", 0) - 1
+                    result["failed"] = result.get("adjusted", 0) + 1
                 if not logged:
                     logged = True
                     self._parent.log_adjustment(True)
                     if self._parent.failed():
                         # the supervisor should stop the children
                         return False
+                if interrupt:
+                    # supervisor has not failed yet but supervision has been
+                    # interrupted for this cycle and a failure has been
+                    # recorded
+                    log.LOG.debug(
+                        "interrupting supervision cycle because of "
+                        "a service error, failure recorded")
+                    return True
         if not logged:
             self._parent.log_adjustment(False)
         return True

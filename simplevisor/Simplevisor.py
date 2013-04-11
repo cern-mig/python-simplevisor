@@ -302,7 +302,7 @@ class Simplevisor(object):
     def pre_run(self):
         """ Before detaching. """
         if isinstance(self._child, service.Service):
-            (rcode, _, _) = self._child.cond_start(careful=True)
+            (rcode, _, _) = self._child.start()
             sys.exit(rcode)
         self._child.start()
 
@@ -312,16 +312,20 @@ class Simplevisor(object):
         """
         result = {
             'ok': 0,
-            'adjusted': 0, }
+            'adjusted': 0,
+            'failed': 0, }
         t_start = time.time()
         successful = self._child.supervise(result)
         t_end = time.time()
         if successful:
             log.LOG.info(
                 "supervision cycle executed successfully in %.3fs: "
-                "%s services OK, %s services needed adjustment" %
-                (t_end - t_start, result.get("ok", "unknown"),
-                 result.get("adjusted", "unknown")))
+                "%s services OK, %s services needed adjustment,"
+                "%s services failed adjustment" %
+                (t_end - t_start,
+                 result.get("ok", "unknown"),
+                 result.get("adjusted", "unknown"),
+                 result.get("failed", "unknown")))
         else:
             raise SimplevisorError("supervision interrupted/failed")
 

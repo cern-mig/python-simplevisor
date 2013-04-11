@@ -198,7 +198,7 @@ from mtb.proc import \
     kill_pids, merge_status, pidof, which
 from mtb.validation import mutex, reqall, reqany, get_int_or_die
 
-from simplevisor.errors import SimplevisorError
+from simplevisor.errors import ServiceError
 
 MAX_LOG_MESSAGES = 100
 DEFAULT_TIMEOUT = 60
@@ -244,7 +244,7 @@ class Service(object):
             self._validate_opts()
         except ValueError:
             error = sys.exc_info()[1]
-            raise SimplevisorError(
+            raise ValueError(
                 "service %s is not properly configured: %s" %
                 (self.name, error))
         if control is None and daemon is not None:
@@ -353,78 +353,24 @@ class Service(object):
         @return: True if adjustment performed, False otherwise
         """
         log.LOG.debug("conditional adjust for service: %s" % (self.name, ))
-        changed = False
-        (return_code, _, _) = self.status()
-        if return_code == 0:
-            if not self.is_enabled():
-                result = self.stop()
-                log.LOG.info(
-                    "service %s stopped with result: %s" %
-                    (self.name, result))
-                self._status_log("stop", result)
-                changed = True
-        elif return_code == 3:
-            if self._opts["expected"] == "running":
-                result = self.start()
-                log.LOG.info(
-                    "service %s started with result: %s" %
-                    (self.name, result))
-                self._status_log("start", result)
-                changed = True
-        else:  # unknown/dead/hang...
-            stop_result = self.stop()
-            self._status_log("stop", stop_result)
-            log.LOG.info(
-                "service %s stopped for cleaning with result: %s" %
-                (self.name, stop_result))
-            if self._opts["expected"] == "running":
-                result = self.start()
-                log.LOG.info(
-                    "service %s started with result: %s" %
-                    (self.name, result))
-                self._status_log("start", result)
-            changed = True
-        if careful and changed:
-            t_max = time.time() + self._opts["timeout"]
-            while time.time() <= t_max:
-                checked_status, _ = self.check()
-                if checked_status:
-                    return changed
-                time.sleep(0.2)
-            error_message = "error adjusting service %s" % (self.name, )
-            log.LOG.error(error_message)
-            raise SimplevisorError(error_message)
-        return changed
-
-    def cond_start(self, careful=False):
-        """
-        Conditional start based on status.
-
-        :param careful: specify if the action should be careful,
-        which means it will make sure that action was performed
-        successfully and that the service is in the expected status
-        """
-        log.LOG.debug("conditional start for service: %s" % (self.name, ))
         changed = None
         (return_code, _, _) = self.status()
         result = (0, "", "")
-        if return_code == 0:
-            if self._opts["expected"] == "stopped":
-                result = self.stop()
-                log.LOG.info(
-                    "service %s stopped with result: %s" %
-                    (self.name, result))
-                self._status_log("stop", result)
-                changed = "stop"
-        elif return_code == 3:
-            if self._opts["expected"] == "running":
-                result = self.start()
-                log.LOG.info(
-                    "service %s started with result: %s" %
-                    (self.name, result))
-                self._status_log("start", result)
-                changed = "start"
-        else:  # unknown/dead/hang...
+        if return_code == 0 and (not self.is_enabled()):
+            result = self.stop()
+            log.LOG.info(
+                "service %s stopped with result: %s" %
+                (self.name, result))
+            self._status_log("stop", result)
+            changed = "stop"
+        elif return_code == 3 and self._opts["expected"] == "running":
+            result = self.start()
+            log.LOG.info(
+                "service %s started with result: %s" %
+                (self.name, result))
+            self._status_log("start", result)
+            changed = "start"
+        elif return_code not in [0, 3]:  # unknown/dead/hang...
             stop_result = self.stop()
             self._status_log("stop", stop_result)
             log.LOG.info(
@@ -439,20 +385,73 @@ class Service(object):
             changed = "stop+start"
         if changed and result[0] != 0:
             error_message = "error during service %s action %s: %s" % \
+                            (self.name, changed, result, )
+            log.LOG.error(error_message)
+            raise ServiceError(error_message, result)
+        if changed and careful:  # let's do it carefully
+            t_max = time.time() + self._opts["timeout"]
+            check_status = (True, "")
+            while time.time() <= t_max:
+                check_status = self.check()
+                if check_status[0]:
+                    return changed
+                time.sleep(0.2)
+            error_message = "error adjusting service %s, " \
+                            "have been waiting %s" % \
+                            (self.name, self._opts["timeout"])
+            log.LOG.error(error_message)
+            raise ServiceError(
+                error_message, (1, check_status[1], ""))
+        return changed
+
+    def cond_start(self, careful=False):
+        """
+        Conditional start based on status.
+
+        :param careful: specify if the action should be careful,
+        which means it will make sure that action was performed
+        successfully and that the service is in the expected status
+        """
+        log.LOG.debug("conditional start for service: %s" % (self.name, ))
+        changed = None
+        (return_code, _, _) = self.status()
+        result = (0, "", "")
+        if return_code == 3 and self._opts["expected"] == "running":
+            result = self.start()
+            log.LOG.info(
+                "service %s started with result: %s" % (self.name, result))
+            self._status_log("start", result)
+            changed = "start"
+        elif return_code != 0 and self._opts["expected"] == "running":
+            # unknown/dead/hang...
+            stop_result = self.stop()
+            self._status_log("stop", stop_result)
+            log.LOG.info(
+                "service %s stopped for cleaning with result: %s" %
+                (self.name, stop_result))
+            result = self.start()
+            log.LOG.info(
+                "service %s started with result: %s" % (self.name, result))
+            self._status_log("start", result)
+            changed = "stop+start"
+        if changed and result[0] != 0:
+            error_message = "error during service %s action %s: %s" % \
                 (self.name, changed, result, )
             log.LOG.error(error_message)
-            raise SimplevisorError(error_message)
-        if careful and (changed is not None):
+            raise ServiceError(error_message, result)
+        if changed and careful:
             t_max = time.time() + self._opts["timeout"]
             while time.time() <= t_max:
-                checked_status, _ = self.check()
-                if checked_status:
-                    return changed is not None
+                result = self.status()
+                if result[0] == 0:
+                    return changed
                 time.sleep(0.2)
-            error_message = "error starting service: %s" % (self.name, )
+            error_message = "error starting service %s, " \
+                            "have been waiting %s" % \
+                            (self.name, self._opts["timeout"])
             log.LOG.error(error_message)
-            raise SimplevisorError(error_message)
-        return changed is not None
+            raise ServiceError(error_message)
+        return changed
 
     def cond_stop(self, careful=False):
         """
@@ -463,15 +462,16 @@ class Service(object):
         successfully and that the service is in the expected status
         """
         log.LOG.debug("conditional stop for service: %s" % (self.name, ))
-        changed = False
+        changed = None
         (return_code, _, _) = self.status()
+        result = (0, "", "")
         if return_code == 0:
             result = self.stop()
             log.LOG.info(
                 "service %s found running, stopped with result: %s" %
                 (self.name, result))
             self._status_log("stop", result)
-            changed = True
+            changed = "stop"
         elif return_code != 3:  # unknown/dead/hang...
             result = self.stop()
             self._status_log("stop", result)
@@ -479,19 +479,23 @@ class Service(object):
                 "service %s found in dirty state: %s, stopped for cleaning"
                 "with result: %s" %
                 (self.name, return_code, result))
-            changed = True
-        if careful and changed:
+            changed = "stop"
+        if changed and result[0] != 0:
+            error_message = "error during service %s action %s: %s" % \
+                            (self.name, changed, result, )
+            log.LOG.error(error_message)
+            raise ServiceError(error_message, result)
+        if changed and careful:
             t_max = time.time() + self._opts["timeout"]
-            return_code = 0
             while time.time() <= t_max:
-                (return_code, _, _) = self.status()
-                if return_code == 3:
-                    return
+                result = self.status()
+                if result[0] == 3:
+                    return changed
                 time.sleep(0.2)
             error_message = "error stopping service %s, expected return" \
-                "code: 3, received: %s" % (self.name, return_code)
+                "code: 3, received: %s" % (self.name, result[0])
             log.LOG.error(error_message)
-            raise SimplevisorError(error_message)
+            raise ServiceError(error_message, result)
         return changed
 
     def start(self):
