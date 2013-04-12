@@ -1,5 +1,9 @@
 Change log for python-simplevisor
 
+0.x X X X 2013
+    * [mp] strategies reviewed and reimplemented
+    * [mp] changing logging to python logging
+
 0.7.1 Tue Jan 29 2013
     * [mp] handling correctly file redirection when daemonizing
 

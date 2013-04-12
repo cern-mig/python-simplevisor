@@ -69,17 +69,19 @@ Default Parameters
 
 Copyright (C) 2013 CERN
 """
+import logging
 import sys
 import time
 
 from mtb.conf import unify_keys
-import mtb.log as log
 from mtb.modules import md5_hash
 from mtb.validation import get_int_or_die
 
 from simplevisor.errors import SimplevisorError, ServiceError
 from simplevisor.service import Service
 
+
+LOGGER = logging.getLogger("simplevisor")
 
 ALLOWED_STRATEGIES = {
     'one_for_one': 'OneForOne',
@@ -247,7 +249,7 @@ class Supervisor(object):
         """
         This method takes care of starting the supervisor and its children.
         """
-        log.LOG.debug(
+        LOGGER.debug(
             "calling start on supervisor %s.%s" %
             (self.name, self._strategy_name))
         try:
@@ -261,7 +263,7 @@ class Supervisor(object):
         """
         This method takes care of stopping the supervisor and its children.
         """
-        log.LOG.debug(
+        LOGGER.debug(
             "calling stop on supervisor %s.%s" %
             (self.name, self._strategy_name))
         try:
@@ -283,7 +285,7 @@ class Supervisor(object):
         """
         This method takes care of restarting the supervisor.
         """
-        log.LOG.debug(
+        LOGGER.debug(
             "calling stop+start on supervisor %s.%s" %
             (self.name, self._strategy_name))
         result = self.stop()
@@ -298,9 +300,9 @@ class Supervisor(object):
         healthy = True
         health_output = list()
         for child in self._children:
-            log.LOG.debug("checking child: %s" % (child.name, ))
+            LOGGER.debug("checking child: %s" % (child.name, ))
             (child_health, output) = child.check()
-            log.LOG.debug(
+            LOGGER.debug(
                 "child check result for %s: %s, %s" %
                 (child.name, child_health, output))
             health_output.extend(output)
@@ -318,7 +320,7 @@ class Supervisor(object):
         to the configuration.
         :param result: dictionary where children result should be added
         """
-        log.LOG.debug(
+        LOGGER.debug(
             "calling supervise on supervisor %s.%s" %
             (self.name, self._strategy_name))
         successful = self._strategy.supervise(self._children, result)
@@ -352,7 +354,7 @@ class Supervisor(object):
         """
         adjusted = self.adjustments()
         if adjusted > self._adjustments:
-            log.LOG.error(
+            LOGGER.error(
                 "%s handled %d adjustments in %s supervision cycles" %
                 (self.name, adjusted, self._window))
             return True

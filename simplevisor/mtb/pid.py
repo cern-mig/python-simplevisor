@@ -5,12 +5,13 @@ Pid file utilities for :py:mod:`mtb` module.
 Copyright (C) 2013 CERN
 """
 import datetime
+import logging
 import os
 import signal
 import sys
 import time
 
-from mtb.log import log_warning
+LOGGER = logging.getLogger("mtb.pid")
 
 
 #### PID helpers
@@ -120,7 +121,7 @@ def pid_quit(path, program=""):
                 try:
                     os.kill(pid, sig)
                 except OSError:
-                    log_warning("cannot kill(%d, %d)" % (pid, sig))
+                    LOGGER.warning("cannot kill(%d, %d)" % (pid, sig))
                 try:
                     os.kill(pid, 0)
                 except OSError:
@@ -141,7 +142,7 @@ def pid_quit(path, program=""):
         print("%s does not seem to be running" % (program, ))
     if os.path.isfile(path):
         try:
-            log_warning("removing pid file %s\n" % path)
+            LOGGER.warning("removing pid file %s\n" % path)
             os.remove(path)
         except OSError:
             raise PIDError("failed to remove pid file: %s" % path)

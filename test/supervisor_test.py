@@ -16,8 +16,8 @@ Copyright (C) 2013 CERN
 """
 from simplevisor.supervisor import Supervisor
 
-#import mtb.log as log
-#log.set_log(log.StdOutLog("test", loglevel="debug"))
+import mtb.log
+mtb.log.setup_log("simplevisor", "stdout", "warning")
 
 import copy
 import os

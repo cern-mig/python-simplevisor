@@ -18,10 +18,8 @@ from simplevisor.errors import ServiceError
 from simplevisor.service import Service
 
 from mtb.proc import which
-import mtb.log as log
-
-log.set_log(
-    log.get_log("stdout")("simplevisor-test", loglevel="info"))
+import mtb.log
+mtb.log.setup_log("simplevisor", "stdout", "info")
 
 from copy import deepcopy
 import os

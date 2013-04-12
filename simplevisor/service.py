@@ -186,12 +186,12 @@ Default Parameters
 
 Copyright (C) 2013 CERN
 """
+import logging
 import os
 import re
 import sys
 import time
 
-import mtb.log as log
 from mtb.modules import md5_hash, unquote
 from mtb.proc import \
     timed_process, ProcessTimedout, ProcessError, \
@@ -199,6 +199,8 @@ from mtb.proc import \
 from mtb.validation import mutex, reqall, reqany, get_int_or_die
 
 from simplevisor.errors import ServiceError
+
+LOGGER = logging.getLogger("simplevisor")
 
 MAX_LOG_MESSAGES = 100
 DEFAULT_TIMEOUT = 60
@@ -269,7 +271,7 @@ class Service(object):
                 pat = " ".join(self.get_cmd("start"))
             try:
                 self._opts["pattern_re"] = re.compile(pat)
-                log.LOG.debug(
+                LOGGER.debug(
                     "using %s as pattern for service %s" % (pat, name))
             except re.error:
                 error = sys.exc_info()[1]
@@ -330,17 +332,17 @@ class Service(object):
             env = {"PATH": "/usr/bin:/usr/sbin:/bin:/sbin", }
         cmd_str = " ".join(cmd)
         try:
-            log.LOG.debug("executing %s" % (cmd_str, ))
+            LOGGER.debug("executing %s" % (cmd_str, ))
             result = timed_process(cmd, self._opts["timeout"], env)
-            log.LOG.debug("%s returned: %s" % (cmd_str, result))
+            LOGGER.debug("%s returned: %s" % (cmd_str, result))
             return result
         except ProcessTimedout:
-            log.LOG.warning(
+            LOGGER.warning(
                 "%s timed out %d seconds" % (cmd_str, self._opts["timeout"]))
             return 1, "", "timeout"
         except ProcessError:
             error = sys.exc_info()[1]
-            log.LOG.warning("error running %s: %s" % (cmd_str, error))
+            LOGGER.warning("error running %s: %s" % (cmd_str, error))
             return 1, "", "%s" % (error, )
 
     def cond_adjust(self, careful=False):
@@ -352,20 +354,20 @@ class Service(object):
         successfully and that the service is in the expected status
         @return: True if adjustment performed, False otherwise
         """
-        log.LOG.debug("conditional adjust for service: %s" % (self.name, ))
+        LOGGER.debug("conditional adjust for service: %s" % (self.name, ))
         changed = None
         (return_code, _, _) = self.status()
         result = (0, "", "")
         if return_code == 0 and (not self.is_enabled()):
             result = self.stop()
-            log.LOG.info(
+            LOGGER.info(
                 "service %s stopped with result: %s" %
                 (self.name, result))
             self._status_log("stop", result)
             changed = "stop"
         elif return_code == 3 and self._opts["expected"] == "running":
             result = self.start()
-            log.LOG.info(
+            LOGGER.info(
                 "service %s started with result: %s" %
                 (self.name, result))
             self._status_log("start", result)
@@ -373,12 +375,12 @@ class Service(object):
         elif return_code not in [0, 3]:  # unknown/dead/hang...
             stop_result = self.stop()
             self._status_log("stop", stop_result)
-            log.LOG.info(
+            LOGGER.info(
                 "service %s stopped for cleaning with result: %s" %
                 (self.name, stop_result))
             if self._opts["expected"] == "running":
                 result = self.start()
-                log.LOG.info(
+                LOGGER.info(
                     "service %s started with result: %s" %
                     (self.name, result))
                 self._status_log("start", result)
@@ -386,7 +388,7 @@ class Service(object):
         if changed and result[0] != 0:
             error_message = "error during service %s action %s: %s" % \
                             (self.name, changed, result, )
-            log.LOG.error(error_message)
+            LOGGER.error(error_message)
             raise ServiceError(error_message, result)
         if changed and careful:  # let's do it carefully
             t_max = time.time() + self._opts["timeout"]
@@ -399,7 +401,7 @@ class Service(object):
             error_message = "error adjusting service %s, " \
                             "have been waiting %s" % \
                             (self.name, self._opts["timeout"])
-            log.LOG.error(error_message)
+            LOGGER.error(error_message)
             raise ServiceError(
                 error_message, (1, check_status[1], ""))
         return changed
@@ -412,13 +414,13 @@ class Service(object):
         which means it will make sure that action was performed
         successfully and that the service is in the expected status
         """
-        log.LOG.debug("conditional start for service: %s" % (self.name, ))
+        LOGGER.debug("conditional start for service: %s" % (self.name, ))
         changed = None
         (return_code, _, _) = self.status()
         result = (0, "", "")
         if return_code == 3 and self._opts["expected"] == "running":
             result = self.start()
-            log.LOG.info(
+            LOGGER.info(
                 "service %s started with result: %s" % (self.name, result))
             self._status_log("start", result)
             changed = "start"
@@ -426,18 +428,18 @@ class Service(object):
             # unknown/dead/hang...
             stop_result = self.stop()
             self._status_log("stop", stop_result)
-            log.LOG.info(
+            LOGGER.info(
                 "service %s stopped for cleaning with result: %s" %
                 (self.name, stop_result))
             result = self.start()
-            log.LOG.info(
+            LOGGER.info(
                 "service %s started with result: %s" % (self.name, result))
             self._status_log("start", result)
             changed = "stop+start"
         if changed and result[0] != 0:
             error_message = "error during service %s action %s: %s" % \
                 (self.name, changed, result, )
-            log.LOG.error(error_message)
+            LOGGER.error(error_message)
             raise ServiceError(error_message, result)
         if changed and careful:
             t_max = time.time() + self._opts["timeout"]
@@ -449,7 +451,7 @@ class Service(object):
             error_message = "error starting service %s, " \
                             "have been waiting %s" % \
                             (self.name, self._opts["timeout"])
-            log.LOG.error(error_message)
+            LOGGER.error(error_message)
             raise ServiceError(error_message)
         return changed
 
@@ -461,13 +463,13 @@ class Service(object):
         which means it will make sure that action was performed
         successfully and that the service is in the expected status
         """
-        log.LOG.debug("conditional stop for service: %s" % (self.name, ))
+        LOGGER.debug("conditional stop for service: %s" % (self.name, ))
         changed = None
         (return_code, _, _) = self.status()
         result = (0, "", "")
         if return_code == 0:
             result = self.stop()
-            log.LOG.info(
+            LOGGER.info(
                 "service %s found running, stopped with result: %s" %
                 (self.name, result))
             self._status_log("stop", result)
@@ -475,7 +477,7 @@ class Service(object):
         elif return_code != 3:  # unknown/dead/hang...
             result = self.stop()
             self._status_log("stop", result)
-            log.LOG.info(
+            LOGGER.info(
                 "service %s found in dirty state: %s, stopped for cleaning"
                 "with result: %s" %
                 (self.name, return_code, result))
@@ -483,7 +485,7 @@ class Service(object):
         if changed and result[0] != 0:
             error_message = "error during service %s action %s: %s" % \
                             (self.name, changed, result, )
-            log.LOG.error(error_message)
+            LOGGER.error(error_message)
             raise ServiceError(error_message, result)
         if changed and careful:
             t_max = time.time() + self._opts["timeout"]
@@ -494,7 +496,7 @@ class Service(object):
                 time.sleep(0.2)
             error_message = "error stopping service %s, expected return" \
                 "code: 3, received: %s" % (self.name, result[0])
-            log.LOG.error(error_message)
+            LOGGER.error(error_message)
             raise ServiceError(error_message, result)
         return changed
 
@@ -520,12 +522,12 @@ class Service(object):
             pid_info = self.pidof()
             if pid_info is None:
                 result = (0, "", "")
-                log.LOG.info(
+                LOGGER.info(
                     "service %s already stopped" % (self.name, ))
             else:
                 pids = [x[0] for x in pid_info]
                 kill_pids(pids, self._opts["timeout"])
-                log.LOG.info(
+                LOGGER.info(
                     "%s killed by killing processes: %s" %
                     (self.name, " ".join([str(p) for p in pids])))
                 result = (0, "", "")
@@ -550,10 +552,10 @@ class Service(object):
         if self._opts["control"] is None and self._opts["status"] is None:
             pid_info = self.pidof()
             if pid_info is None:
-                log.LOG.debug("%s not running" % (self.name, ))
+                LOGGER.debug("%s not running" % (self.name, ))
                 result = (3, "", "")
             else:
-                log.LOG.debug("%s running" % (self.name, ))
+                LOGGER.debug("%s running" % (self.name, ))
                 result = (0, "", "")
         else:
             result = self.__execute(self.get_cmd("status"))
@@ -611,14 +613,14 @@ class Service(object):
 
         if restart_cmd:
             result = self.__execute(self.get_cmd("restart"))
-            log.LOG.info(
+            LOGGER.info(
                 "service %s restarted with result: %s" % (self.name, result))
             self._status_log("restart", result)
         else:
             stop_result = self.stop()
             start_result = self.start()
             result = merge_status(stop_result, start_result)
-            log.LOG.info(
+            LOGGER.info(
                 "service %s stop+start result: %s" % (self.name, result))
             self._status_log("stop+start", result)
         return result

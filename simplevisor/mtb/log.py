@@ -20,256 +20,117 @@ stdout
 
 Copyright (C) 2013 CERN
 """
-import datetime
 import logging
+from logging.handlers import SysLogHandler
 import sys
-import syslog
 import traceback
 
 
-class SysLog(object):
+class CustomNullHandler(logging.Handler):
+    """ Custom and easy null handler for python prior to 2.6. """
+    def emit(self, record):
+        pass
+
+if not hasattr(logging, "NullHandler"):
+    setattr(logging, "NullHandler", CustomNullHandler)
+
+
+LOG_SYSTEMS = {
+    'null': {'handler': logging.NullHandler, },
+    'stdout': {
+        'handler': logging.StreamHandler,
+        'handler_options': {
+            'stream': sys.stdout,
+        },
+        'formatter': logging.Formatter,
+        'formatter_options': {
+            'fmt': '%(asctime)s %(name)s[%(process)d]: '
+                   '[%(levelname)s] %(message)s',
+        },
+    },
+    'file': {
+        'handler': logging.FileHandler,
+        'formatter': logging.Formatter,
+        'formatter_options': {
+            'fmt': '%(asctime)s %(name)s[%(process)d]: '
+                   '[%(levelname)s] %(message)s',
+        }
+    },
+    'syslog': {
+        'handler': SysLogHandler,
+        'handler_options': {
+            'facility': SysLogHandler.LOG_DAEMON,
+        },
+        'formatter': logging.Formatter,
+        'formatter_options': {
+            'fmt': ' %(name)s %(process)d: [%(levelname)s] %(message)s',
+        }
+    },
+}
+LOG_LEVELS = {
+    'debug': logging.DEBUG,
+    'info': logging.INFO,
+    'warning': logging.WARNING,
+    'error': logging.ERROR,
+    'critical': logging.CRITICAL,
+}
+
+
+def remove_log_handlers(name):
     """
-    Class which logs with :py:mod:`syslog`
-
-    Parameters:
-
-    name
-        the name of the logger
+    Remove all logger handler.
     """
-    level = {'debug': syslog.LOG_DEBUG,
-             'info': syslog.LOG_INFO,
-             'warning': syslog.LOG_WARNING,
-             'error': syslog.LOG_ERR,
-             'critical': syslog.LOG_CRIT,
-             }
-
-    def __init__(self, name, **kwargs):
-        """ Initialize syslog logging. """
-        self.level_threshold = self.level.get(
-            kwargs.get('loglevel', 'warning'), syslog.LOG_WARNING)
-        syslog.openlog("%s" % (name, ),
-                       syslog.LOG_PID,
-                       syslog.LOG_DAEMON)
-
-    def _log(self, criticality, message):
-        """ Filter. """
-        if self.level_threshold >= self.level[criticality]:
-            syslog.syslog(self.level[criticality], "[%s] %s" %
-                          (criticality.upper(), message))
-
-    def debug(self, message):
-        """ Log a debug message. """
-        self._log('debug', message)
-
-    def info(self, message):
-        """ Log an info message. """
-        self._log('info', message)
-
-    def warning(self, message):
-        """ Log a warning message. """
-        self._log('warning', message)
-
-    def error(self, message):
-        """ Log an error message. """
-        self._log('error', message)
-
-    def critical(self, message):
-        """ Log a critical message. """
-        self._log('critical', message)
+    logger = logging.getLogger(name)
+    for handler in logger.handlers:
+        handler.close()
+        logger.removeHandler(handler)
 
 
-class FileLog(object):
+def add_log_handler(name, log_type, log_level=logging.WARNING, extra=None):
     """
-    Class which logs with Python standard :py:mod:`logging`.
-
-    Parameters:
-
-    name
-        the name of the logger
-
-    logfile
-        the file where to log
-
-    loglevel
-        the logging level
+    Helper to add a logging handler.
     """
-    level = {'debug': logging.DEBUG,
-             'info': logging.INFO,
-             'warning': logging.WARN,
-             'error': logging.ERROR,
-             'critical': logging.CRITICAL,
-             }
-
-    def __init__(self, name, **kwargs):
-        """ Initialize standard logging. """
-        self.logger = logging.getLogger(name)
-        self.logger.setLevel(
-            self.level.get(kwargs.get('loglevel', 'warning'),
-                           self.level['warning']))
-        custom_format = logging.Formatter(
-            '%(asctime)s - %(name)s:%(lineno)s -' +
-            ' %(levelname)s [%(process)d] %(message)s ')
-        if kwargs.get('logfile') is not None:
-            file_hdlr = logging.FileHandler(filename=kwargs.get('logfile'), )
-            file_hdlr.setFormatter(custom_format)
-            self.logger.addHandler(file_hdlr)
-
-    def debug(self, message):
-        """ Log a debug message. """
-        self.logger.debug(message)
-
-    def info(self, message):
-        """ Log an info message. """
-        self.logger.info(message)
-
-    def warning(self, message):
-        """ Log a warning message. """
-        self.logger.warning(message)
-
-    def error(self, message):
-        """ Log an error message. """
-        self.logger.error(message)
-
-    def critical(self, message):
-        """ Log a critical message. """
-        self.logger.critical(message)
+    if log_type not in LOG_SYSTEMS:
+        raise ValueError(
+            "%s is an invalid log system, must be one of: %s" %
+            (log_type, ", ".join(LOG_SYSTEMS.keys())))
+    if extra is None:
+        extra = dict()
+    # get main logger
+    logger = logging.getLogger(name)
+    log_level = LOG_LEVELS.get(log_level, logging.WARNING)
+    logger.setLevel(log_level)
+    # create handler
+    handler_class = LOG_SYSTEMS[log_type]['handler']
+    handler_options = LOG_SYSTEMS[log_type].get('handler_options', dict())
+    handler_options.update(extra.get('handler_options', dict()))
+    handler = handler_class(**handler_options)
+    handler.setLevel(log_level)
+    # create formatter
+    if 'formatter' in LOG_SYSTEMS[log_type]:
+        formatter_class = LOG_SYSTEMS[log_type]['formatter']
+        formatter_options = LOG_SYSTEMS[log_type].get(
+            'formatter_options', dict())
+        formatter_options.update(extra.get('formatter_options', dict()))
+        formatter = formatter_class(**formatter_options)
+        handler.setFormatter(formatter)
+    # finally add handler to the logger
+    logger.addHandler(handler)
 
 
-class StdOutLog(object):
+def setup_log(name, log_type, log_level=logging.WARNING, extra=None):
     """
-    Class which logs on standard output.
-
-    Parameters:
-
-    name
-        the name of the logger
-
-    loglevel
-        the logging level
+    Helper to setup the logging facility.
     """
-    level = {'debug': 4,
-             'info': 3,
-             'warning': 2,
-             'error': 1,
-             'critical': 0,
-             }
-
-    def __init__(self, name, **kwargs):
-        """ Initialize stdout logging. """
-        self.level_threshold = self.level.get(
-            kwargs.get('loglevel', 'warning'), 2)
-        self.name = name
-
-    def debug(self, message):
-        """ Log a debug message. """
-        self._print('debug', message)
-
-    def info(self, message):
-        """ Log an info message. """
-        self._print('info', message)
-
-    def warning(self, message):
-        """ Log a warning message. """
-        self._print('warning', message)
-
-    def error(self, message):
-        """ Log an error message. """
-        self._print('error', message)
-
-    def critical(self, message):
-        """ Log a critical message. """
-        self._print('critical', message)
-
-    def _print(self, criticality, message):
-        """ Custom print. """
-        if self.level_threshold >= self.level[criticality]:
-            print("%s - %s: %s" % (
-                  datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                  criticality.upper(), message))
-
-
-class NullLog(object):
-    """
-    Class which log on a black hole.
-
-    Parameters:
-
-    name
-        the name of the logger
-
-    loglevel
-        the logging level
-    """
-
-    def __init__(self, name, **kwargs):
-        """ Initialize stdout logging. """
-
-    def debug(self, message):
-        """ Log a debug message. """
-
-    def info(self, message):
-        """ Log an info message. """
-
-    def warning(self, message):
-        """ Log a warning message. """
-
-    def error(self, message):
-        """ Log an error message. """
-
-    def critical(self, message):
-        """ Log a critical message. """
-
-    def _print(self, criticality, message):
-        """ Custom print. """
-
-
-class LogSystemNotSupported(Exception):
-    """ Raised when a log system which is not supported is specified. """
-
-
-def get_log(type_t):
-    """
-    Return the class representing the *type* of log required.
-    """
-    try:
-        log = LOG_SYSTEM[type_t]
-    except KeyError:
-        raise LogSystemNotSupported(
-            "%s is not valid as log system, must be one of: %s" %
-            (type_t, ", ".join(LOG_SYSTEM.keys()), ))
-    else:
-        return log
-
-
-def set_log(new_log):
-    """ Set LOG to provided log system. """
-    global LOG
-    LOG = new_log
-
-
-def log_debug(message):
-    """ Log a debug message on LOG. """
-    LOG.debug(message)
-
-
-def log_warning(message):
-    """ Log a warning message on LOG. """
-    LOG.warning(message)
-
-
-def log_error(message):
-    """ Log an error message on LOG. """
-    LOG.error(message)
-
-
-LOG_SYSTEM = {"null": NullLog,
-              "stdout": StdOutLog,
-              "file": FileLog,
-              "syslog": SysLog, }
-LOG = StdOutLog("stdout")
-
+    if log_type not in LOG_SYSTEMS:
+        raise ValueError(
+            "%s is an invalid log system, must be one of: %s" %
+            (log_type, ", ".join(LOG_SYSTEMS.keys())))
+    remove_log_handlers(name)
+    add_log_handler(name, log_type, log_level, extra)
 
 ################################ Useful decorators for logging
+
 
 def print_only_exception_error():
     """
@@ -293,10 +154,12 @@ def print_only_exception_error():
     return out_function
 
 
-def log_exceptions(re_raise=True):
+def log_exceptions(logger_name, re_raise=True):
     """
     Log exceptions to configured log and re raise the exception or exit.
     """
+    logger = logging.getLogger(logger_name)
+
     def out_function(in_function):
         """ Wrap function. """
         def out_function(*args, **kwargs):
@@ -308,8 +171,9 @@ def log_exceptions(re_raise=True):
                 raise sys.exc_info()[1]
             except Exception:
                 (_, error, error_tb) = sys.exc_info()
-                log_debug("%s" % (" ".join(traceback.format_tb(error_tb)),))
-                log_error("%s" % (error,))
+                logger.debug(
+                    "%s" % (" ".join(traceback.format_tb(error_tb)),))
+                logger.error("%s" % (error,))
                 if re_raise:
                     raise error
                 else:

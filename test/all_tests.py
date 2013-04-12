@@ -13,8 +13,6 @@
 
  Copyright (C) 2013 CERN
 """
-__version__ = "$Revision: 1 $"
-# $Source$
 
 import glob
 import unittest

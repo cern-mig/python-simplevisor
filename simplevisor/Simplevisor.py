@@ -4,12 +4,14 @@ Simplevisor module.
 
 Copyright (C) 2013 CERN
 """
+import logging
 import os
 import signal
 import sys
 import time
 
 import mtb.log as log
+import mtb.pid
 from mtb.pid import \
     pid_check, pid_quit, pid_read, pid_remove, \
     pid_status, pid_touch, pid_write
@@ -91,7 +93,7 @@ class Simplevisor(object):
         if command == "check":
             self.check(target)
             return
-        log.LOG.debug("calling %s.%s" % (target.name, command))
+        self.logger.debug("calling %s.%s" % (target.name, command))
         (return_code, out, err) = getattr(target, command)()
         if len(out.strip()) > 0:
             print("stdout: %s" % (out.strip(), ))
@@ -108,13 +110,13 @@ class Simplevisor(object):
     def on_signal(self, signum, _):
         """ Handle signals. """
         if signum == signal.SIGINT:
-            log.LOG.info("caught SIGINT")
+            self.logger.info("caught SIGINT")
             self._running = False
         elif signum == signal.SIGTERM:
-            log.LOG.info("caught SIGTERM")
+            self.logger.info("caught SIGTERM")
             self._running = False
         elif signum == signal.SIGHUP:
-            log.LOG.info("caught SIGHUP, ignoring it")
+            self.logger.info("caught SIGHUP, ignoring it")
 
     def start(self):
         """ Do start action. """
@@ -125,9 +127,13 @@ class Simplevisor(object):
         self.pre_run()
         if self._config.get("daemon"):
             daemonize()
-            run_function = log.log_exceptions(re_raise=False)(self.run)
+            run_function = log.log_exceptions(
+                logger_name=self.prog,
+                re_raise=False)(self.run)
         else:
-            run_function = log.log_exceptions(re_raise=True)(self.run)
+            run_function = log.log_exceptions(
+                logger_name=self.prog,
+                re_raise=True)(self.run)
         if self._config.get("pidfile"):
             pid_write(self._config["pidfile"], os.getpid(), excl=True)
         try:
@@ -236,11 +242,23 @@ class Simplevisor(object):
         If stdout is set to True then the log is initialized to print
         to stdout independently from the configuration.
         """
+        log_level = self._config.get("loglevel", "warning")
         if stdout:
-            log.LOG = log.get_log("stdout")(self.prog, **self._config)
+            log.setup_log(self.prog, "stdout", log_level)
         else:
-            log.LOG = log.get_log(self._config.get("log", "stdout"))(
-                self.prog, **self._config)
+            log_type = self._config.get("log", "stdout")
+            handler_options = dict()
+            if log_type == "file":
+                if "logfile" not in self._config:
+                    raise AttributeError(
+                        "logfile required for file log system")
+                handler_options['filename'] = self._config["logfile"]
+            extra = {
+                'handler_options': handler_options,
+            }
+            log.setup_log(self.prog, log_type, log_level, extra)
+        self.logger = logging.getLogger(self.prog)
+        mtb.pid.LOGGER = logging.getLogger(self.prog)
 
     def load_status(self):
         """ Load saved status. """
@@ -263,7 +281,7 @@ class Simplevisor(object):
                 tmp_file.close()
                 return status
         except IOError:
-            # log.LOG.info("status file not found, continuing.")
+            # self.logger.info("status file not found, continuing.")
             pass
 
     def save_status(self):
@@ -271,24 +289,24 @@ class Simplevisor(object):
         if self._status_file is None:
             return
         try:
-            log.LOG.debug("status file: %s" % self._status_file)
+            self.logger.debug("status file: %s" % self._status_file)
             status_f = open(self._status_file, "w")
             try:
                 status = {self._child.get_id(): self._child.dump_status()}
                 json.dump(status, status_f)
-                log.LOG.debug("status saved: %s" % (status, ))
+                self.logger.debug("status saved: %s" % (status, ))
             except StandardError:
                 error_type, error, _ = sys.exc_info()
                 msg = "error writing status file %s: %s - %s" % \
                       (self._status_file, error_type, error)
-                log.LOG.error(msg)
+                self.logger.error(msg)
                 raise SimplevisorError(msg)
             status_f.close()
         except IOError:
             error = sys.exc_info()[1]
             msg = "error writing to status file %s: %s" % \
                   (self._status_file, error)
-            log.LOG.error(msg)
+            self.logger.error(msg)
             raise IOError(msg)
 
     def sleep_interval(self):
@@ -318,7 +336,7 @@ class Simplevisor(object):
         successful = self._child.supervise(result)
         t_end = time.time()
         if successful:
-            log.LOG.info(
+            self.logger.info(
                 "supervision cycle executed successfully in %.3fs: "
                 "%s services OK, %s services needed adjustment,"
                 "%s services failed adjustment" %
@@ -331,36 +349,37 @@ class Simplevisor(object):
 
     def run(self):
         """ Coordinate the job. """
-        log.LOG.info("%s started" % (self.prog, ))
+        self.logger.info("%s started" % (self.prog, ))
         self._running = True
         action = None
         while self._running:
             self.supervise()
             self.save_status()
             if self._config.get("command") == "single":
-                log.LOG.debug("single mode, exiting")
+                self.logger.debug("single mode, exiting")
                 return
             wake_time = self.sleep_interval() + time.time()
-            log.LOG.debug("sleeping for %d seconds" % self.sleep_interval())
+            self.logger.debug(
+                "sleeping for %d seconds" % self.sleep_interval())
             while wake_time >= time.time():
                 if self._config.get("pidfile"):
                     pid_touch(self._config["pidfile"])
                     action = pid_check(self._config["pidfile"])
                     if action in ["quit", "stop_supervisor"]:
-                        log.LOG.info("asked to %s" % action)
+                        self.logger.info("asked to %s" % action)
                         self._running = False
                         break
                     elif action == "stop_children":
-                        log.LOG.info("stopping all the children")
+                        self.logger.info("stopping all the children")
                         self._child.stop()
                         pid_write(self._config["pidfile"], os.getpid())
                     elif action != "":
-                        log.LOG.warning("unknown action: %s" % action)
+                        self.logger.warning("unknown action: %s" % action)
                 if not self._running:
                     break
                 time.sleep(0.2)
         if action != "stop_supervisor":
-            log.LOG.info("stopping all the children")
+            self.logger.info("stopping all the children")
             self._child.stop()
-        log.LOG.info("stopping %s" % (self.prog, ))
+        self.logger.info("stopping %s" % (self.prog, ))
         self.save_status()
