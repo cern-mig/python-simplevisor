@@ -60,6 +60,7 @@ LOG_SYSTEMS = {
         'handler': SysLogHandler,
         'handler_options': {
             'kwargs': {
+                'address': '/dev/log',
                 'facility': SysLogHandler.LOG_DAEMON,
             }
         },
@@ -69,6 +70,13 @@ LOG_SYSTEMS = {
         }
     },
 }
+
+if sys.platform == "linux2":
+    LOG_SYSTEMS['syslog']['handler_options']['kwargs']['address'] = \
+        '/var/run/syslog'
+elif sys.platform == "darwin":
+    LOG_SYSTEMS['syslog']['handler_options']['kwargs']['address'] = \
+        '/var/run/syslog'
 LOG_LEVELS = {
     'debug': logging.DEBUG,
     'info': logging.INFO,

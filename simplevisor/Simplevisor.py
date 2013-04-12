@@ -338,7 +338,7 @@ class Simplevisor(object):
         if successful:
             self.logger.info(
                 "supervision cycle executed successfully in %.3fs: "
-                "%s services OK, %s services needed adjustment,"
+                "%s services OK, %s services needed adjustment, "
                 "%s services failed adjustment" %
                 (t_end - t_start,
                  result.get("ok", "unknown"),
