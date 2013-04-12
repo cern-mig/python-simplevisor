@@ -73,7 +73,7 @@ LOG_SYSTEMS = {
 
 if sys.platform == "linux2":
     LOG_SYSTEMS['syslog']['handler_options']['kwargs']['address'] = \
-        '/var/run/syslog'
+        '/dev/log'
 elif sys.platform == "darwin":
     LOG_SYSTEMS['syslog']['handler_options']['kwargs']['address'] = \
         '/var/run/syslog'
