@@ -40,7 +40,7 @@ LOG_SYSTEMS = {
     'stdout': {
         'handler': logging.StreamHandler,
         'handler_options': {
-            'stream': sys.stdout,
+            'args': [sys.stdout, ],
         },
         'formatter': logging.Formatter,
         'formatter_options': {
@@ -59,7 +59,9 @@ LOG_SYSTEMS = {
     'syslog': {
         'handler': SysLogHandler,
         'handler_options': {
-            'facility': SysLogHandler.LOG_DAEMON,
+            'kwargs': {
+                'facility': SysLogHandler.LOG_DAEMON,
+            }
         },
         'formatter': logging.Formatter,
         'formatter_options': {
@@ -103,8 +105,10 @@ def add_log_handler(name, log_type, log_level=logging.WARNING, extra=None):
     # create handler
     handler_class = LOG_SYSTEMS[log_type]['handler']
     handler_options = LOG_SYSTEMS[log_type].get('handler_options', dict())
-    handler_options.update(extra.get('handler_options', dict()))
-    handler = handler_class(**handler_options)
+    kwargs = handler_options.get("kwargs", dict())
+    kwargs.update(extra.get('handler_options', dict()))
+    args = handler_options.get("args", list())
+    handler = handler_class(*args, **kwargs)
     handler.setLevel(log_level)
     # create formatter
     if 'formatter' in LOG_SYSTEMS[log_type]:
