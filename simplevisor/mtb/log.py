@@ -88,7 +88,7 @@ LOG_LEVELS = {
 
 def remove_log_handlers(name):
     """
-    Remove all logger handler.
+    Remove all logger handlers.
     """
     logger = logging.getLogger(name)
     for handler in logger.handlers:
