@@ -1,13 +1,7 @@
 from distutils.core import setup, Command
-import simplevisor
 import os
 import sys
-
-_no_data_files = "--no-data-files"
-no_data_files = False
-if _no_data_files in sys.argv:
-    no_data_files = True
-    sys.argv.remove(_no_data_files)
+import simplevisor
 
 NAME = 'simplevisor'
 VERSION = simplevisor.VERSION
@@ -54,15 +48,21 @@ class test(Command):
         from test import run_tests
         run_tests.main()
 
-if no_data_files:
-    data_files = []
-else:
+_with_data_files = "--with-data-files"
+with_data_files = False
+if _with_data_files in sys.argv:
+    with_data_files = True
+    sys.argv.remove(_with_data_files)
+
+if with_data_files:
     data_files = [
         ('/usr/share/man/man1',
          ['man/simplevisor.1',
           'man/simplevisor-control.1',
-          'man/simplevisor-loop.1']),
-    ]
+          'man/simplevisor-loop.1']), ]
+else:
+    data_files = list()
+
 setup(name=NAME,
       version=VERSION,
       description=DESCRIPTION,
