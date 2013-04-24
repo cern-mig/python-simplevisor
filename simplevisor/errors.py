@@ -17,5 +17,5 @@ class ServiceError(Exception):
         """
         Custom constructor.
         """
-        super(ServiceError, self).__init__(message)
+        Exception.__init__(message)
         self.result = result
