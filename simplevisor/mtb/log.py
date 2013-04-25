@@ -66,7 +66,7 @@ LOG_SYSTEMS = {
         },
         'formatter': logging.Formatter,
         'formatter_options': {
-            'fmt': ' %(name)s %(process)d: [%(levelname)s] %(message)s',
+            'fmt': '%(name)s[%(process)d]: [%(levelname)s] %(message)s',
         }
     },
 }
