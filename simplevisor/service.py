@@ -329,7 +329,7 @@ class Service(object):
         if self._opts["path"] is not None:
             env = {"PATH": self._opts["path"], }
         else:
-            env = {"PATH": "/usr/bin:/usr/sbin:/bin:/sbin", }
+            env = None
         cmd_str = " ".join(cmd)
         try:
             LOGGER.debug("executing %s" % (cmd_str, ))
