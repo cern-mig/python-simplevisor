@@ -38,8 +38,8 @@ Copyright (C) 2013 CERN
 
 AUTHOR = "Massimo Paladin <massimo.paladin@gmail.com>"
 COPYRIGHT = "Copyright (C) 2013 CERN"
-VERSION = "0.7.1"
-DATE = "29 Jan 2013"
+VERSION = "0.8"
+DATE = "26 Apr 2013"
 __author__ = AUTHOR
 __version__ = VERSION
 __date__ = DATE

@@ -1,6 +1,6 @@
 Change log for python-simplevisor
 
-0.x X X X 2013
+0.8 Fri Apr 26 2013
     * [mp] strategies reviewed and reimplemented
     * [mp] changing logging to python logging
 
