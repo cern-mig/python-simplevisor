@@ -1,5 +1,8 @@
 Change log for python-simplevisor
 
+X.X X X X X
+    * [mp] allow including same file multiple times in the configuration
+
 0.8 Fri Apr 26 2013
     * [mp] strategies reviewed and reimplemented
     * [mp] changing logging to python logging
