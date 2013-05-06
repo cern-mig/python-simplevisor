@@ -413,7 +413,7 @@ def main():
     if configuration_file is not None:
         conf = read_apache_config(
             os.path.abspath(configuration_file),
-            {"InterPolateVars": True, })
+            {"InterPolateVars": True, "IncludeAgain": True, })
     entry = conf.pop("entry", None)
     merged = conf.pop("simplevisor", dict())
     merged = merge_(DEFAULT_OPTIONS, merged)
