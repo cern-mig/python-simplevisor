@@ -3,6 +3,7 @@ python-simplevisor
 ==================
 
 .. image:: https://secure.travis-ci.org/cern-mig/python-simplevisor.png?branch=master
+   :target: https://travis-ci.org/cern-mig/python-simplevisor
 
 Overview
 ========
