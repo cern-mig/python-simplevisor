@@ -24,6 +24,6 @@ install:
 # command to run tests
 script:
   - pep8 simplevisor bin/simplevisor test
-  - sh pylint.sh --rcfile .pylintrc simplevisor bin/simplevisor test || echo "*ignored*"
+  - sh pylint.sh simplevisor bin/simplevisor test || echo "*ignored*"
   - python setup.py install
   - python setup.py test
