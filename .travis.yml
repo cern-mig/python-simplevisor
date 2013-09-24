@@ -18,7 +18,7 @@ install:
   - if [[ $TRAVIS_PYTHON_VERSION == '2.5' ]]; then pip install --use-mirrors simplejson; fi
   - pip install --use-mirrors argparse || echo "no needed from 3.2 on, ok"
   - pip install --use-mirrors pep8
-  - pip install --use-mirrors pylint
+  - if [[ $TRAVIS_PYTHON_VERSION != '2.5' ]]; then pip install --use-mirrors pylint; fi
   - curl -O -R -S -f -s https://raw.github.com/cern-mig/dev-tools/master/python/pylint.sh
   - curl -O -R -S -f -s https://raw.github.com/cern-mig/dev-tools/master/python/.pylintrc
 # command to run tests
