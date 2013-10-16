@@ -31,29 +31,36 @@ T_SVC1_OK = {
     'name': 'svc1',
     'type': 'service',
     'start': 'sleep 101',
-    'daemon': os.path.join(TEST_DIR, 'svc1.pid'), }
+    'daemon': os.path.join(TEST_DIR, 'svc1.pid'),
+}
 T_SVC2_OK = {
     'name': 'svc2',
     'type': 'service',
     'expected': 'stopped',
     'start': 'sleep 102',
-    'daemon': os.path.join(TEST_DIR, 'svc2.pid'), }
+    'daemon': os.path.join(TEST_DIR, 'svc2.pid'),
+}
 T_SVC3_OK = {
     'name': 'svc3',
     'type': 'service',
     'start': 'sleep 103',
-    'daemon': os.path.join(TEST_DIR, 'svc3.pid'), }
+    'daemon': os.path.join(TEST_DIR, 'svc3.pid'),
+}
 T_SUP2_OK = {
     'name': 'sup2',
     'type': 'supervisor',
     'children': {
-    'entry': [T_SVC3_OK, ], }}
+        'entry': [T_SVC3_OK, ],
+    },
+}
 T_SUP1_OK = {
     'name': 'sup1',
     'window': 5,
     'adjustments': 3,
     'children': {
-    'entry': [T_SVC1_OK, T_SUP2_OK, T_SVC2_OK], }}
+        'entry': [T_SVC1_OK, T_SUP2_OK, T_SVC2_OK],
+    },
+}
 
 OK = True
 FAIL = False
