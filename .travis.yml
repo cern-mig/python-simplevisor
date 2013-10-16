@@ -14,7 +14,7 @@ before_install:
   - sudo apt-get install cpanminus -y
 # command to install dependencies
 install:
-  - sudo cpanm -v --notest --mirror http://cpan.mirrors.travis-ci.org No::Worries
+  - sudo cpanm -v --notest No::Worries
   - if [[ $TRAVIS_PYTHON_VERSION == '2.5' ]]; then pip install --use-mirrors simplejson; fi
   - pip install --use-mirrors argparse || echo "no needed from 3.2 on, ok"
   - pip install --use-mirrors pep8
