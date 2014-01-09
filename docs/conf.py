@@ -43,7 +43,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'simplevisor'
-copyright = u'Copyright (C) 2013 CERN - Author: %s' % simplevisor.AUTHOR
+copyright = u'%s - Author: %s' % (simplevisor.COPYRIGHT, simplevisor.AUTHOR)
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

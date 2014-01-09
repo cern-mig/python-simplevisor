@@ -7,7 +7,7 @@
 #                                                                              #
 #-##############################################################################
 
-# $Revision: 1.9 $
+# $Revision: 1.11 $
 
 # FIXME: consider adding --discard-stdout and --discard-stderr options?
 # FIXME: consider adding a --discard-stdin option?
@@ -222,8 +222,8 @@ stop after having executed the command the given number of times
 
 =item B<--daemon>
 
-detach B<simplevisor-loop> so that it becomes a daemon running in the
-background; debug, warning and error messages get sent to syslog
+detach B<simplevisor-loop> so that it becomes a daemon running in the background;
+debug, warning and error messages get sent to syslog
 
 =item B<--debug>, B<-d>
 
@@ -263,4 +263,4 @@ zero if the instance is alive and non-zero otherwise
 
 Lionel Cons L<http://cern.ch/lionel.cons>
 
-Copyright CERN 2012
+Copyright (C) CERN 2012-2014

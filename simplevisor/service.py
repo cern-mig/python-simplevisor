@@ -1,6 +1,6 @@
 """
 This class implements a :py:class:`Service` abstraction.
-As service we mean a process which run in daemon mode.
+As service we mean a process which runs in daemon mode.
 
 An example of service declaration::
 
@@ -19,7 +19,7 @@ another example for a standalone script::
         start = /path/to/script --conf /path/to/conf --daemon
         # If you cannot provide a status or stop command you can specify a
         # pattern which will be used to look for the process in the process
-        # table, however this is supported only on linux.
+        # table, however this is supported only on Linux.
         # If not specified start command is used as pattern.
         pattern = /path/to/script --conf /path/to/conf --daemon
     </entry>
@@ -184,7 +184,7 @@ Default Parameters
 - all the others are default to None
 
 
-Copyright (C) 2013 CERN
+Copyright (C) 2013-2014 CERN
 """
 import logging
 import os

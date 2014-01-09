@@ -6,7 +6,6 @@
 #
 #
 
-
 RETVAL=0
 
 [ -r "/etc/sysconfig/simplevisor" ] && . "/etc/sysconfig/simplevisor"
@@ -173,7 +172,7 @@ look at simplevisor man page for path behavior.
 
 =head1 EXAMPLES
 
-On linux you can look at the script shipped in the examples folder
+On Linux you can look at the script shipped in the examples folder
 which is called simplevisor-new-instance, it creates folders and
 the configuration to run a simplevisor instance.
 
@@ -218,4 +217,6 @@ And use it as a normal service:
 
 =head1 AUTHOR
 
-Massimo Paladin <massimo.paladin@gmail.com> - Copyright (C) 2013 CERN
+Massimo Paladin <massimo.paladin@gmail.com>
+
+Copyright (C) CERN 2013-2014

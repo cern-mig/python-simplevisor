@@ -1,7 +1,7 @@
 """
 Strategies implemented.
 
-Copyright (C) 2013 CERN
+Copyright (C) 2013-2014 CERN
 """
 import logging
 

@@ -2,15 +2,15 @@ Main Features
 =============
 
 - *Standalone services*
-  The supervisor is able to run default services like *httpd*,
-  *mysql* which are invoked with a command of the type::
-  
-      $ service httpd start
+    The supervisor is able to run default services like *httpd*,
+    *mysql* which are invoked with a command of the type::
+
+        $ service httpd start
 
 - *Executable*
     The supervisor is able to run any executable program,
     not only standard services::
-    
+
         /opt/whatever/instance/bin/service --option 1 --other "foo bar" --config /opt/whatever/instance/etc/whatever.cfg
 
 - *Dead or "hang" state handling*
@@ -67,4 +67,4 @@ Main Features
     Supervisor does not require to be run as *root* user, it is
     able to run as any user of course limited by the user privileges.
 
-Copyright (C) 2013 CERN
+Copyright (C) 2013-2014 CERN
