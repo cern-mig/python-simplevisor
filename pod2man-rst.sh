@@ -1,4 +1,6 @@
-#! /bin/sh -x
+#!/bin/sh -x
+
+export PYTHONPATH=.
 
 ./bin/simplevisor pod > man/simplevisor.pod
 

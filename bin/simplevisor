@@ -370,8 +370,8 @@ def print_pod():
     out += optional
     out += "<{LIST_END}>\n"
     for title, text in [("EXAMPLES", EXAMPLES),
-                        ("AUTHOR", "%s - %s" % (simplevisor.AUTHOR,
-                                                simplevisor.COPYRIGHT))]:
+                        ("AUTHOR", "%s\n\n%s" % (simplevisor.AUTHOR,
+                                                 simplevisor.COPYRIGHT))]:
         out += "=head1 %s\n\n%s\n\n" % (title, text)
     out = out.replace("::", ":")\
              .replace("**%s**" % PROG, "B<%s>" % PROG)\
