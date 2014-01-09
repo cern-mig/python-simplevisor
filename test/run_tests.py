@@ -12,7 +12,7 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
- Copyright (C) 2013 CERN
+ Copyright (C) 2013-2014 CERN
 """
 
 import sys

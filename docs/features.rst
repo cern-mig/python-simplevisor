@@ -5,13 +5,13 @@ Main Features
     The supervisor is able to run default services like *httpd*,
     *mysql* which are invoked with a command of the type::
 
-        $ service httpd start
+      $ service httpd start
 
 - *Executable*
     The supervisor is able to run any executable program,
     not only standard services::
 
-        /opt/whatever/instance/bin/service --option 1 --other "foo bar" --config /opt/whatever/instance/etc/whatever.cfg
+      /opt/whatever/instance/bin/service --option 1 --other "foo bar" --config /opt/whatever/instance/etc/whatever.cfg
 
 - *Dead or "hang" state handling*
     Something important is to be able to handle services in an apparently
@@ -35,16 +35,13 @@ Main Features
     Inspired by the OTP platform there are different strategies
     for handling group of services and their behavior.
 
-- *Commands: start/stop/status*
+- *Commands: start/stop/status/restart*
     Different commands can be specified to handle a service:
     
     - start
     - stop
     - status
-    
-    other:
-    
-    - restart? (or stop+start)
+    - restart (defaults to stop+start)
 
 - *Ensure expected state*
     Each service should have an expected state.
