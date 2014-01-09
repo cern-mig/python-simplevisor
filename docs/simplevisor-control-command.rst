@@ -77,5 +77,6 @@ And use it as a normal service::
 AUTHOR
 ------
 
-Massimo Paladin <massimo.paladin@gmail.com> - Copyright (C) 2013 CERN
+Massimo Paladin <massimo.paladin@gmail.com>
 
+Copyright (C) CERN 2013-2014
