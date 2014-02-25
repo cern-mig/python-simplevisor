@@ -21,6 +21,12 @@ COMMANDS = sorted(set(COMMANDS))
 CHECK_ARG_COMMAND_RE = re.compile("(%s)" % "|".join(COMMANDS))
 LOG_SYSTEMS = "null file syslog stdout".split()
 CHECK_ARG_LOG_RE = re.compile("(%s)" % ("|".join(LOG_SYSTEMS), ))
+CONF_GEN_OPTS = {
+    "IncludeAgain":    True,
+    "IncludeGlob":     True,
+    "IncludeRelative": True,
+    "InterPolateVars": True,
+}
 
 PROG = "simplevisor"
 SHORT_DESCRIPTION = "simple daemons supervisor"
@@ -411,9 +417,8 @@ def main():
     configuration_file = args.pop("conf", None)
     conf = dict()
     if configuration_file is not None:
-        conf = read_apache_config(
-            os.path.abspath(configuration_file),
-            {"InterPolateVars": True, "IncludeAgain": True, })
+        confpath = os.path.abspath(configuration_file)
+        conf = read_apache_config(confpath, CONF_GEN_OPTS)
     entry = conf.pop("entry", None)
     merged = conf.pop("simplevisor", dict())
     merged = merge_(DEFAULT_OPTIONS, merged)
