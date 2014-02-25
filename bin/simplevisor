@@ -194,7 +194,8 @@ ARGUMENTS = [
         "long": "path",
         "nargs": "?",
         "help": "path to a service, subset of commands available: %s" %
-                 ", ".join(SERVICE_COMMAND)}), ]
+                 ", ".join(SERVICE_COMMAND)}),
+]
 
 DEFAULT_OPTIONS = {
     "daemon": False,
@@ -203,7 +204,8 @@ DEFAULT_OPTIONS = {
     "interval": 60,
     "path": None,
     "pidfile": None,
-    "store": None, }
+    "store": None,
+}
 
 
 def get_parser():
@@ -388,7 +390,8 @@ def print_pod():
 
 SIMPLEVISOR_CONFIGURATION_FIELDS = [
     "store", "pidfile", "interval", "log", "logfile",
-    "loglevel", "path", "command", "daemon", ]
+    "loglevel", "path", "command", "daemon",
+]
 
 
 def check_restrictions(arguments):
