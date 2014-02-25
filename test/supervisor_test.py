@@ -22,10 +22,11 @@ mtb.log.setup_log("simplevisor", "stdout", "warning")
 import copy
 import os
 import shutil
+import tempfile
 import time
 import unittest
 
-TEST_DIR = os.path.join(os.getcwd(), "test_directory")
+TEST_DIR = tempfile.mkdtemp(prefix='simplevisor-supervisor')
 
 T_SVC1_OK = {
     'name': 'svc1',

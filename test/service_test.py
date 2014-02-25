@@ -24,9 +24,10 @@ mtb.log.setup_log("simplevisor", "stdout", "info")
 from copy import deepcopy
 import os
 import shutil
+import tempfile
 import unittest
 
-TEST_DIR = os.path.join(os.getcwd(), "test_directory")
+TEST_DIR = tempfile.mkdtemp(prefix='simplevisor-service')
 
 OK = True
 FAIL = False
