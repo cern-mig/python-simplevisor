@@ -16,18 +16,18 @@ Copyright (C) 2013-2014 CERN
 """
 from simplevisor.errors import ServiceError
 from simplevisor.service import Service
-
 from mtb.proc import which
-import mtb.log
-mtb.log.setup_log("simplevisor", "stdout", "info")
 
-from copy import deepcopy
+import copy
+import mtb.log
 import os
 import shutil
 import tempfile
 import unittest
 
+TEST_LOGNAME = os.path.basename(__file__)
 TEST_DIR = tempfile.mkdtemp(prefix='simplevisor-service')
+TEST_LOG = os.path.join(TEST_DIR, "log")
 
 OK = True
 FAIL = False
@@ -57,9 +57,9 @@ CREATION_COMBINATIONS = [
             "stop": "stop", "status": "status", }),
     (OK, {"name": "foo", "start": "start",
           "stop": "stop", "status": "status", }),
-    (OK, deepcopy(T_SVC1_OK)),
-    (OK, deepcopy(T_SVC2_OK)),
-    (OK, deepcopy(T_SVC3_FAIL))
+    (OK, copy.deepcopy(T_SVC1_OK)),
+    (OK, copy.deepcopy(T_SVC2_OK)),
+    (OK, copy.deepcopy(T_SVC3_FAIL))
 ]
 
 
@@ -68,13 +68,18 @@ class ServiceTest(unittest.TestCase):
 
     def setUp(self):
         """ Setup the test environment. """
-        self.path = TEST_DIR
-        shutil.rmtree(self.path, ignore_errors=True)
-        os.makedirs(self.path)
+        shutil.rmtree(TEST_DIR, ignore_errors=True)
+        os.makedirs(TEST_DIR)
+        handler_options = dict()
+        handler_options["filename"] = TEST_LOG
+        extra = {"handler_options": handler_options}
+        mtb.log.setup_log(TEST_LOGNAME, "file", "info", extra)
 
     def tearDown(self):
         """ Restore the test environment. """
-        shutil.rmtree(self.path, ignore_errors=True)
+        #with open(TEST_LOG, "r") as fin:
+        #    print fin.read()
+        shutil.rmtree(TEST_DIR, ignore_errors=True)
 
     def test_creation(self):
         """ Test service creation. """
@@ -92,7 +97,8 @@ class ServiceTest(unittest.TestCase):
         Test service start fail.
         """
         print("running service start failure expected")
-        opts = deepcopy(T_SVC3_FAIL)
+        opts = copy.deepcopy(T_SVC3_FAIL)
+        opts['logname'] = TEST_LOGNAME
         svc = Service(**opts)
         self.assertRaises(ServiceError, svc.cond_start)
         self.assertRaises(ServiceError, svc.cond_start, careful=True)
@@ -103,7 +109,8 @@ class ServiceTest(unittest.TestCase):
         Test service start - stop.
         """
         print("running service start - stop tests")
-        for opts in [deepcopy(T_SVC1_OK), deepcopy(T_SVC2_OK), ]:
+        for opts in [copy.deepcopy(T_SVC1_OK), copy.deepcopy(T_SVC2_OK), ]:
+            opts['logname'] = TEST_LOGNAME
             svc = Service(**opts)
             svc.cond_start(careful=True)
             self.assertEquals(

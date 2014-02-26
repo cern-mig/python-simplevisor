@@ -9,7 +9,7 @@ import sys
 
 import simplevisor.mtb as mtb
 from mtb.conf import read_apache_config, unify_keys
-
+import mtb.log as log
 import simplevisor
 from simplevisor.Simplevisor import Simplevisor, \
     NORMAL_COMMAND, SERVICE_COMMAND
@@ -169,6 +169,9 @@ ARGUMENTS = [
     ("loglevel", {
         "long": "--loglevel",
         "help": "log level"}),
+    ("logname", {
+        "long": "--logname",
+        "help": "log name"}),
     ("pidfile", {
         "short": "-p",
         "long": "--pidfile",
@@ -198,13 +201,14 @@ ARGUMENTS = [
 ]
 
 DEFAULT_OPTIONS = {
-    "daemon": False,
-    "log": "stdout",
+    "daemon":   False,
+    "log":      "stdout",
     "loglevel": "warning",
+    "logname":  "simplevisor",
     "interval": 60,
-    "path": None,
-    "pidfile": None,
-    "store": None,
+    "path":     None,
+    "pidfile":  None,
+    "store":    None,
 }
 
 
@@ -390,7 +394,7 @@ def print_pod():
 
 SIMPLEVISOR_CONFIGURATION_FIELDS = [
     "store", "pidfile", "interval", "log", "logfile",
-    "loglevel", "path", "command", "daemon",
+    "loglevel", "logname", "path", "command", "daemon",
 ]
 
 
@@ -407,11 +411,22 @@ def check_restrictions(arguments):
             "daemon option make sense only with start command")
 
 
-def merge_(first, second):
+def merge_dicts(first, second):
     """ Merge two dictionaries. """
     merge = first.copy()
     merge.update(second)
     return merge
+
+
+def initialize_log(config):
+    """ Initialize the log system. """
+    handler_options = dict()
+    if config["log"] == "file":
+        if "logfile" not in config:
+            raise AttributeError("logfile required for file log system")
+        handler_options["filename"] = config["logfile"]
+    extra = {"handler_options": handler_options}
+    log.setup_log(config["logname"], config["log"], config["loglevel"], extra)
 
 
 def main():
@@ -423,14 +438,15 @@ def main():
         confpath = os.path.abspath(configuration_file)
         conf = read_apache_config(confpath, CONF_GEN_OPTS)
     entry = conf.pop("entry", None)
-    merged = conf.pop("simplevisor", dict())
-    merged = merge_(DEFAULT_OPTIONS, merged)
-    merged = merge_(merged, args)
-    check_restrictions(merged)
+    unify_keys(entry)
+    sconf = conf.pop("simplevisor", dict())
+    sconf = merge_dicts(merge_dicts(DEFAULT_OPTIONS, sconf), args)
+    unify_keys(sconf)
+    check_restrictions(sconf)
     if conf:
-        raise ValueError(
-            "invalid properties in the configuration: %s" % (conf, ))
-    svisor = Simplevisor(unify_keys(merged), unify_keys(entry))
+        raise ValueError("invalid configuration: %s" % (conf, ))
+    initialize_log(sconf)
+    svisor = Simplevisor(config=sconf, child_config=entry)
     svisor.work()
 
 if __name__ == "__main__":

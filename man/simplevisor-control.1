@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "SIMPLEVISOR-CONTROL 1"
-.TH SIMPLEVISOR-CONTROL 1 "2014-01-09" "" "simplevisor-control man page"
+.TH SIMPLEVISOR-CONTROL 1 "2014-02-25" "" "simplevisor-control man page"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -133,11 +133,10 @@
 simplevisor\-control \- run simplevisor as a service
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
-\&\fBsimplevisor-control\fR
-command [path]
+\&\fBsimplevisor-control\fR command [path]
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
-simplevisor-control command can be used to run simplevisor as a service.
+\&\fBsimplevisor-control\fR command can be used to run simplevisor as a service.
 .PP
 If this script is used the pidfile value specified in the simplevisor
 configuration file will be ignored.
@@ -151,9 +150,9 @@ one of: start, stop, stop-supervisor,
 look at simplevisor man page for path behavior.
 .SH "EXAMPLES"
 .IX Header "EXAMPLES"
-On Linux you can look at the script shipped in the examples folder
-which is called simplevisor-new-instance, it creates folders and
-the configuration to run a simplevisor instance.
+On Linux you can look at the script shipped in the examples folder which is
+called simplevisor-new-instance, it creates folders and the configuration to
+run a simplevisor instance.
 .PP
 .Vb 3
 \&    mkdir \-p /var/lib/myinstance/bin
@@ -161,8 +160,8 @@ the configuration to run a simplevisor instance.
 \&    mkdir \-p /var/lib/myinstance/etc
 .Ve
 .PP
-Create a file /var/lib/myinstance/bin/service with content
-and make it executable:
+Create a file /var/lib/myinstance/bin/service with content and make it
+executable:
 .PP
 .Vb 4
 \&    #!/bin/sh

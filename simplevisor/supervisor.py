@@ -81,16 +81,15 @@ from simplevisor.errors import SimplevisorError, ServiceError
 from simplevisor.service import Service
 
 
-LOGGER = logging.getLogger("simplevisor")
-
 ALLOWED_STRATEGIES = {
     'one_for_one': 'OneForOne',
     'rest_for_one': 'RestForOne',
     'one_for_all': 'OneForAll',
 }
-DEFAULT_EXPECTED = "none"
-DEFAULT_WINDOW = 12
 DEFAULT_ADJUSTMENTS = 3
+DEFAULT_EXPECTED = "none"
+DEFAULT_STRATEGY = "one_for_one"
+DEFAULT_WINDOW = 12
 
 
 def new_child(options, inherit=None):
@@ -147,9 +146,15 @@ class Supervisor(object):
                 "strategies")
         return getattr(cls.strategies, name)
 
-    def __init__(self, name="supervisor", expected=DEFAULT_EXPECTED,
-                 window=DEFAULT_WINDOW, adjustments=DEFAULT_ADJUSTMENTS,
-                 strategy="one_for_one", children=None, **kwargs):
+    def __init__(self,
+                 adjustments=DEFAULT_ADJUSTMENTS,
+                 children=None,
+                 expected=DEFAULT_EXPECTED,
+                 logname=None,
+                 name="supervisor",
+                 strategy=DEFAULT_STRATEGY,
+                 window=DEFAULT_WINDOW,
+                 **kwargs):
         """
         Constructor.
         :param name: the supervisor name
@@ -162,6 +167,10 @@ class Supervisor(object):
         """
         if children is None:
             children = dict()
+        if logname is None:
+            logname = self.__class__.__name__
+        self.logname = logname
+        self.logger = logging.getLogger(logname)
         self.name = name
         self._expected = expected.lower()
         self._window = get_int_or_die(
@@ -217,6 +226,8 @@ class Supervisor(object):
         Add a child.
         :param options: the child configuration
         """
+        if "logname" not in options:
+            options["logname"] = self.logname
         n_child = new_child(options, {"expected": self._expected, })
         if n_child is not None:
             if n_child.name in self._children_by_name:
@@ -249,7 +260,7 @@ class Supervisor(object):
         """
         This method takes care of starting the supervisor and its children.
         """
-        LOGGER.debug(
+        self.logger.debug(
             "calling start on supervisor %s.%s" %
             (self.name, self._strategy_name))
         try:
@@ -263,7 +274,7 @@ class Supervisor(object):
         """
         This method takes care of stopping the supervisor and its children.
         """
-        LOGGER.debug(
+        self.logger.debug(
             "calling stop on supervisor %s.%s" %
             (self.name, self._strategy_name))
         try:
@@ -285,7 +296,7 @@ class Supervisor(object):
         """
         This method takes care of restarting the supervisor.
         """
-        LOGGER.debug(
+        self.logger.debug(
             "calling stop+start on supervisor %s.%s" %
             (self.name, self._strategy_name))
         result = self.stop()
@@ -300,9 +311,9 @@ class Supervisor(object):
         healthy = True
         health_output = list()
         for child in self._children:
-            LOGGER.debug("checking child: %s" % (child.name, ))
+            self.logger.debug("checking child: %s" % (child.name, ))
             (child_health, output) = child.check()
-            LOGGER.debug(
+            self.logger.debug(
                 "child check result for %s: %s, %s" %
                 (child.name, child_health, output))
             health_output.extend(output)
@@ -320,7 +331,7 @@ class Supervisor(object):
         to the configuration.
         :param result: dictionary where children result should be added
         """
-        LOGGER.debug(
+        self.logger.debug(
             "calling supervise on supervisor %s.%s" %
             (self.name, self._strategy_name))
         successful = self._strategy.supervise(self._children, result)
@@ -354,7 +365,7 @@ class Supervisor(object):
         """
         adjusted = self.adjustments()
         if adjusted > self._adjustments:
-            LOGGER.error(
+            self.logger.error(
                 "%s handled %d adjustments in %s supervision cycles" %
                 (self.name, adjusted, self._window))
             return True

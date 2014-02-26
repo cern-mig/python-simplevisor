@@ -16,17 +16,17 @@ Copyright (C) 2013-2014 CERN
 """
 from simplevisor.supervisor import Supervisor
 
-import mtb.log
-mtb.log.setup_log("simplevisor", "stdout", "warning")
-
 import copy
+import mtb.log
 import os
 import shutil
 import tempfile
 import time
 import unittest
 
+TEST_LOGNAME = os.path.basename(__file__)
 TEST_DIR = tempfile.mkdtemp(prefix='simplevisor-supervisor')
+TEST_LOG = os.path.join(TEST_DIR, "log")
 
 T_SVC1_OK = {
     'name': 'svc1',
@@ -77,13 +77,18 @@ class SupervisorTest(unittest.TestCase):
 
     def setUp(self):
         """ Setup the test environment. """
-        self.path = TEST_DIR
-        shutil.rmtree(self.path, ignore_errors=True)
-        os.makedirs(self.path)
+        shutil.rmtree(TEST_DIR, ignore_errors=True)
+        os.makedirs(TEST_DIR)
+        handler_options = dict()
+        handler_options["filename"] = TEST_LOG
+        extra = {"handler_options": handler_options}
+        mtb.log.setup_log(TEST_LOGNAME, "file", "info", extra)
 
     def tearDown(self):
         """ Restore the test environment. """
-        shutil.rmtree(self.path, ignore_errors=True)
+        #with open(TEST_LOG, "r") as fin:
+        #    print fin.read()
+        shutil.rmtree(TEST_DIR, ignore_errors=True)
 
     def test_creation(self):
         """ Test supervisor creation. """
@@ -104,6 +109,7 @@ class SupervisorTest(unittest.TestCase):
             current = copy.deepcopy(T_SUP1_OK)
             current['children']['entry'][1]['strategy'] = strategy
             current['strategy'] = strategy
+            current['logname'] = TEST_LOGNAME
             sup1 = Supervisor(**current)
             sup1.start()
             time.sleep(1)
@@ -130,6 +136,7 @@ class SupervisorTest(unittest.TestCase):
             current = copy.deepcopy(T_SUP1_OK)
             current['children']['entry'][1]['strategy'] = strategy
             current['strategy'] = strategy
+            current['logname'] = TEST_LOGNAME
             sup1 = Supervisor(**current)
             sup1.start()
             time.sleep(1)

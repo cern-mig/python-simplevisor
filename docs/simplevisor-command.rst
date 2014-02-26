@@ -7,7 +7,7 @@ SYNOPSIS
 --------
 
 **simplevisor**
-[--conf CONF] [--daemon] [--interval INTERVAL] [-h] [--log LOG] [--logfile LOGFILE] [--loglevel LOGLEVEL] [-p PIDFILE] [--store STORE] [--version] 
+[--conf CONF] [--daemon] [--interval INTERVAL] [-h] [--log LOG] [--logfile LOGFILE] [--loglevel LOGLEVEL] [--logname LOGNAME] [-p PIDFILE] [--store STORE] [--version] 
 command [path] 
 
 DESCRIPTION
@@ -103,6 +103,9 @@ OPTIONS
 **--loglevel LOGLEVEL**
 	log level (default: warning)
 
+**--logname LOGNAME**
+	log name (default: simplevisor)
+
 **-p, --pidfile PIDFILE**
 	the pidfile
 
@@ -139,6 +142,6 @@ Given the example configuration, to start the httpd service::
 AUTHOR
 ------
 
-Massimo Paladin <massimo.paladin@gmail.com> - Copyright (C) 2013-2014 CERN
+Massimo Paladin <massimo.paladin@gmail.com> - Copyright (C) CERN 2013-2014
 
 

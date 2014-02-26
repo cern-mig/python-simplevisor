@@ -5,7 +5,7 @@ simplevisor 0.8 - simple daemons supervisor
 =head1 SYNOPSIS
 
 B<simplevisor>
-[--conf CONF][--daemon][--interval INTERVAL][-h][--log LOG][--logfile LOGFILE][--loglevel LOGLEVEL][-p PIDFILE][--store STORE][--version]
+[--conf CONF][--daemon][--interval INTERVAL][-h][--log LOG][--logfile LOGFILE][--loglevel LOGLEVEL][--logname LOGNAME][-p PIDFILE][--store STORE][--version]
 command [path]
 
 =head1 DESCRIPTION
@@ -98,6 +98,8 @@ B<--logfile LOGFILE> log file, ONLY for file
 
 B<--loglevel LOGLEVEL> log level (default: warning)
 
+B<--logname LOGNAME> log name (default: simplevisor)
+
 B<-p, --pidfile PIDFILE> the pidfile
 
 B<--store STORE> file where to store the state, it is not mandatory,however recommended to store the simplevisor nodes status between restarts
@@ -134,6 +136,6 @@ Given the example configuration, to start the httpd service:
 
 Massimo Paladin <massimo.paladin@gmail.com>
 
-Copyright (C) 2013-2014 CERN
+Copyright (C) CERN 2013-2014
 
 

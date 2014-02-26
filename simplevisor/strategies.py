@@ -9,8 +9,6 @@ from simplevisor.errors import ServiceError
 from simplevisor.service import Service
 from simplevisor.supervisor import Supervisor
 
-LOGGER = logging.getLogger("simplevisor")
-
 
 class SupervisionStrategy(object):
     """ Strategy interface. """
@@ -78,7 +76,7 @@ class OneForOne(SupervisionStrategy):
                 successful = child.supervise(result)
                 if not successful:
                     # start it, it should have stopped by itself
-                    LOGGER.info(
+                    self._parent.logger.info(
                         "supervisor %s stopped, starting it" %
                         (child.name, ))
                     child.start()
@@ -187,7 +185,7 @@ class DependentStrategy(SupervisionStrategy):
                     # supervisor has not failed yet but supervision has been
                     # interrupted for this cycle and a failure has been
                     # recorded
-                    LOGGER.debug(
+                    self._parent.logger.debug(
                         "interrupting supervision cycle because of "
                         "a service error, failure recorded")
                     return True
@@ -212,7 +210,7 @@ class RestForOne(DependentStrategy):
 
     def adjust(self, children, child):
         """ Implement adjust. """
-        LOGGER.info(
+        self._parent.logger.info(
             "applying rest_for_one strategy because of: %s" % (child.name, ))
         children_subset = children[children.index(child):]
         self.stop(children_subset)
@@ -234,7 +232,7 @@ class OneForAll(DependentStrategy):
 
     def adjust(self, children, child):
         """ Implement adjust. """
-        LOGGER.info(
+        self._parent.logger.info(
             "applying one_for_all strategy because of: %s" % (child.name, ))
         self.stop(children)
         self.start(children)

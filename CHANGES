@@ -5,6 +5,7 @@ X.X	X X X X
 	* [lc] documentation cleanup
 	* [lc] allow including multiple files via globbing
 	* [lc] always use the tempfile module for temporary directories
+	* [lc] added a logname option to better control how messages are logged
 
 0.8	Fri Apr 26 2013
 	* [mp] strategies reviewed and reimplemented

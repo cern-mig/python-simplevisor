@@ -38,18 +38,25 @@ class Simplevisor(object):
     """ Simplevisor class. """
     prog = "simplevisor"
 
-    def __init__(self, config=None, child_configuration=None):
+    def __init__(self, config=None, child_config=None):
         """ Initialize Simplevisor. """
         if config is None:
             config = dict()
         elif type(config) != dict:
-            raise SimplevisorError(
-                "Simplevisor expect a configuration dictionary.")
+            raise SimplevisorError("Simplevisor config is not a dictionary")
+        if "logname" not in config:
+            config["logname"] = self.__class__.__name__
+        self.logger = logging.getLogger(config["logname"])
+        mtb.pid.LOGGER = self.logger
         self._config = config
         self._status_file = self._config.get("store")
         self._running = False
-        self._child = supervisor.new_child(child_configuration)
-        self.initialize_log()
+        if child_config is None:
+            self._child = None
+        else:
+            if "logname" not in child_config:
+                child_config["logname"] = config["logname"]
+            self._child = supervisor.new_child(child_config)
 
     def get_child(self, path=""):
         """ Return child by its path. """
@@ -123,7 +130,6 @@ class Simplevisor(object):
         signal.signal(signal.SIGINT, self.on_signal)
         signal.signal(signal.SIGTERM, self.on_signal)
         signal.signal(signal.SIGHUP, self.on_signal)
-        self.initialize_log()
         self.pre_run()
         if self._config.get("daemon"):
             daemonize()
@@ -235,31 +241,6 @@ class Simplevisor(object):
         print("%s" % (message, ))
         sys.exit(status)
 
-    def initialize_log(self, stdout=False):
-        """
-        Initialize the log system.
-
-        If stdout is set to True then the log is initialized to print
-        to stdout independently from the configuration.
-        """
-        log_level = self._config.get("loglevel", "warning")
-        if stdout:
-            log.setup_log(self.prog, "stdout", log_level)
-        else:
-            log_type = self._config.get("log", "stdout")
-            handler_options = dict()
-            if log_type == "file":
-                if "logfile" not in self._config:
-                    raise AttributeError(
-                        "logfile required for file log system")
-                handler_options['filename'] = self._config["logfile"]
-            extra = {
-                'handler_options': handler_options,
-            }
-            log.setup_log(self.prog, log_type, log_level, extra)
-        self.logger = logging.getLogger(self.prog)
-        mtb.pid.LOGGER = logging.getLogger(self.prog)
-
     def load_status(self):
         """ Load saved status. """
         if self._status_file is not None:
@@ -349,7 +330,7 @@ class Simplevisor(object):
 
     def run(self):
         """ Coordinate the job. """
-        self.logger.info("%s started" % (self.prog, ))
+        self.logger.info("started")
         self._running = True
         action = None
         while self._running:
@@ -381,5 +362,6 @@ class Simplevisor(object):
         if action != "stop_supervisor":
             self.logger.info("stopping all the children")
             self._child.stop()
-        self.logger.info("stopping %s" % (self.prog, ))
+        self.logger.info("stopping")
         self.save_status()
+        self.logger.info("stopped")
