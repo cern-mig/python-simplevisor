@@ -1,6 +1,6 @@
-Change log for python-simplevisor
+Change log for python-simplevisor:
 
-X.X	X X X X
+0.9	Thu Feb 27 2014
 	* [mp] allow including same file multiple times in the configuration
 	* [lc] documentation cleanup
 	* [lc] allow including multiple files via globbing
