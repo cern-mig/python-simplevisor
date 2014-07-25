@@ -14,7 +14,7 @@ import time
 LOGGER = logging.getLogger("mtb.pid")
 
 
-#### PID helpers
+# PID helpers
 class PIDError(Exception):
     """ PID related errors. """
 

@@ -77,7 +77,7 @@ class ServiceTest(unittest.TestCase):
 
     def tearDown(self):
         """ Restore the test environment. """
-        #with open(TEST_LOG, "r") as fin:
+        # with open(TEST_LOG, "r") as fin:
         #    print fin.read()
         shutil.rmtree(TEST_DIR, ignore_errors=True)
 

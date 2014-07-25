@@ -141,7 +141,7 @@ def setup_log(name, log_type, log_level=logging.WARNING, extra=None):
     remove_log_handlers(name)
     add_log_handler(name, log_type, log_level, extra)
 
-################################ Useful decorators for logging
+# Useful decorators for logging
 
 
 def print_only_exception_error():

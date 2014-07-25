@@ -8,7 +8,7 @@ import os
 import stat
 
 
-#### File helper
+# File helper
 def is_regular_file(element):
     """
     Return True if the given element is a regular file.
