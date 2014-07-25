@@ -38,11 +38,20 @@ COMMANDS
 
 If a path is given or only one service entry is given:
 
-for given command X
+for a given X command
     run the service X command where service is the only entry provided
     or the entry identified by its path
 
-If path is not given and root entry is a supervisor:
+If a path is given and the root entry is a supervisor:
+
+restart_child
+    tell a running simplevisor process to restart the child identified
+    by the given path; it is different from the restart command as
+    described above because, this way, we are sure that the running
+    simplevisor will not attempt to check/start/stop the child while
+    we restart it
+
+If a path is not given and the root entry is a supervisor:
 
 start
     start the simplevisor process which start the supervision.

@@ -28,7 +28,7 @@ from simplevisor import service, supervisor
 QUICK_COMMANDS = ["status", "stop", "stop_supervisor", "stop_children",
                   "wake_up"]
 SERVICE_COMMANDS = ["start", "stop", "status", "check", "restart"]
-OTHER_COMMANDS = ["single", "check_configuration"]
+OTHER_COMMANDS = ["single", "check_configuration", "restart_child"]
 
 DEFAULT_INTERVAL = 60
 
@@ -87,16 +87,17 @@ class Simplevisor(object):
                 self.load_status()
             getattr(self, command)()
             return
+        if path is not None and command == "restart_child":
+            target = self.get_child(path)
+            self.send_action(command + " " + path)
+            return
         if command not in SERVICE_COMMANDS:
             raise ValueError("command must be one of: %s" %
                              ", ".join(SERVICE_COMMANDS))
         if path is None:
             target = self._child
         else:
-            # service's command at path
             target = self.get_child(path)
-            if target is None:
-                raise ValueError("element with path not found: %s" % (path, ))
         if command == "check":
             self.check(target)
             return
@@ -357,6 +358,9 @@ class Simplevisor(object):
                         self._child.stop()
                     elif action == "wake_up":
                         break
+                    elif action[:14] == "restart_child ":
+                        target = self.get_child(action[14:])
+                        target.restart()
                     elif action != "":
                         self.logger.warning("unknown action: %s" % action)
                 if not self._running:
