@@ -142,8 +142,7 @@ class Supervisor(object):
         """
         if not hasattr(cls, "strategies"):
             cls.strategies = getattr(__import__(
-                "simplevisor.strategies"),
-                "strategies")
+                "simplevisor.strategies"), "strategies")
         return getattr(cls.strategies, name)
 
     def __init__(self,
