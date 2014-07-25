@@ -25,12 +25,11 @@ from simplevisor.supervisor import Supervisor
 from simplevisor import service, supervisor
 
 
-QUICK_COMMAND = ["status", "stop", "stop_supervisor", "stop_children"]
-SERVICE_COMMAND = ["start", "stop", "status", "check", "restart"]
-NORMAL_COMMAND = list(SERVICE_COMMAND)
-NORMAL_COMMAND.remove("restart")
-NORMAL_COMMAND.extend(["single", "stop_supervisor", "stop_children",
-                       "check_configuration"])
+QUICK_COMMANDS = ["status", "stop", "stop_supervisor", "stop_children",
+                  "wake_up"]
+SERVICE_COMMANDS = ["start", "stop", "status", "check", "restart"]
+OTHER_COMMANDS = ["single", "check_configuration"]
+
 DEFAULT_INTERVAL = 60
 
 
@@ -78,7 +77,7 @@ class Simplevisor(object):
         """ Controller. """
         command = self._config.get("command", "status")
         path = self._config.get("path", None)
-        if path is None and command in QUICK_COMMAND:
+        if path is None and command in QUICK_COMMANDS:
             getattr(self, command)()
             return
         if self._child is None:
@@ -88,9 +87,9 @@ class Simplevisor(object):
                 self.load_status()
             getattr(self, command)()
             return
-        if command not in SERVICE_COMMAND:
+        if command not in SERVICE_COMMANDS:
             raise ValueError("command must be one of: %s" %
-                             ", ".join(SERVICE_COMMAND))
+                             ", ".join(SERVICE_COMMANDS))
         if path is None:
             target = self._child
         else:
@@ -194,14 +193,16 @@ class Simplevisor(object):
 
     def stop_children(self):
         """ Tell the supervisor to stop the children. """
-        if not self._config.get("pidfile"):
-            raise SimplevisorError("stop requires a pidfile")
         self.send_action("stop_children")
 
-    def send_action(self, action="stop_children"):
+    def wake_up(self):
+        """ Tell the supervisor to wake up. """
+        self.send_action("wake_up")
+
+    def send_action(self, action):
         """ Tell the supervisor to execute an action. """
         if not self._config.get("pidfile"):
-            raise SimplevisorError("%s requires a pidfile" % action)
+            raise SimplevisorError("action %s requires a pidfile" % action)
         pid = pid_read(self._config["pidfile"])
         if pid:
             print("%s (pid %d) is being told to %s..." %
@@ -347,14 +348,15 @@ class Simplevisor(object):
                 if self._config.get("pidfile"):
                     pid_touch(self._config["pidfile"])
                     action = pid_check(self._config["pidfile"])
-                    if action in ["quit", "stop_supervisor"]:
+                    if action != "":
                         self.logger.info("asked to %s" % action)
-                        self._running = False
-                        break
-                    elif action == "stop_children":
-                        self.logger.info("stopping all the children")
-                        self._child.stop()
                         pid_write(self._config["pidfile"], os.getpid())
+                    if action in ["quit", "stop_supervisor"]:
+                        self._running = False
+                    elif action == "stop_children":
+                        self._child.stop()
+                    elif action == "wake_up":
+                        break
                     elif action != "":
                         self.logger.warning("unknown action: %s" % action)
                 if not self._running:

@@ -2,6 +2,7 @@ Change log for python-simplevisor:
 
 ???	???
 	* [lc] renamed configuration_check to check_configuration
+	* [lc] added a wake_up action
 
 0.9	Thu Feb 27 2014
 	* [mp] allow including same file multiple times in the configuration

@@ -12,10 +12,11 @@ from mtb.conf import read_apache_config, unify_keys
 import mtb.log as log
 import simplevisor
 from simplevisor.Simplevisor import Simplevisor, \
-    NORMAL_COMMAND, SERVICE_COMMAND
+    QUICK_COMMANDS, SERVICE_COMMANDS, OTHER_COMMANDS
 
-COMMANDS = list(NORMAL_COMMAND)
-COMMANDS.extend(SERVICE_COMMAND)
+COMMANDS = list(QUICK_COMMANDS)
+COMMANDS.extend(SERVICE_COMMANDS)
+COMMANDS.extend(OTHER_COMMANDS)
 COMMANDS.extend(["pod", "rst", "help"])
 COMMANDS = sorted(set(COMMANDS))
 CHECK_ARG_COMMAND_RE = re.compile("(%s)" % "|".join(COMMANDS))
@@ -58,18 +59,18 @@ check
     0 -> everything is fine
     1 -> warning, not expected
 
-restart
-    stop + start the simplevisor process
-
 single
     execute one cycle of supervision and exit.
     Useful to be run in a cron script
 
+wake_up
+    tell a running simplevisor process to wake up and supervise
+
 stop_supervisor
-    stop only the simplevisor process and the supervision
+    only stop the simplevisor process but not the children
 
 stop_children
-    stop only the children
+    only stop the children but not the simplevisor process
 
 check_configuration
     only check the configuration file
