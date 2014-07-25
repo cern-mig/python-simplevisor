@@ -116,7 +116,7 @@ case "$1" in
     if [ ${RETVAL} -eq 1 ]; then
         echo "skipping start action"
     else
-        sleep 0.3
+        sleep 0.5
         start
     fi
     ;;
@@ -126,7 +126,7 @@ case "$1" in
     if [ ${RETVAL} -eq 1 ]; then
         echo "skipping start action"
     else
-        sleep 0.3
+        sleep 0.5
         start
     fi
     ;;

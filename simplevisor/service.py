@@ -406,7 +406,7 @@ class Service(object):
                 check_status = self.check()
                 if check_status[0]:
                     return changed
-                time.sleep(0.2)
+                time.sleep(0.5)
             error_message = "error adjusting service %s, " \
                             "have been waiting %s" % \
                             (self.name, self._opts["timeout"])
@@ -456,7 +456,7 @@ class Service(object):
                 result = self.status()
                 if result[0] == 0:
                     return changed
-                time.sleep(0.2)
+                time.sleep(0.5)
             error_message = "error starting service %s, " \
                             "have been waiting %s" % \
                             (self.name, self._opts["timeout"])
@@ -502,7 +502,7 @@ class Service(object):
                 result = self.status()
                 if result[0] == 3:
                     return changed
-                time.sleep(0.2)
+                time.sleep(0.5)
             error_message = "error stopping service %s, expected return" \
                 "code: 3, received: %s" % (self.name, result[0])
             self.logger.error(error_message)

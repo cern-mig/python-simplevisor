@@ -77,6 +77,9 @@ class Simplevisor(object):
         """ Controller. """
         command = self._config.get("command", "status")
         path = self._config.get("path", None)
+        if path is not None and command == "restart_child":
+            self.send_action(command + " " + path)
+            return
         if path is None and command in QUICK_COMMANDS:
             getattr(self, command)()
             return
@@ -86,10 +89,6 @@ class Simplevisor(object):
             if command != "check_configuration":
                 self.load_status()
             getattr(self, command)()
-            return
-        if path is not None and command == "restart_child":
-            target = self.get_child(path)
-            self.send_action(command + " " + path)
             return
         if command not in SERVICE_COMMANDS:
             raise ValueError("command must be one of: %s" %
@@ -179,7 +178,7 @@ class Simplevisor(object):
                 except OSError:
                     break
                 timeout -= 1
-                time.sleep(1)
+                time.sleep(0.5)
             try:
                 os.kill(pid, 0)
             except OSError:
@@ -363,7 +362,7 @@ class Simplevisor(object):
                         self.logger.warning("unknown action: %s" % action)
                 if not self._running:
                     break
-                time.sleep(0.2)
+                time.sleep(0.5)
         if action != "stop_supervisor":
             self.logger.info("stopping all the children")
             self._child.stop()
