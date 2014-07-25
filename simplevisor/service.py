@@ -613,13 +613,10 @@ class Service(object):
         order to restart the service.
         """
         restart_cmd = True
-        if self._opts["control"] is not None:
-            if self._opts["restart"] == "stop+start":
-                restart_cmd = False
-        else:
-            if self._opts["restart"] is None:
-                restart_cmd = False
-
+        if self._opts["restart"] is None:
+            restart_cmd = False
+        if self._opts["restart"] == "stop+start":
+            restart_cmd = False
         if restart_cmd:
             result = self.__execute(self.get_cmd("restart"))
             self.logger.info(
