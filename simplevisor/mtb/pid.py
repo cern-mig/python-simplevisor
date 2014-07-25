@@ -56,10 +56,9 @@ def pid_touch(path):
 def pid_write(path, pid, action=None, excl=False):
     """ Write content to the pid. """
     try:
+        mode = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
         if excl:
-            mode = os.O_WRONLY | os.O_CREAT | os.O_EXCL
-        else:
-            mode = os.O_WRONLY | os.O_CREAT
+            mode |= os.O_EXCL
         # int('0666', 8) is for compatibility with python2.4
         # which support only octal with the form 0666
         # since python 2.6 0o666 must be used

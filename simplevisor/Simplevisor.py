@@ -158,7 +158,8 @@ class Simplevisor(object):
         if self._config.get("pidfile"):
             pid_write(self._config["pidfile"], os.getpid(), excl=True)
         self.pre_run()
-        self.run()
+        self.supervise()
+        self.save_status()
         if self._config.get("pidfile"):
             pid_remove(self._config.get("pidfile"))
 
@@ -339,9 +340,6 @@ class Simplevisor(object):
         while self._running:
             self.supervise()
             self.save_status()
-            if self._config.get("command") == "single":
-                self.logger.debug("single mode, exiting")
-                return
             wake_time = self.sleep_interval() + time.time()
             self.logger.debug(
                 "sleeping for %d seconds" % self.sleep_interval())
