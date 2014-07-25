@@ -20,11 +20,20 @@ COMMANDS
 
 If a path is given or only one service entry is given:
 
-for given command X
+for a given X command
     run the service X command where service is the only entry provided
     or the entry identified by its path
 
-If path is not given and root entry is a supervisor:
+If a path is given and the root entry is a supervisor:
+
+restart_child
+    tell a running simplevisor process to restart the child identified
+    by the given path; it is different from the restart command as
+    described above because, this way, we are sure that the running
+    simplevisor will not attempt to check/start/stop the child while
+    we restart it
+
+If a path is not given and the root entry is a supervisor:
 
 start
     start the simplevisor process which start the supervision.
@@ -41,18 +50,18 @@ check
     0 -> everything is fine
     1 -> warning, not expected
 
-restart
-    stop + start the simplevisor process
-
 single
     execute one cycle of supervision and exit.
     Useful to be run in a cron script
 
+wake_up
+    tell a running simplevisor process to wake up and supervise
+
 stop_supervisor
-    stop only the simplevisor process and the supervision
+    only stop the simplevisor process but not the children
 
 stop_children
-    stop only the children
+    only stop the children but not the simplevisor process
 
 check_configuration
     only check the configuration file
@@ -75,7 +84,7 @@ OPTIONS
 **positional arguments:**
 
 **command**
-	check, check_configuration, help, pod, restart, rst, single, start, status, stop, stop_children, stop_supervisor
+	check, check_configuration, help, pod, restart, restart_child, rst, single, start, status, stop, stop_children, stop_supervisor, wake_up
 
 **path**
 	path to a service, subset of commands available: start, stop, status, check, restart
@@ -110,7 +119,7 @@ OPTIONS
 	the pidfile
 
 **--store STORE**
-	file where to store the state, it is not mandatory,however recommended to store the simplevisor nodes status between restarts
+	file where to store the state, it is not mandatory, however recommended to store the simplevisor nodes status between restarts
 
 **--version**
 	print the program version
