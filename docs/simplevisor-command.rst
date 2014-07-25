@@ -54,8 +54,8 @@ stop_supervisor
 stop_children
     stop only the children
 
-configuration_check
-    just check the configuration
+check_configuration
+    only check the configuration file
 
 pod
     generate pod format help to be used by pod2man to generate man page
@@ -75,7 +75,7 @@ OPTIONS
 **positional arguments:**
 
 **command**
-	check, configuration_check, help, pod, restart, rst, single, start, status, stop, stop_children, stop_supervisor
+	check, check_configuration, help, pod, restart, rst, single, start, status, stop, stop_children, stop_supervisor
 
 **path**
 	path to a service, subset of commands available: start, stop, status, check, restart

@@ -30,7 +30,7 @@ SERVICE_COMMAND = ["start", "stop", "status", "check", "restart"]
 NORMAL_COMMAND = list(SERVICE_COMMAND)
 NORMAL_COMMAND.remove("restart")
 NORMAL_COMMAND.extend(["single", "stop_supervisor", "stop_children",
-                       "configuration_check"])
+                       "check_configuration"])
 DEFAULT_INTERVAL = 60
 
 
@@ -84,7 +84,7 @@ class Simplevisor(object):
         if self._child is None:
             raise SimplevisorError("no entry found")
         if path is None and isinstance(self._child, Supervisor):
-            if command != "configuration_check":
+            if command != "check_configuration":
                 self.load_status()
             getattr(self, command)()
             return
@@ -109,10 +109,10 @@ class Simplevisor(object):
             print("stderr: %s" % (err.strip(), ))
         sys.exit(return_code)
 
-    def configuration_check(self):
-        """ Check only the configuration. """
+    def check_configuration(self):
+        """ Only check the configuration. """
         # so far so good
-        print("Configuration is valid.")
+        print("the configuration file is valid")
         sys.exit(0)
 
     def on_signal(self, signum, _):

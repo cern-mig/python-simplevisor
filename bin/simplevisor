@@ -71,8 +71,8 @@ stop_supervisor
 stop_children
     stop only the children
 
-configuration_check
-    just check the configuration
+check_configuration
+    only check the configuration file
 
 pod
     generate pod format help to be used by pod2man to generate man page

@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "SIMPLEVISOR 1"
-.TH SIMPLEVISOR 1 "2014-02-27" "" "simplevisor man page"
+.TH SIMPLEVISOR 1 "2014-07-25" "" "simplevisor man page"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -179,8 +179,8 @@ stop_supervisor
 stop_children
     stop only the children
 .PP
-configuration_check
-    just check the configuration
+check_configuration
+    only check the configuration file
 .PP
 pod
     generate pod format help to be used by pod2man to generate man page
@@ -195,7 +195,7 @@ help
 \&\fBpositional arguments:\fR
 .Sp
 .RS 4
-\&\fBcommand\fR check, configuration_check, help, pod, restart, rst, single, start, status, stop, stop_children, stop_supervisor
+\&\fBcommand\fR check, check_configuration, help, pod, restart, rst, single, start, status, stop, stop_children, stop_supervisor
 .Sp
 \&\fBpath\fR path to a service, subset of commands available: start, stop, status, check, restart
 .RE
