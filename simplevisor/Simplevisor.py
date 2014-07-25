@@ -84,7 +84,8 @@ class Simplevisor(object):
         if self._child is None:
             raise SimplevisorError("no entry found")
         if path is None and isinstance(self._child, Supervisor):
-            self.load_status()
+            if command != "configuration_check":
+                self.load_status()
             getattr(self, command)()
             return
         if command not in SERVICE_COMMAND:
