@@ -3,7 +3,6 @@ Strategies implemented.
 
 Copyright (C) 2013-2014 CERN
 """
-import logging
 
 from simplevisor.errors import ServiceError
 from simplevisor.service import Service
@@ -77,8 +76,7 @@ class OneForOne(SupervisionStrategy):
                 if not successful:
                     # start it, it should have stopped by itself
                     self._parent.logger.info(
-                        "supervisor %s stopped, starting it" %
-                        (child.name, ))
+                        "supervisor %s stopped, starting it", child.name)
                     child.start()
                     adjusted = True
             elif isinstance(child, Service):
@@ -211,7 +209,7 @@ class RestForOne(DependentStrategy):
     def adjust(self, children, child):
         """ Implement adjust. """
         self._parent.logger.info(
-            "applying rest_for_one strategy because of: %s" % (child.name, ))
+            "applying rest_for_one strategy because of: %s", child.name)
         children_subset = children[children.index(child):]
         self.stop(children_subset)
         self.start(children_subset)
@@ -233,6 +231,6 @@ class OneForAll(DependentStrategy):
     def adjust(self, children, child):
         """ Implement adjust. """
         self._parent.logger.info(
-            "applying one_for_all strategy because of: %s" % (child.name, ))
+            "applying one_for_all strategy because of: %s", child.name)
         self.stop(children)
         self.start(children)
