@@ -100,7 +100,7 @@ class Simplevisor(object):
         if command == "check":
             self.check(target)
             return
-        self.logger.debug("calling %s.%s" % (target.name, command))
+        self.logger.debug("calling %s.%s", target.name, command)
         (return_code, out, err) = getattr(target, command)()
         if len(out.strip()) > 0:
             print("stdout: %s" % (out.strip(), ))
@@ -273,12 +273,12 @@ class Simplevisor(object):
         if self._status_file is None:
             return
         try:
-            self.logger.debug("status file: %s" % self._status_file)
+            self.logger.debug("status file: %s", self._status_file)
             status_f = open(self._status_file, "w")
             try:
                 status = {self._child.get_id(): self._child.dump_status()}
                 json.dump(status, status_f)
-                self.logger.debug("status saved: %s" % (status, ))
+                self.logger.debug("status saved: %s", status)
             except StandardError:
                 error_type, error, _ = sys.exc_info()
                 msg = "error writing status file %s: %s - %s" % \
@@ -323,11 +323,11 @@ class Simplevisor(object):
             self.logger.info(
                 "supervision cycle executed successfully in %.3fs: "
                 "%s services OK, %s services needed adjustment, "
-                "%s services failed adjustment" %
-                (t_end - t_start,
-                 result.get("ok", "unknown"),
-                 result.get("adjusted", "unknown"),
-                 result.get("failed", "unknown")))
+                "%s services failed adjustment",
+                t_end - t_start,
+                result.get("ok", "unknown"),
+                result.get("adjusted", "unknown"),
+                result.get("failed", "unknown"))
         else:
             raise SimplevisorError("supervision interrupted/failed")
 
@@ -341,13 +341,13 @@ class Simplevisor(object):
             self.save_status()
             wake_time = self.sleep_interval() + time.time()
             self.logger.debug(
-                "sleeping for %d seconds" % self.sleep_interval())
+                "sleeping for %d seconds", self.sleep_interval())
             while wake_time >= time.time():
                 if self._config.get("pidfile"):
                     pid_touch(self._config["pidfile"])
                     action = pid_check(self._config["pidfile"])
                     if action != "":
-                        self.logger.info("asked to %s" % action)
+                        self.logger.info("asked to %s", action)
                         pid_write(self._config["pidfile"], os.getpid())
                     if action in ["quit", "stop_supervisor"]:
                         self._running = False
@@ -359,7 +359,7 @@ class Simplevisor(object):
                         target = self.get_child(action[14:])
                         target.restart()
                     elif action != "":
-                        self.logger.warning("unknown action: %s" % action)
+                        self.logger.warning("unknown action: %s", action)
                 if not self._running:
                     break
                 time.sleep(0.5)

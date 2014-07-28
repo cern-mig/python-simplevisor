@@ -183,9 +183,8 @@ def log_exceptions(logger_name, re_raise=True):
                 raise sys.exc_info()[1]
             except Exception:
                 (_, error, error_tb) = sys.exc_info()
-                logger.debug(
-                    "%s" % (" ".join(traceback.format_tb(error_tb)),))
-                logger.error("%s" % (error,))
+                logger.debug(" ".join(traceback.format_tb(error_tb)))
+                logger.error(error)
                 if re_raise:
                     raise error
                 else:

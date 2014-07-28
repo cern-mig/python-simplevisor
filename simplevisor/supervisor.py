@@ -260,8 +260,8 @@ class Supervisor(object):
         This method takes care of starting the supervisor and its children.
         """
         self.logger.debug(
-            "calling start on supervisor %s.%s" %
-            (self.name, self._strategy_name))
+            "calling start on supervisor %s.%s",
+            self.name, self._strategy_name)
         try:
             result = self._strategy.start(self._children)
         except ServiceError:
@@ -274,8 +274,8 @@ class Supervisor(object):
         This method takes care of stopping the supervisor and its children.
         """
         self.logger.debug(
-            "calling stop on supervisor %s.%s" %
-            (self.name, self._strategy_name))
+            "calling stop on supervisor %s.%s",
+            self.name, self._strategy_name)
         try:
             result = self._strategy.stop(self._children)
         except ServiceError:
@@ -296,8 +296,8 @@ class Supervisor(object):
         This method takes care of restarting the supervisor.
         """
         self.logger.debug(
-            "calling stop+start on supervisor %s.%s" %
-            (self.name, self._strategy_name))
+            "calling stop+start on supervisor %s.%s",
+            self.name, self._strategy_name)
         result = self.stop()
         if result[0] != 0:
             return result
@@ -310,11 +310,11 @@ class Supervisor(object):
         healthy = True
         health_output = list()
         for child in self._children:
-            self.logger.debug("checking child: %s" % (child.name, ))
+            self.logger.debug("checking child: %s", child.name)
             (child_health, output) = child.check()
             self.logger.debug(
-                "child check result for %s: %s, %s" %
-                (child.name, child_health, output))
+                "child check result for %s: %s, %s",
+                child.name, child_health, output)
             health_output.extend(output)
             healthy = healthy and child_health
         if healthy:
@@ -331,8 +331,8 @@ class Supervisor(object):
         :param result: dictionary where children result should be added
         """
         self.logger.debug(
-            "calling supervise on supervisor %s.%s" %
-            (self.name, self._strategy_name))
+            "calling supervise on supervisor %s.%s",
+            self.name, self._strategy_name)
         successful = self._strategy.supervise(self._children, result)
         if (not successful) and self.failed():
             # the supervisor should stop the children
@@ -365,8 +365,8 @@ class Supervisor(object):
         adjusted = self.adjustments()
         if adjusted > self._adjustments:
             self.logger.error(
-                "%s handled %d adjustments in %s supervision cycles" %
-                (self.name, adjusted, self._window))
+                "%s handled %d adjustments in %s supervision cycles",
+                self.name, adjusted, self._window)
             return True
         return False
 

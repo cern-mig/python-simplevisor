@@ -120,7 +120,7 @@ def pid_quit(path, program=""):
                 try:
                     os.kill(pid, sig)
                 except OSError:
-                    LOGGER.warning("cannot kill(%d, %d)" % (pid, sig))
+                    LOGGER.warning("cannot kill(%d, %d)", pid, sig)
                 try:
                     os.kill(pid, 0)
                 except OSError:
@@ -141,7 +141,7 @@ def pid_quit(path, program=""):
         print("%s does not seem to be running" % (program, ))
     if os.path.isfile(path):
         try:
-            LOGGER.warning("removing pid file %s\n" % path)
+            LOGGER.warning("removing pid file %s", path)
             os.remove(path)
         except OSError:
             raise PIDError("failed to remove pid file: %s" % path)
