@@ -18,7 +18,7 @@ stdout
     print log messages on the standard output, works only if not daemonized
 
 
-Copyright (C) 2013 CERN
+Copyright (C) 2013-2014 CERN
 """
 import logging
 from logging.handlers import SysLogHandler
