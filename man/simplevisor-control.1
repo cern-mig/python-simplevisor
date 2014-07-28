@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "SIMPLEVISOR-CONTROL 1"
-.TH SIMPLEVISOR-CONTROL 1 "2014-07-25" "" "simplevisor-control man page"
+.TH SIMPLEVISOR-CONTROL 1 "2014-07-28" "" "simplevisor-control man page"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -136,15 +136,14 @@ simplevisor\-control \- run simplevisor as a service
 \&\fBsimplevisor-control\fR command [path]
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
-\&\fBsimplevisor-control\fR command can be used to run simplevisor as a service.
+The \fBsimplevisor-control\fR script can be used to run simplevisor as a service.
 .PP
 If this script is used the pidfile value specified in the simplevisor
 configuration file will be ignored.
 .SH "OPTIONS"
 .IX Header "OPTIONS"
 \&\fBcommand\fR
-one of: start, stop, stop-supervisor,
-        restart, restart-supervisor, status, check
+run \*(L"simplevisor-control help\*(R" to list the available commands
 .PP
 \&\fBpath\fR
 look at simplevisor man page for path behavior.
