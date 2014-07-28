@@ -52,7 +52,7 @@ start() {
     fi
 }
 
-status(){
+status() {
     echo -n "${NAME} status: "
     ${COMMAND} status ${SUBPATH}
     RETVAL=$?
@@ -94,10 +94,35 @@ stop_supervisor() {
     fi
 }
 
+restart_child() {
+    echo "Restarting ${NAME} child: "
+    ${COMMAND} restart_child ${SUBPATH}
+    RETVAL=$?
+}
+
 check() {
     echo "Check ${NAME}: "
     ${COMMAND} check ${SUBPATH}
     RETVAL=$?
+}
+
+configtest() {
+    echo "Check ${NAME} configuration: "
+    ${COMMAND} check_configuration
+    RETVAL=$?
+}
+
+wake_up() {
+    echo "Wake up ${NAME}: "
+    ${COMMAND} wake_up
+    RETVAL=$?
+}
+
+usage() {
+    commands="start|stop|restart|status|check|configtest|help"
+    commands="${commands}|stop-supervisor|restart-supervisor|restart-child|wake-up"
+    echo "Usage: ${NAME} {${commands}} [PATH]" >&2
+    RETVAL=1
 }
 
 case "$1" in
@@ -130,15 +155,23 @@ case "$1" in
         start
     fi
     ;;
+  restart-child)
+    restart_child
+    ;;
+  wake-up)
+    wake_up
+    ;;
   status)
     status
     ;;
   check)
     check
     ;;
+  configtest)
+    configtest
+    ;;
   *)
-    echo "Usage: ${NAME} {start|stop|stop-supervisor|restart|restart-supervisor|status|check} [PATH]" >&2
-    RETVAL=1
+    usage
     ;;
 esac
 
@@ -154,7 +187,7 @@ B<simplevisor-control> command [path]
 
 =head1 DESCRIPTION
 
-B<simplevisor-control> command can be used to run simplevisor as a service.
+The B<simplevisor-control> script can be used to run simplevisor as a service.
 
 If this script is used the pidfile value specified in the simplevisor
 configuration file will be ignored.
@@ -162,8 +195,7 @@ configuration file will be ignored.
 =head1 OPTIONS
 
 B<command>
-one of: start, stop, stop-supervisor,
-        restart, restart-supervisor, status, check
+run "simplevisor-control help" to list the available commands
 
 B<path>
 look at simplevisor man page for path behavior.
