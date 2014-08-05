@@ -1,6 +1,6 @@
 Change log for python-simplevisor:
 
-???	???
+1.0	Tue Aug  5 2014
 	* [lc] renamed configuration_check to check_configuration
 	* [lc] added a wake_up command
 	* [lc] added a restart_child command

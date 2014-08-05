@@ -1,7 +1,7 @@
 simplevisor command
 ===================
 
-simplevisor 0.9 - simple daemons supervisor
+simplevisor 1.0 - simple daemons supervisor
 
 SYNOPSIS
 --------
