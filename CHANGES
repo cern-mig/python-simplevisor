@@ -1,5 +1,8 @@
 Change log for python-simplevisor:
 
+???	???
+        * [lc] now using runuser instead of sudo to change user
+
 1.0	Tue Aug  5 2014
 	* [lc] renamed configuration_check to check_configuration
 	* [lc] added a wake_up command
