@@ -21,26 +21,32 @@ if [ ! -r "${CONF}" ]; then
     exit 5
 fi
 
-USER=${SIMPLEVISOR_USER}
 NAME=${SIMPLEVISOR_NAME-simplevisor}
 PIDFILE=${SIMPLEVISOR_PIDFILE-/var/run/${NAME}.pid}
 LOCKFILE=${SIMPLEVISOR_LOCKFILE-/var/lock/subsys/${NAME}}
 MAXAGE=${SIMPLEVISOR_MAXAGE-10}
-
-if [ -z "${USER}" -o `id -un` = "${USER}" ]; then
-    COMMAND="${CMD} --pidfile ${PIDFILE} --conf ${CONF}"
-else
-    COMMAND="sudo -n -u ${USER} ${CMD} --pidfile ${PIDFILE} --conf ${CONF}"
+USER=${SIMPLEVISOR_USER}
+if [ -n "${USER}" -a `id -un` = "${USER}" ]; then
+    # no need to change user...
+    USER=
 fi
 
 SUBPATH="$2"
 
+simplevise() {
+    if [ -n "${USER}" ]; then
+        runuser -s /bin/sh ${USER} -c "${CMD} --pidfile ${PIDFILE} --conf ${CONF} $*"
+    else
+        ${CMD} --pidfile ${PIDFILE} --conf ${CONF} $*
+    fi
+}
+
 start() {
     echo -n "Starting ${NAME}: "
     if [ "x${SUBPATH}" = "x" ]; then
-        ${COMMAND} --daemon start
+        simplevise --daemon start
     else
-        ${COMMAND} start ${SUBPATH}
+        simplevise start ${SUBPATH}
     fi
     RETVAL=$?
     [ "x${SUBPATH}" != "x" ] && return
@@ -54,7 +60,7 @@ start() {
 
 status() {
     echo -n "${NAME} status: "
-    ${COMMAND} status ${SUBPATH}
+    simplevise status ${SUBPATH}
     RETVAL=$?
     [ "x${SUBPATH}" != "x" ] && return
     if [ ${RETVAL} -eq 0 ]; then
@@ -71,7 +77,7 @@ status() {
 
 stop() {
     echo -n "Stopping ${NAME}: "
-    ${COMMAND} stop ${SUBPATH}
+    simplevise stop ${SUBPATH}
     RETVAL=$?
     [ "x${SUBPATH}" != "x" ] && return
     if [ ${RETVAL} -eq 0 ]; then
@@ -84,7 +90,7 @@ stop() {
 
 stop_supervisor() {
     echo -n "Stopping supervisor ${NAME}: "
-    ${COMMAND} stop_supervisor
+    simplevise stop_supervisor
     RETVAL=$?
     if [ ${RETVAL} -eq 0 ]; then
         rm -f ${LOCKFILE} ${PIDFILE}
@@ -96,25 +102,25 @@ stop_supervisor() {
 
 restart_child() {
     echo "Restarting ${NAME} child: "
-    ${COMMAND} restart_child ${SUBPATH}
+    simplevise restart_child ${SUBPATH}
     RETVAL=$?
 }
 
 check() {
     echo "Check ${NAME}: "
-    ${COMMAND} check ${SUBPATH}
+    simplevise check ${SUBPATH}
     RETVAL=$?
 }
 
 configtest() {
     echo "Check ${NAME} configuration: "
-    ${COMMAND} check_configuration
+    simplevise check_configuration
     RETVAL=$?
 }
 
 wake_up() {
     echo "Wake up ${NAME}: "
-    ${COMMAND} wake_up
+    simplevise wake_up
     RETVAL=$?
 }
 
