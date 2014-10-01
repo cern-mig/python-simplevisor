@@ -1,6 +1,6 @@
 Change log for python-simplevisor:
 
-???	???
+1.1	Wed Oct  1 2014
         * [lc] now using runuser instead of sudo to change user
 
 1.0	Tue Aug  5 2014
