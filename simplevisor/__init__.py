@@ -36,6 +36,9 @@ Author: Massimo.Paladin@gmail.com
 Copyright (C) CERN 2013-2015
 """
 
+import sys
+import simplevisor.mtb as mtb
+
 AUTHOR = "Massimo Paladin <massimo.paladin@gmail.com>"
 COPYRIGHT = "Copyright (C) CERN 2013-2015"
 VERSION = "1.1"
@@ -43,9 +46,6 @@ DATE = "1 Oct 2014"
 __author__ = AUTHOR
 __version__ = VERSION
 __date__ = DATE
-
-import sys
-import simplevisor.mtb as mtb
 
 if "mtb" not in sys.modules:
     sys.modules["mtb"] = mtb
