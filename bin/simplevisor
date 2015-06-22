@@ -9,6 +9,7 @@ import sys
 
 import simplevisor.mtb as mtb
 from mtb.conf import read_apache_config, unify_keys
+from mtb.modules import json
 import mtb.log as log
 import simplevisor
 from simplevisor.Simplevisor import Simplevisor, \
@@ -121,7 +122,7 @@ def check_arg_command(command):
     """ Check command argument validity. """
     match = CHECK_ARG_COMMAND_RE.match(command)
     if match is None:
-        msg = "command must be one of %s" % ",".join(COMMANDS)
+        msg = "command must be one of %s" % ", ".join(COMMANDS)
         raise argparse.ArgumentTypeError(msg)
     return command
 
@@ -156,6 +157,9 @@ ARGUMENTS = [
     ("conf", {
         "long": "--conf",
         "help": "configuration file", }),
+    ("conftype", {
+        "long": "--conftype",
+        "help": "configuration file type", }),
     ("daemon", {
         "long": "--daemon",
         "help": "daemonize, ONLY with start",
@@ -211,6 +215,7 @@ ARGUMENTS = [
 ]
 
 DEFAULT_OPTIONS = {
+    "conftype": "apache",
     "daemon":   False,
     "log":      "stdout",
     "loglevel": "warning",
@@ -403,8 +408,8 @@ def print_pod():
     print(out)
 
 SIMPLEVISOR_CONFIGURATION_FIELDS = [
-    "store", "pidfile", "interval", "log", "logfile",
-    "loglevel", "logname", "path", "command", "daemon",
+    "command", "conftype", "daemon", "interval", "log",
+    "logfile", "loglevel", "logname", "path", "pidfile", "store",
 ]
 
 
@@ -442,11 +447,20 @@ def initialize_log(config):
 def main():
     """ Do the work. """
     args = read_args()
-    configuration_file = args.pop("conf", None)
-    conf = dict()
-    if configuration_file is not None:
-        confpath = os.path.abspath(configuration_file)
-        conf = read_apache_config(confpath, CONF_GEN_OPTS)
+    conf_file = args.pop("conf", None)
+    if conf_file is None:
+        conf = dict()
+    else:
+        conf_path = os.path.abspath(conf_file)
+        conf_type = args.pop("conftype", DEFAULT_OPTIONS["conftype"])
+        if conf_type == "apache":
+            conf = read_apache_config(conf_path, CONF_GEN_OPTS)
+        elif conf_type == "json":
+            conf_fp = open(conf_path, "r")
+            conf = json.load(conf_fp)
+            conf_fp.close()
+        else:
+            raise ValueError("invalid configuration type: %s" % (conf_type, ))
     entry = conf.pop("entry", None)
     unify_keys(entry)
     sconf = conf.pop("simplevisor", dict())
