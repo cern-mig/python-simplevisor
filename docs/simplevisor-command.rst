@@ -7,7 +7,7 @@ SYNOPSIS
 --------
 
 **simplevisor**
-[--conf CONF] [--daemon] [--interval INTERVAL] [-h] [--log LOG] [--logfile LOGFILE] [--loglevel LOGLEVEL] [--logname LOGNAME] [-p PIDFILE] [--store STORE] [--version] 
+[--conf CONF] [--conftype CONFTYPE] [--daemon] [--interval INTERVAL] [-h] [--log LOG] [--logfile LOGFILE] [--loglevel LOGLEVEL] [--logname LOGNAME] [-p PIDFILE] [--store STORE] [--version] 
 command [path] 
 
 DESCRIPTION
@@ -93,6 +93,9 @@ OPTIONS
 
 **--conf CONF**
 	configuration file
+
+**--conftype CONFTYPE**
+	configuration file type (default: apache)
 
 **--daemon**
 	daemonize, ONLY with start

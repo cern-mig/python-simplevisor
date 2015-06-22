@@ -1,21 +1,23 @@
 Configuration
 =============
 
-Simplevisor has one main configuration file. The format of the configuration
-file is the Apache Style Config, the configuration parsing is handled
-with Perl Config::General module for commodity.
+Simplevisor has one main configuration file. The default format of this
+configuration file is the Apache Style Config and the configuration parsing is
+handled by the Perl Config::General module.
 
-These are the main features supported in the configuration file:
+Alternatively, you can use JSON configuration files (via *--conftype json*):
+this removes the need for Perl but the features listed below will not be
+supported.
 
-format
-    Apache Style Config syntax
+Here are the main features supported in the Apache Style Config syntax:
+
 comments
     comments are allowed through lines starting with *#*
 blank lines
     blank lines are ignored
 file inclusion
     file inclusion is supported to allow modularization of the configuration
-    file. It is possible to include a file which is in the same folder or in
+    file; it is possible to include a file which is in the same folder or in
     its subtree with the following directive:
     <<include relative_file_path.conf>>
 variable interpolation
@@ -41,7 +43,6 @@ variable interpolation
         var_foo = bar
         property_x = ${var_foo} the rest of the value
         ...
-    
     
 
 The options specified through the command line have the priority over
@@ -136,5 +137,4 @@ and *other_service.conf* could look like::
         # If not specified start command is used as pattern.
         pattern = /path/to/script --conf /path/to/conf --daemon
     </entry>
-
 

@@ -1,5 +1,8 @@
 Change log for python-simplevisor:
 
+???	???
+	* [lc] added support for JSON configuration files
+
 1.1	Wed Oct  1 2014
         * [lc] now using runuser instead of sudo to change user
 

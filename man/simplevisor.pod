@@ -5,7 +5,7 @@ simplevisor 1.1 - simple daemons supervisor
 =head1 SYNOPSIS
 
 B<simplevisor>
-[--conf CONF][--daemon][--interval INTERVAL][-h][--log LOG][--logfile LOGFILE][--loglevel LOGLEVEL][--logname LOGNAME][-p PIDFILE][--store STORE][--version]
+[--conf CONF][--conftype CONFTYPE][--daemon][--interval INTERVAL][-h][--log LOG][--logfile LOGFILE][--loglevel LOGLEVEL][--logname LOGNAME][-p PIDFILE][--store STORE][--version]
 command [path]
 
 =head1 DESCRIPTION
@@ -95,6 +95,8 @@ B<optional arguments:>
 
 B<--conf CONF> configuration file
 
+B<--conftype CONFTYPE> configuration file type (default: apache)
+
 B<--daemon> daemonize, ONLY with start
 
 B<--interval INTERVAL> interval to wait between supervision cycles (default: 60)
@@ -145,6 +147,6 @@ Given the example configuration, to start the httpd service:
 
 Massimo Paladin <massimo.paladin@gmail.com>
 
-Copyright (C) CERN 2013-2014
+Copyright (C) CERN 2013-2015
 
 
