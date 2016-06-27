@@ -2,6 +2,7 @@ Change log for python-simplevisor:
 
 ???	???
 	* [lc] added support for JSON configuration files
+	* [lc] fixed bug in restart_child
 
 1.1	Wed Oct  1 2014
         * [lc] now using runuser instead of sudo to change user

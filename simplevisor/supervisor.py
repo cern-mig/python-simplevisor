@@ -263,11 +263,11 @@ class Supervisor(object):
             "calling start on supervisor %s.%s",
             self.name, self._strategy_name)
         try:
-            result = self._strategy.start(self._children)
+            self._strategy.start(self._children)
         except ServiceError:
             error = sys.exc_info()[1]
-            result = error.result
-        return result
+            return error.result
+        return None
 
     def stop(self):
         """
@@ -277,11 +277,11 @@ class Supervisor(object):
             "calling stop on supervisor %s.%s",
             self.name, self._strategy_name)
         try:
-            result = self._strategy.stop(self._children)
+            self._strategy.stop(self._children)
         except ServiceError:
             error = sys.exc_info()[1]
-            result = error.result
-        return result
+            return error.result
+        return None
 
     def status(self):
         """
@@ -299,7 +299,7 @@ class Supervisor(object):
             "calling stop+start on supervisor %s.%s",
             self.name, self._strategy_name)
         result = self.stop()
-        if result[0] != 0:
+        if result is not None:
             return result
         return self.start()
 
