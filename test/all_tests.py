@@ -11,7 +11,7 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
- Copyright (C) 2013-2015 CERN
+ Copyright (C) 2013-2016 CERN
 """
 
 import glob

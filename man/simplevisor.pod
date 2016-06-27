@@ -147,6 +147,6 @@ Given the example configuration, to start the httpd service:
 
 Massimo Paladin <massimo.paladin@gmail.com>
 
-Copyright (C) CERN 2013-2015
+Copyright (C) CERN 2013-2016
 
 

@@ -4,13 +4,13 @@ MyToolBox is a collection of reusable tools.
 
 Author: Massimo.Paladin@gmail.com
 
-Copyright (C) 2013-2015 CERN
+Copyright (C) 2013-2016 CERN
 """
 
 import sys
 
 AUTHOR = "Massimo Paladin <massimo.paladin@gmail.com>"
-COPYRIGHT = "Copyright (C) 2013-2015 CERN"
+COPYRIGHT = "Copyright (C) 2013-2016 CERN"
 VERSION = "0.1.0"
 DATE = "01 Mar 2013"
 __author__ = AUTHOR
