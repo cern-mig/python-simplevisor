@@ -1,6 +1,6 @@
 Change log for python-simplevisor:
 
-???	???
+1.2	Mon Jun 27 2016
 	* [lc] added support for JSON configuration files
 	* [lc] fixed bug in restart_child
 
