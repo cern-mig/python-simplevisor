@@ -33,14 +33,14 @@ if you want to run it as a service user simplevisor-control as init script.
 
 Author: Massimo.Paladin@gmail.com
 
-Copyright (C) CERN 2013-2016
+Copyright (C) CERN 2013-2019
 """
 
 import sys
 import simplevisor.mtb as mtb
 
 AUTHOR = "Massimo Paladin <massimo.paladin@gmail.com>"
-COPYRIGHT = "Copyright (C) CERN 2013-2016"
+COPYRIGHT = "Copyright (C) CERN 2013-2019"
 VERSION = "1.2"
 DATE = "27 June 2016"
 __author__ = AUTHOR

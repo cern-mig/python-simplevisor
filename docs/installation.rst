@@ -33,9 +33,7 @@ into the directory and install it::
 rpm
 ---
 
-RPMs are available for *Fedora* main branches and *EPEL 5/6*, you can simply
+RPMs are available for *Fedora* main branches and *EPEL 7*, you can simply
 install it with *yum*::
 
     yum install python-simplevisor
-
-

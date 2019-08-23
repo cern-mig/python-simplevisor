@@ -2,7 +2,7 @@
 Configuration utilities for :py:mod:`mtb` module.
 
 
-Copyright (C) 2013-2016 CERN
+Copyright (C) 2013-2019 CERN
 """
 import os
 import re

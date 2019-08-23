@@ -24,7 +24,6 @@ To test this module, run the following command:
 Support and documentation
 =========================
 
-
 After installing, you can find documentation for this module with the
 standard python help function command or at:
 
@@ -33,7 +32,7 @@ standard python help function command or at:
 License and Copyright
 =====================
 
-Copyright (C) CERN 2013-2016
+Copyright (C) CERN 2013-2019
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
