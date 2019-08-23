@@ -154,6 +154,6 @@ Given the example configuration, to start the httpd service::
 AUTHOR
 ------
 
-Massimo Paladin <massimo.paladin@gmail.com> - Copyright (C) CERN 2013-2016
+Massimo Paladin <massimo.paladin@gmail.com> - Copyright (C) CERN 2013-2019
 
 
