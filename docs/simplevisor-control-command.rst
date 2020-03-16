@@ -79,4 +79,4 @@ AUTHOR
 
 Massimo Paladin <massimo.paladin@gmail.com>
 
-Copyright (C) CERN 2013-2019
+Copyright (C) CERN 2013-2020

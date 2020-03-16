@@ -1,7 +1,7 @@
 """
 Strategies implemented.
 
-Copyright (C) 2013-2019 CERN
+Copyright (C) CERN 2013-2020
 """
 
 from simplevisor.errors import ServiceError

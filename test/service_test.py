@@ -12,7 +12,7 @@ either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-Copyright (C) 2013-2019 CERN
+Copyright (C) CERN 2013-2020
 """
 from simplevisor.errors import ServiceError
 from simplevisor.service import Service
