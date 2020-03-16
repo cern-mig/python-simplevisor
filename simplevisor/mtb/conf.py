@@ -68,7 +68,7 @@ def write_apache_config(path, conf):
         "$json = join(\"\", <FILE>); close FILE; " \
         "$loaded = from_json($json); " \
         "Config::General->new->save_file(\"%s\", $loaded); '" \
-        % (tmp_path, tmp_path, path.replace("@", "\@"))
+        % (tmp_path, tmp_path, path.replace("@", "\\@"))
     proc = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
     _, err = proc.communicate()
     if err:
@@ -96,7 +96,7 @@ def unify_keys(dictionary):
     return dictionary
 
 
-_EXPLOSION_RE = re.compile("^(\w+)-(.+)$")
+_EXPLOSION_RE = re.compile(r'^(\w+)-(.+)$')
 
 
 def _explode_dict(given):

@@ -153,6 +153,7 @@ def check_arg_log(log_type):
         raise argparse.ArgumentTypeError(msg)
     return log_type
 
+
 ARGUMENTS = [
     ("conf", {
         "long": "--conf",
@@ -407,6 +408,7 @@ def print_pod():
              .replace("\n- ", "\n=item *\n\n")
     print(out)
 
+
 SIMPLEVISOR_CONFIGURATION_FIELDS = [
     "command", "conftype", "daemon", "interval", "log",
     "logfile", "loglevel", "logname", "path", "pidfile", "store",
@@ -472,6 +474,7 @@ def main():
     initialize_log(sconf)
     svisor = Simplevisor(config=sconf, child_config=entry)
     svisor.work()
+
 
 if __name__ == "__main__":
     main()

@@ -144,7 +144,7 @@ class Simplevisor(object):
             pid_write(self._config["pidfile"], os.getpid(), excl=True)
         try:
             run_function()
-        except:
+        except Exception:
             self.save_status()
             if self._config.get("pidfile"):
                 pid_remove(self._config.get("pidfile"))

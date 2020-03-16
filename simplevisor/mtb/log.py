@@ -31,6 +31,7 @@ class CustomNullHandler(logging.Handler):
     def emit(self, record):
         pass
 
+
 if not hasattr(logging, "NullHandler"):
     setattr(logging, "NullHandler", CustomNullHandler)
 

@@ -16,13 +16,13 @@ before_install:
 install:
   - sudo cpanm -v --notest No::Worries
   - pip install argparse || echo "no needed from 3.2 onward, ok"
-  - pip install pep8
+  - pip install pycodestyle
   - pip install pylint
   - curl -O -R -S -f -s https://raw.github.com/cern-mig/dev-tools/master/python/pylint.sh
   - curl -O -R -S -f -s https://raw.github.com/cern-mig/dev-tools/master/python/.pylintrc
 # command to run tests
 script:
-  - pep8 simplevisor bin/simplevisor test
+  - pycodestyle simplevisor bin/simplevisor test
   - sh pylint.sh simplevisor bin/simplevisor test || echo "*ignored*"
   - python setup.py install
   - python setup.py test

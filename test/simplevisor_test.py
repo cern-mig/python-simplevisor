@@ -38,5 +38,6 @@ class SimplevisorTest(unittest.TestCase):
                 self.assertRaises(Exception, Simplevisor, **options)
         print("...Simplevisor init ok")
 
+
 if __name__ == "__main__":
     unittest.main()

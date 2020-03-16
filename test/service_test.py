@@ -151,5 +151,6 @@ class ServiceTest(unittest.TestCase):
             service._opts["status"])
         print("...service daemon option ok")
 
+
 if __name__ == "__main__":
     unittest.main()
