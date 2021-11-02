@@ -113,14 +113,14 @@ class ServiceTest(unittest.TestCase):
             opts['logname'] = TEST_LOGNAME
             svc = Service(**opts)
             svc.cond_start(careful=True)
-            self.assertEquals(
+            self.assertEqual(
                 0, svc.status()[0],
                 "%s should be started" % (svc.name,))
             self.assertTrue(
                 svc.check()[0],
                 "check should have returned true for %s" % (svc.name, ))
             svc.cond_stop(careful=True)
-            self.assertEquals(
+            self.assertEqual(
                 3, svc.status()[0],
                 "%s should be stopped" % (svc.name,))
             self.assertFalse(

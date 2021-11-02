@@ -154,7 +154,7 @@ class SupervisorTest(unittest.TestCase):
                 child = sup1.get_child(child_path)
                 child.cond_stop(careful=True)
                 (child_status, _, _) = child.status()
-                self.assertEquals(
+                self.assertEqual(
                     child_status, 3,
                     "%s should be stopped: %s" % (child.name, child_status))
                 successful = sup1.supervise()
@@ -178,16 +178,16 @@ class SupervisorTest(unittest.TestCase):
                 [current['children']['entry'][0]['name'], ])
             for i in range(3):
                 child1.cond_stop(careful=True)
-                self.assertEquals(child1.status()[0], 3)
+                self.assertEqual(child1.status()[0], 3)
                 self.assertEqual(i, sup1.adjustments(), sup1._cycles)
                 self.assertTrue(
                     sup1.supervise(),
                     "supervision failed during cycle nr. %d" % (i, ))
-                self.assertEquals(child1.status()[0], 0)
+                self.assertEqual(child1.status()[0], 0)
                 self.assertEqual(i + 1, sup1.adjustments(), sup1._cycles)
                 self.assertFalse(sup1.failed())
             child1.cond_stop(careful=True)
-            self.assertEquals(child1.status()[0], 3)
+            self.assertEqual(child1.status()[0], 3)
             self.assertFalse(sup1.supervise())
             self.assertTrue(sup1.failed())
             self.assertFalse(sup1.check()[0])
