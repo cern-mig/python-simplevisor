@@ -2,8 +2,8 @@
 python-simplevisor
 ==================
 
-.. image:: https://secure.travis-ci.org/cern-mig/python-simplevisor.png?branch=master
-   :target: https://travis-ci.org/cern-mig/python-simplevisor
+.. image:: https://github.com/cern-mig/python-simplevisor/actions/workflows/test.yml/badge.svg
+
 
 Overview
 ========
