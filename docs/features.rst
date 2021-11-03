@@ -64,4 +64,4 @@ Main Features
     Supervisor does not require to be run as *root* user, it is
     able to run as any user of course limited by the user privileges.
 
-Copyright (C) CERN 2013-2020
+Copyright (C) CERN 2013-2021

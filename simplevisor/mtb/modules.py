@@ -2,7 +2,7 @@
 Extra modules utilities for :py:mod:`mtb` module.
 
 
-Copyright (C) CERN 2013-2020
+Copyright (C) CERN 2013-2021
 """
 
 try:

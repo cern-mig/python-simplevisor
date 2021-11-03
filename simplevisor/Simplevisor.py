@@ -2,7 +2,7 @@
 Simplevisor module.
 
 
-Copyright (C) CERN 2013-2020
+Copyright (C) CERN 2013-2021
 """
 import logging
 import os

@@ -67,7 +67,7 @@ Default Parameters
 - adjustments = 3
 - strategy = one_for_one
 
-Copyright (C) CERN 2013-2020
+Copyright (C) CERN 2013-2021
 """
 import logging
 import sys
