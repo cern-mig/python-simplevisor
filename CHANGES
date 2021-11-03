@@ -1,5 +1,9 @@
 Change log for python-simplevisor:
 
+1.3	Wed Nov  3 2021
+	* [lc] packaging and code cleanup
+	* [lc] tested with Python 3.11
+
 1.2	Mon Jun 27 2016
 	* [lc] added support for JSON configuration files
 	* [lc] fixed bug in restart_child

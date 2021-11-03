@@ -41,8 +41,8 @@ import simplevisor.mtb as mtb
 
 AUTHOR = "Massimo Paladin <massimo.paladin@gmail.com>"
 COPYRIGHT = "Copyright (C) CERN 2013-2021"
-VERSION = "1.2"
-DATE = "27 June 2016"
+VERSION = "1.3"
+DATE = "3 Nov 2021"
 __author__ = AUTHOR
 __version__ = VERSION
 __date__ = DATE
