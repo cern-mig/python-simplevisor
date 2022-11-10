@@ -18,7 +18,8 @@ def _normalize_bool(tree):
     for key, value in tree.items():
         if type(value) == dict:
             _normalize_bool(value)
-        elif type(value) in [str, unicode]:
+        elif ((PY2 and type(value) in [str, unicode]) or
+              (PY3 and type(value) in [str])):
             if value.lower() == "true":
                 tree[key] = True
             elif value.lower() == "false":

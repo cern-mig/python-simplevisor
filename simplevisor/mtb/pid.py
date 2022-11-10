@@ -11,6 +11,8 @@ import signal
 import sys
 import time
 
+from mtb import PY2, PY3
+
 LOGGER = logging.getLogger("mtb.pid")
 
 
@@ -21,23 +23,20 @@ class PIDError(Exception):
 
 def pid_read(path, action=False):
     """ Return the pid content. """
-    content = (None, None)
-    if not os.path.exists(path):
-        if action:
-            return "", None
-        return ""
-    try:
-        pid_file = open(path, "r")
-        pid_content = pid_file.readlines()
-        if len(pid_content) == 1:
-            content = (int(pid_content[0]), None)
+    content = ("", None)
+    if os.path.exists(path):
+        try:
+            pid_file = open(path, "r")
+            pid_content = pid_file.readlines()
+            if len(pid_content) == 1:
+                content = (int(pid_content[0]), None)
+            elif len(pid_content) > 1:
+                content = (int(pid_content[0]), pid_content[1].strip())
+        except (IOError, ValueError):
+            error = sys.exc_info()[1]
+            raise IOError("cannot read pidfile %s: %s" % (path, error))
         else:
-            content = (int(pid_content[0]), pid_content[1].strip())
-    except (IOError, ValueError):
-        error = sys.exc_info()[1]
-        raise IOError("cannot read pidfile %s: %s" % (path, error))
-    else:
-        pid_file.close()
+            pid_file.close()
     if action:
         return content
     return content[0]
@@ -66,7 +65,7 @@ def pid_write(path, pid, action=None, excl=False):
         content = "%s\n" % pid
         if action is not None:
             content += "%s\n" % action
-        os.write(pid_file, content)
+        os.write(pid_file, content.encode() if PY3 else content)
     except IOError:
         error = sys.exc_info()[1]
         raise IOError("cannot write to %s: %s" % (path, error.strerror))
