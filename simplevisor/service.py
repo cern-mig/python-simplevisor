@@ -683,5 +683,5 @@ class Service(object):
         """
         # removing log for the time being
         if "log" in self._status:
-            del(self._status["log"])
+            del self._status["log"]
         return self._status
