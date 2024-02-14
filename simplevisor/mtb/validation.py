@@ -50,7 +50,7 @@ def get_int_or_die(value, message=None):
     """
     Return the integer value or die with the error message provided.
     """
-    if type(value) == int:
+    if isinstance(value, int):
         return value
     try:
         value = int(value)

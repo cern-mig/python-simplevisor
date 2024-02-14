@@ -41,7 +41,7 @@ class Simplevisor(object):
         """ Initialize Simplevisor. """
         if config is None:
             config = dict()
-        elif type(config) != dict:
+        elif not isinstance(config, dict):
             raise SimplevisorError("Simplevisor config is not a dictionary")
         if "logname" not in config:
             config["logname"] = self.__class__.__name__

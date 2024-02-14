@@ -16,7 +16,7 @@ from mtb import PY2, PY3
 def _normalize_bool(tree):
     """ Normalize boolean in the dict. """
     for key, value in tree.items():
-        if type(value) == dict:
+        if isinstance(value, dict):
             _normalize_bool(value)
         elif ((PY2 and type(value) in [str, unicode]) or
               (PY3 and type(value) in [str])):
@@ -112,14 +112,14 @@ def _explode_dict(given):
                 given[match.group(1)] = {
                     match.group(2): given.pop(key)}
     for item in given.values():
-        if type(item) == dict:
+        if isinstance(item, dict):
             _explode_dict(item)
 
 
 def _tree_dictify(given):
     """ TreeDict-ify it. """
     for key, item in given.items():
-        if type(item) == dict:
+        if isinstance(item, dict):
             _tree_dictify(item)
             given[key] = TreeDict(item)
 
