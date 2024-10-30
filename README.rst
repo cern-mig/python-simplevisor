@@ -4,6 +4,7 @@ python-simplevisor
 
 .. image:: https://github.com/cern-mig/python-simplevisor/actions/workflows/test.yml/badge.svg
 
+WARNING: This software is not maintained anymore.
 
 Overview
 ========
